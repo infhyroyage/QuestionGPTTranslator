@@ -1,0 +1,142 @@
+name: Create Azure Resources
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/create-azure-resources.yaml
+      - resources**
+
+env:
+  FUNCTIONS_NAME: qgtranslator-je-func
+  LOCATION: japaneast
+  RESOURCE_GROUP: qgtranslator-je
+  VAULT_NAME: qgtranslator-je-vault
+
+jobs:
+  create-resources:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@main
+
+      - name: Login Azure as Contributor
+        uses: azure/login@v2
+        with:
+          creds: '{"clientId":"${{ vars.AZURE_AD_SP_CONTRIBUTOR_CLIENT_ID }}","clientSecret":"${{ secrets.AZURE_AD_SP_CONTRIBUTOR_CLIENT_SECRET }}","subscriptionId":"${{ vars.AZURE_SUBSCRIPTION_ID }}","tenantId":"${{ vars.AZURE_TENANT_ID }}"}'
+
+      - name: Create Resource Group if Needed
+        run: |
+          az group create \
+            -n ${{ env.RESOURCE_GROUP }} \
+            -l ${{ env.LOCATION }}
+
+      - name: Create Resources
+        uses: azure/arm-deploy@v2
+        with:
+          scope: resourcegroup
+          subscriptionId: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+          resourceGroupName: ${{ env.RESOURCE_GROUP }}
+          template: ./resources/base.bicep
+          parameters: >-
+            azureAdEAContributorObjectId=${{ vars.AZURE_AD_EA_CONTRIBUTOR_OBJECT_ID }}
+            azureApimPublisherEmail=${{ secrets.AZURE_APIM_PUBLISHER_EMAIL }}
+            deeplAuthKey=${{ secrets.DEEPL_AUTH_KEY }}
+
+  # 短期間でAzure Functionsのアプリケーション設定を複数回更新すると、正常終了したのにも関わらず更新しない場合があるため
+  # 1回のみ更新するようにJob/Stepを構成する
+  set-functions-appsettings:
+    runs-on: ubuntu-latest
+    needs: create-resources
+    steps:
+      - name: Checkout
+        uses: actions/checkout@main
+
+      - name: Login Azure as Contributor
+        uses: azure/login@v2
+        with:
+          creds: '{"clientId":"${{ vars.AZURE_AD_SP_CONTRIBUTOR_CLIENT_ID }}","clientSecret":"${{ secrets.AZURE_AD_SP_CONTRIBUTOR_CLIENT_SECRET }}","subscriptionId":"${{ vars.AZURE_SUBSCRIPTION_ID }}","tenantId":"${{ vars.AZURE_TENANT_ID }}"}'
+
+      - name: Update functions-appsettings.json
+        run: |
+          translatorKey=$( \
+            az keyvault secret show \
+              --vault-name ${{ env.VAULT_NAME }} \
+              -n translator-key \
+              --query id \
+              -o tsv \
+          )
+          cosmosdbKey=$( \
+            az keyvault secret show \
+              --vault-name ${{ env.VAULT_NAME }} \
+              -n cosmos-db-primary-key \
+              --query id \
+              -o tsv \
+          )
+          cosmosdbReadonlyKey=$( \
+            az keyvault secret show \
+              --vault-name ${{ env.VAULT_NAME }} \
+              -n cosmos-db-primary-readonly-key \
+              --query id \
+              -o tsv \
+          )
+          sed -i.bak \
+            -e "s|{translatorKey}|${translatorKey}|g" \
+            -e "s|{cosmosdbKey}|${cosmosdbKey}|g" \
+            -e "s|{cosmosdbReadonlyKey}|${cosmosdbReadonlyKey}|g" \
+            resources/functions-appsettings.json
+
+      - name: Update Functions Application Settings
+        run: |
+          az functionapp config appsettings set \
+            -g ${{ env.RESOURCE_GROUP }} \
+            -n ${{ env.FUNCTIONS_NAME }} \
+            --settings @resources/functions-appsettings.json
+
+  # FunctionsにAzureWebJobsStorageのアプリケーション設定をせずにデプロイすると
+  # InternalServerErrorとなってしまうデプロイ処理は、以下のJobに定義すること
+  connect-apim-2-functions:
+    runs-on: ubuntu-latest
+    needs: set-functions-appsettings
+    steps:
+      - name: Checkout
+        uses: actions/checkout@main
+
+      - name: Login Azure as Contributor
+        uses: azure/login@v2
+        with:
+          creds: '{"clientId":"${{ vars.AZURE_AD_SP_CONTRIBUTOR_CLIENT_ID }}","clientSecret":"${{ secrets.AZURE_AD_SP_CONTRIBUTOR_CLIENT_SECRET }}","subscriptionId":"${{ vars.AZURE_SUBSCRIPTION_ID }}","tenantId":"${{ vars.AZURE_TENANT_ID }}"}'
+
+      - name: Create Resources
+        uses: azure/arm-deploy@v2
+        with:
+          scope: resourcegroup
+          subscriptionId: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+          resourceGroupName: ${{ env.RESOURCE_GROUP }}
+          template: ./resources/connect-apim-2-functions.bicep
+
+  # use-build-functions-app-workflow:
+  #   needs: set-functions-appsettings
+  #   uses: ./.github/workflows/reusable-build-functions-app.yaml
+
+  # use-deploy-functions-app-workflow:
+  #   needs: use-build-functions-app-workflow
+  #   uses: ./.github/workflows/reusable-deploy-functions-app.yaml
+  #   with:
+  #     AZURE_AD_SP_CONTRIBUTOR_CLIENT_ID: ${{ vars.AZURE_AD_SP_CONTRIBUTOR_CLIENT_ID }}
+  #     AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+  #     AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+  #   secrets:
+  #     AZURE_AD_SP_CONTRIBUTOR_CLIENT_SECRET: ${{ secrets.AZURE_AD_SP_CONTRIBUTOR_CLIENT_SECRET }}
+
+  # use-deploy-apim-workflow:
+  #   needs: connect-apim-2-functions
+  #   uses: ./.github/workflows/reusable-deploy-apim.yaml
+  #   with:
+  #     AZURE_AD_SP_CONTRIBUTOR_CLIENT_ID: ${{ vars.AZURE_AD_SP_CONTRIBUTOR_CLIENT_ID }}
+  #     AZURE_AD_SP_MSAL_CLIENT_ID: ${{ vars.AZURE_AD_SP_MSAL_CLIENT_ID }}
+  #     AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+  #     AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+  #   secrets:
+  #     AZURE_AD_SP_CONTRIBUTOR_CLIENT_SECRET: ${{ secrets.AZURE_AD_SP_CONTRIBUTOR_CLIENT_SECRET }}
