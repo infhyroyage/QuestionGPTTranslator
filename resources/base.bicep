@@ -4,6 +4,8 @@ param azureApimPublisherEmail string
 @secure()
 param deeplAuthKey string
 param location string = resourceGroup().location
+@secure()
+param translatorKey string
 
 var apimApisName = 'apis-functions'
 var apisHealthcheckName = 'apis-healthcheck-functions'
@@ -34,8 +36,6 @@ var lawName = 'qgtranslator-je-law'
 
 var storageBlobContainerName = 'import-items'
 var storageName = 'qgtranslatorjesa'
-
-var translatorName = 'qgtranslator-je-translator'
 
 var vaultName = 'qgtranslator-je-vault'
 var vaultSecretNames = {
@@ -135,19 +135,6 @@ resource apimDiagnosticsInsights 'Microsoft.ApiManagement/service/diagnostics@20
       percentage: 100
       samplingType: 'fixed'
     }
-  }
-}
-
-// Translator
-resource translator 'Microsoft.CognitiveServices/accounts@2023-05-01' = {
-  name: translatorName
-  location: location
-  sku: {
-    name: 'F0'
-  }
-  kind: 'TextTranslation'
-  properties: {
-    publicNetworkAccess: 'Enabled'
   }
 }
 
@@ -444,7 +431,7 @@ resource vaultSecretsTranslatorKey 'Microsoft.KeyVault/vaults/secrets@2023-02-01
     attributes: {
       enabled: true
     }
-    value: translator.listKeys().key1
+    value: translatorKey
   }
 }
 resource vaultSecretsCosmosDBPrimaryKey 'Microsoft.KeyVault/vaults/secrets@2023-02-01' = {
