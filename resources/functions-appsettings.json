@@ -1,0 +1,47 @@
+[
+  {
+    "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+    "slotSetting": false,
+    "value": "@Microsoft.KeyVault(VaultName=qgtranslator-je-vault;SecretName=insights-instrumentation-key)"
+  },
+  {
+    "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
+    "slotSetting": false,
+    "value": "@Microsoft.KeyVault(VaultName=qgtranslator-je-vault;SecretName=insights-connection-string)"
+  },
+  {
+    "name": "AzureWebJobsStorage",
+    "slotSetting": false,
+    "value": "@Microsoft.KeyVault(VaultName=qgtranslator-je-vault;SecretName=storage-connection-string)"
+  },
+  {
+    "name": "COSMOSDB_KEY",
+    "slotSetting": false,
+    "value": "@Microsoft.KeyVault(SecretUri={cosmosdbKey})"
+  },
+  {
+    "name": "COSMOSDB_READONLY_KEY",
+    "slotSetting": false,
+    "value": "@Microsoft.KeyVault(SecretUri={cosmosdbReadonlyKey})"
+  },
+  {
+    "name": "DEEPL_AUTH_KEY",
+    "slotSetting": false,
+    "value": "@Microsoft.KeyVault(VaultName=qgtranslator-je-vault;SecretName=deepl-auth-key)"
+  },
+  {
+    "name": "TRANSLATOR_KEY",
+    "slotSetting": false,
+    "value": "@Microsoft.KeyVault(SecretUri={translatorKey})"
+  },
+  {
+    "name": "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING",
+    "slotSetting": false,
+    "value": "@Microsoft.KeyVault(VaultName=qgtranslator-je-vault;SecretName=storage-connection-string)"
+  },
+  {
+    "name": "WEBSITE_CONTENTSHARE",
+    "slotSetting": false,
+    "value": "qgtranslator-je-func"
+  }
+]
