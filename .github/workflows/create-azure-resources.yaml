@@ -117,19 +117,19 @@ jobs:
           resourceGroupName: ${{ env.RESOURCE_GROUP }}
           template: ./resources/connect-apim-2-functions.bicep
 
-  # use-build-functions-app-workflow:
-  #   needs: set-functions-appsettings
-  #   uses: ./.github/workflows/reusable-build-functions-app.yaml
+  use-build-functions-app-workflow:
+    needs: set-functions-appsettings
+    uses: ./.github/workflows/reusable-build-functions-app.yaml
 
-  # use-deploy-functions-app-workflow:
-  #   needs: use-build-functions-app-workflow
-  #   uses: ./.github/workflows/reusable-deploy-functions-app.yaml
-  #   with:
-  #     AZURE_AD_SP_CONTRIBUTOR_CLIENT_ID: ${{ vars.AZURE_AD_SP_CONTRIBUTOR_CLIENT_ID }}
-  #     AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
-  #     AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
-  #   secrets:
-  #     AZURE_AD_SP_CONTRIBUTOR_CLIENT_SECRET: ${{ secrets.AZURE_AD_SP_CONTRIBUTOR_CLIENT_SECRET }}
+  use-deploy-functions-app-workflow:
+    needs: use-build-functions-app-workflow
+    uses: ./.github/workflows/reusable-deploy-functions-app.yaml
+    with:
+      AZURE_AD_SP_CONTRIBUTOR_CLIENT_ID: ${{ vars.AZURE_AD_SP_CONTRIBUTOR_CLIENT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+    secrets:
+      AZURE_AD_SP_CONTRIBUTOR_CLIENT_SECRET: ${{ secrets.AZURE_AD_SP_CONTRIBUTOR_CLIENT_SECRET }}
 
   # use-deploy-apim-workflow:
   #   needs: connect-apim-2-functions
