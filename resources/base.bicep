@@ -256,6 +256,7 @@ resource cosmosDBDatabaseUsersContainerQuestion 'Microsoft.DocumentDb/databaseAc
 resource openAI 'Microsoft.CognitiveServices/accounts@2023-05-01' = {
   name: openAIName
   location: location
+  kind: 'OpenAI'
   sku: {
     name: 'S0'
   }
