@@ -1,0 +1,51 @@
+<policies>
+  <inbound>
+    <!--CORSチェック-->
+    <cors>
+      <allowed-origins>
+        <origin>https://infhyroyage.github.io/</origin>
+      </allowed-origins>
+      <allowed-methods>
+        <method>GET</method>
+        <method>PUT</method>
+      </allowed-methods>
+      <allowed-headers>
+        <!--X-Access-Tokenと指定すると、PUTメソッドでCORSエラーが発生するため注意-->
+        <header>*</header>
+      </allowed-headers>
+    </cors>
+    <!--下記URLに基づいたJWTトークンチェック-->
+    <!--https://docs.microsoft.com/ja-jp/azure/active-directory/develop/access-tokens-->
+    <validate-jwt header-name="X-Access-Token" require-scheme="Bearer">
+      <!--トークンの署名は妥当か-->
+      <openid-config url="https://login.microsoftonline.com/{AZURE_TENANT_ID}/.well-known/openid-configuration" />
+      <!--Microsoft IDプラットフォームのクライアント(アプリケーション)が妥当か-->
+      <audiences>
+        <audience>{AZURE_AD_SP_MSAL_CLIENT_ID}</audience>
+      </audiences>
+      <!--Microsoft IDプラットフォームのテナント(ディレクトリ)が妥当か-->
+      <issuers>
+        <issuer>https://login.microsoftonline.com/{AZURE_TENANT_ID}/v2.0</issuer>
+      </issuers>
+      <!--上記クライアント(アプリケーション)のAPIのスコープが妥当か-->
+      <required-claims>
+        <claim name="scp" match="all">
+          <value>access_as_user</value>
+        </claim>
+      </required-claims>
+    </validate-jwt>
+    <!--上位スコープのinboundのポリシー適用-->
+    <base />
+    <!--バックエンド設定-->
+    <set-backend-service id="backends-functions-policy" backend-id="backends-functions" />
+  </inbound>
+  <backend>
+    <base />
+  </backend>
+  <outbound>
+    <base />
+  </outbound>
+  <on-error>
+    <base />
+  </on-error>
+</policies>

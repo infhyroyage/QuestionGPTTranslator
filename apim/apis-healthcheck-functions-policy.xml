@@ -1,0 +1,11 @@
+<policies>
+  <inbound>
+    <set-backend-service id="backends-functions-policy" backend-id="backends-functions" />
+  </inbound>
+  <backend>
+  </backend>
+  <outbound>
+  </outbound>
+  <on-error>
+  </on-error>
+</policies>

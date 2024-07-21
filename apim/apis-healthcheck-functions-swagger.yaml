@@ -1,0 +1,28 @@
+openapi: 3.0.1
+info:
+  title: HealthCheckAPIs
+  description: FunctionsのヘルスチェックAPIリファレンスです
+  version: "1.0"
+servers:
+  - url: https://qgtranslator-je-apim.azure-api.net
+paths:
+  /healthcheck:
+    get:
+      summary: /healthcheck
+      operationId: get-healthcheck
+      responses:
+        "200":
+          description: Normal Response
+components:
+  securitySchemes:
+    apiKeyHeader:
+      type: apiKey
+      name: Ocp-Apim-Subscription-Key
+      in: header
+    apiKeyQuery:
+      type: apiKey
+      name: subscription-key
+      in: query
+security:
+  - apiKeyHeader: []
+  - apiKeyQuery: []

@@ -1,0 +1,127 @@
+name: Deploy API Management (Reusable Workflow)
+
+on:
+  workflow_call:
+    inputs:
+      APIM_APIS_HEALTHCHECK_NAME:
+        default: apis-healthcheck-functions
+        required: false
+        type: string
+      APIM_APIS_NAME:
+        default: apis-functions
+        required: false
+        type: string
+      APIM_NAME:
+        default: qgtranslator-je-apim
+        required: false
+        type: string
+      AZURE_AD_SP_CONTRIBUTOR_CLIENT_ID:
+        required: true
+        type: string
+      AZURE_AD_SP_MSAL_CLIENT_ID:
+        required: true
+        type: string
+      AZURE_SUBSCRIPTION_ID:
+        required: true
+        type: string
+      AZURE_TENANT_ID:
+        required: true
+        type: string
+      RESOURCE_GROUP:
+        default: qgtranslator-je
+        required: false
+        type: string
+    secrets:
+      AZURE_AD_SP_CONTRIBUTOR_CLIENT_SECRET:
+        required: true
+
+jobs:
+  deploy-apis-functions:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@main
+
+      - name: Update Swagger
+        run: |
+          sed -i.bak \
+            -e "s|{API_URI}/api|https://${{ inputs.APIM_NAME }}.azure-api.net|g" \
+            apim/apis-functions-swagger.yaml
+
+      - name: Login Azure as Contributor
+        uses: azure/login@v2
+        with:
+          creds: '{"clientId":"${{ inputs.AZURE_AD_SP_CONTRIBUTOR_CLIENT_ID }}","clientSecret":"${{ secrets.AZURE_AD_SP_CONTRIBUTOR_CLIENT_SECRET }}","subscriptionId":"${{ inputs.AZURE_SUBSCRIPTION_ID }}","tenantId":"${{ inputs.AZURE_TENANT_ID }}"}'
+          enable-AzPSSession: true
+
+      - name: Import Swagger into API Management
+        run: |
+          az apim api import \
+            -g ${{ inputs.RESOURCE_GROUP }} \
+            -n ${{ inputs.APIM_NAME }} \
+            --api-id ${{ inputs.APIM_APIS_NAME }} \
+            --path "api" \
+            --specification-format OpenApi \
+            --specification-path ./apim/apis-functions-swagger.yaml \
+            --subscription-required false
+
+      - name: Update API Management Policy XML File
+        run: |
+          sed -i.bak \
+            -e "s/{AZURE_AD_SP_MSAL_CLIENT_ID}/${{ inputs.AZURE_AD_SP_MSAL_CLIENT_ID }}/g" \
+            -e "s/{AZURE_TENANT_ID}/${{ inputs.AZURE_TENANT_ID }}/g" \
+            apim/apis-functions-policy.xml
+
+      # 従量課金のAPI Managementは、ARMテンプレートにポリシーを記述してデプロイできないため、
+      # PowershellにてFunctions API全体に対するポリシーを別途設定
+      - name: Set API Management Policies
+        uses: azure/powershell@v2
+        with:
+          inlineScript: |
+            $apimContext = New-AzApiManagementContext `
+              -ResourceGroupName "${{ inputs.RESOURCE_GROUP }}" `
+              -ServiceName "${{ inputs.APIM_NAME }}"
+            Set-AzApiManagementPolicy `
+              -Context $apimContext `
+              -ApiId "${{ inputs.APIM_APIS_NAME }}" `
+              -PolicyFilePath "./apim/apis-functions-policy.xml"
+          azPSVersion: latest
+
+  deploy-apis-healthcheck-functions:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@main
+
+      - name: Login Azure as Contributor
+        uses: azure/login@v2
+        with:
+          creds: '{"clientId":"${{ inputs.AZURE_AD_SP_CONTRIBUTOR_CLIENT_ID }}","clientSecret":"${{ secrets.AZURE_AD_SP_CONTRIBUTOR_CLIENT_SECRET }}","subscriptionId":"${{ inputs.AZURE_SUBSCRIPTION_ID }}","tenantId":"${{ inputs.AZURE_TENANT_ID }}"}'
+          enable-AzPSSession: true
+
+      - name: Import Swagger into API Management
+        run: |
+          az apim api import \
+            -g ${{ inputs.RESOURCE_GROUP }} \
+            -n ${{ inputs.APIM_NAME }} \
+            --api-id ${{ inputs.APIM_APIS_HEALTHCHECK_NAME }} \
+            --path "" \
+            --specification-format OpenApi \
+            --specification-path ./apim/apis-healthcheck-functions-swagger.yaml \
+            --subscription-required true
+
+      # 従量課金のAPI Managementは、ARMテンプレートにポリシーを記述してデプロイできないため、
+      # PowershellにてFunctions API全体に対するポリシーを別途設定
+      # ただし、[GET] /healthcheckのAPIのみ、CORSチェック・JWTトークンチェックを迂回する独自ポリシーを設定
+      - name: Set API Management Policies
+        uses: azure/powershell@v2
+        with:
+          inlineScript: |
+            $apimContext = New-AzApiManagementContext `
+              -ResourceGroupName "${{ inputs.RESOURCE_GROUP }}" `
+              -ServiceName "${{ inputs.APIM_NAME }}"
+            Set-AzApiManagementPolicy `
+              -Context $apimContext `
+              -ApiId "${{ inputs.APIM_APIS_HEALTHCHECK_NAME }}" `
+              -PolicyFilePath "./apim/apis-healthcheck-functions-policy.xml"
+          azPSVersion: latest

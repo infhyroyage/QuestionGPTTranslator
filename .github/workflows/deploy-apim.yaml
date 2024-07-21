@@ -1,0 +1,21 @@
+name: Deploy API Management
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/deploy-apim.yaml
+      - .github/workflows/reusable-deploy-apim.yaml
+      - apim**
+
+jobs:
+  use-deploy-apim-workflow:
+    uses: ./.github/workflows/reusable-deploy-apim.yaml
+    with:
+      AZURE_AD_SP_CONTRIBUTOR_CLIENT_ID: ${{ vars.AZURE_AD_SP_CONTRIBUTOR_CLIENT_ID }}
+      AZURE_AD_SP_MSAL_CLIENT_ID: ${{ vars.AZURE_AD_SP_MSAL_CLIENT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+    secrets:
+      AZURE_AD_SP_CONTRIBUTOR_CLIENT_SECRET: ${{ secrets.AZURE_AD_SP_CONTRIBUTOR_CLIENT_SECRET }}

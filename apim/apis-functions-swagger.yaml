@@ -1,0 +1,219 @@
+openapi: 3.0.1
+info:
+  title: QuestionGPTPortalAPIs
+  description: QuestionGPTPortalでのWebアプリケーションから実行するAPIリファレンスです
+  version: "1.0"
+servers:
+  - url: "{API_URI}/api"
+paths:
+  /en2ja:
+    put:
+      summary: 翻訳API
+      description: 英語の各メッセージを日本語に翻訳します
+      operationId: put-en2ja
+      parameters:
+        - name: X-Access-Token
+          in: header
+          description: Microsoft ID Platformから発行されたアクセストークン
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: 英語の各メッセージ
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: string
+        required: true
+      responses:
+        "200":
+          description: サーバー処理が正常終了しました
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+        "401":
+          description: アクセスが拒否されました
+          content:
+            application/json:
+              schema:
+                type: string
+        "500":
+          description: サーバー処理が異常終了しました
+          content:
+            application/json:
+              schema:
+                type: string
+  /tests:
+    get:
+      summary: コース・テスト一覧取得API
+      description: 各コースに属するテストをすべて取得します
+      operationId: get-tests
+      parameters:
+        - name: X-Access-Token
+          in: header
+          description: Microsoft ID Platformから発行されたアクセストークン
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: サーバー処理が正常終了しました
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      testName:
+                        type: string
+        "401":
+          description: アクセスが拒否されました
+          content:
+            application/json:
+              schema:
+                type: string
+        "500":
+          description: サーバー処理が異常終了しました
+          content:
+            application/json:
+              schema:
+                type: string
+  /tests/{testId}:
+    get:
+      summary: テスト取得API
+      description: 指定したテストIDでのテストの詳細情報を取得します
+      operationId: tests-testid
+      parameters:
+        - name: testId
+          in: path
+          description: testId
+          required: true
+          schema:
+            type: string
+        - name: X-Access-Token
+          in: header
+          description: Microsoft ID Platformから発行されたアクセストークン
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: サーバー処理が正常終了しました
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  testName:
+                    type: string
+                  length:
+                    type: integer
+        "401":
+          description: アクセスが拒否されました
+          content:
+            application/json:
+              schema:
+                type: string
+        "404":
+          description: 指定したテストが存在しません
+          content:
+            application/json:
+              schema:
+                type: string
+        "500":
+          description: サーバー処理が異常終了しました
+          content:
+            application/json:
+              schema:
+                type: string
+  /tests/{testId}/questions/{questionNumber}:
+    get:
+      summary: 問題・選択肢取得API
+      description: 指定したテストID・問題番号での問題・選択肢を取得します
+      operationId: tests-testid-questions-questionnumber
+      parameters:
+        - name: testId
+          in: path
+          description: testId
+          required: true
+          schema:
+            type: string
+        - name: questionNumber
+          in: path
+          description: questionNumber
+          required: true
+          schema:
+            type: integer
+        - name: X-Access-Token
+          in: header
+          description: Microsoft ID Platformから発行されたアクセストークン
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: サーバー処理が正常終了しました
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  subjects:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        sentence:
+                          type: string
+                        isIndicatedImg:
+                          type: boolean
+                        isEscapedTranslation:
+                          type: boolean
+                  choices:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        sentence:
+                          type: string
+                        img:
+                          type: string
+                          nullable: true
+                        isEscapedTranslation:
+                          type: boolean
+                  isMultiplied:
+                    type: boolean
+        "400":
+          description: 問題番号が不正です
+          content:
+            application/json:
+              schema:
+                type: string
+        "401":
+          description: アクセスが拒否されました
+          content:
+            application/json:
+              schema:
+                type: string
+        "404":
+          description: 指定したテスト/問題番号が存在しません
+          content:
+            application/json:
+              schema:
+                type: string
+        "500":
+          description: サーバー処理が異常終了しました
+          content:
+            application/json:
+              schema:
+                type: string
