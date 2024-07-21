@@ -30,6 +30,11 @@
     "value": "@Microsoft.KeyVault(VaultName=qgtranslator-je-vault;SecretName=deepl-auth-key)"
   },
   {
+    "name": "OPENAI_KEY",
+    "slotSetting": false,
+    "value": "@Microsoft.KeyVault(VaultName=qgtranslator-je-vault;SecretName=openai-key)"
+  },
+  {
     "name": "TRANSLATOR_KEY",
     "slotSetting": false,
     "value": "@Microsoft.KeyVault(SecretUri={translatorKey})"

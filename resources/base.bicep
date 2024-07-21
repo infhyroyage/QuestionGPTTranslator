@@ -34,6 +34,8 @@ var insightsName = 'qgtranslator-je-insights'
 
 var lawName = 'qgtranslator-je-law'
 
+var openAIName = 'qgtranslator-je-openai'
+
 var storageBlobContainerName = 'import-items'
 var storageName = 'qgtranslatorjesa'
 
@@ -45,6 +47,7 @@ var vaultSecretNames = {
   deeplAuthKey: 'deepl-auth-key'
   insightsConnectionString: 'insights-connection-string'
   insightsInstrumentationKey: 'insights-instrumentation-key'
+  openAIKey: 'openai-key'
   storageConnectionString: 'storage-connection-string'
 }
 
@@ -246,6 +249,34 @@ resource cosmosDBDatabaseUsersContainerQuestion 'Microsoft.DocumentDb/databaseAc
         paths: ['/id']
       }
     }
+  }
+}
+
+// OpenAI
+resource openAI 'Microsoft.CognitiveServices/accounts@2023-05-01' = {
+  name: openAIName
+  location: location
+  sku: {
+    name: 'S0'
+  }
+  properties: {
+    publicNetworkAccess: 'Enabled'
+  }
+}
+resource openAIGPT4o 'Microsoft.CognitiveServices/accounts/deployments@2023-05-01' = {
+  parent: openAI
+  name: 'gpt-4o'
+  sku: {
+    name: 'Standard'
+    capacity: 150
+  }
+  properties: {
+    model: {
+      format: 'OpenAI'
+      name: 'gpt-4o'
+      version: '2024-05-13'
+    }
+    versionUpgradeOption: 'OnceCurrentVersionExpired'
   }
 }
 
@@ -482,6 +513,16 @@ resource vaultSecretsInsightsInstrumentationKey 'Microsoft.KeyVault/vaults/secre
       enabled: true
     }
     value: insights.properties.InstrumentationKey
+  }
+}
+resource vaultSecretsOpenAIKey 'Microsoft.KeyVault/vaults/secrets@2023-02-01' = {
+  parent: vault
+  name: vaultSecretNames.openAIKey
+  properties: {
+    attributes: {
+      enabled: true
+    }
+    value: openAI.listKeys().key1
   }
 }
 resource vaultSecretsStorageConnectionString 'Microsoft.KeyVault/vaults/secrets@2023-02-01' = {
