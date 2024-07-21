@@ -4,6 +4,7 @@ param azureApimPublisherEmail string
 @secure()
 param deeplAuthKey string
 param location string = resourceGroup().location
+param openAILocation string = 'westus'
 @secure()
 param translatorKey string
 
@@ -255,7 +256,7 @@ resource cosmosDBDatabaseUsersContainerQuestion 'Microsoft.DocumentDb/databaseAc
 // OpenAI
 resource openAI 'Microsoft.CognitiveServices/accounts@2023-05-01' = {
   name: openAIName
-  location: location
+  location: openAILocation
   kind: 'OpenAI'
   sku: {
     name: 'S0'
