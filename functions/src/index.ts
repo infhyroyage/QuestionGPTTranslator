@@ -2,7 +2,7 @@ import { app } from "@azure/functions";
 import en2ja from "./en2ja";
 import healthcheck from "./healthcheck";
 import importItems from "./importItems";
-// import question from "./question";
+import question from "./question";
 import test from "./test";
 import tests from "./tests";
 
@@ -31,12 +31,12 @@ app.http("test", {
   handler: test,
 });
 
-// app.http("question", {
-//   methods: ["GET"],
-//   authLevel: "function",
-//   route: "tests/{testId}/questions/{questionNumber}",
-//   handler: question,
-// });
+app.http("question", {
+  methods: ["GET"],
+  authLevel: "function",
+  route: "tests/{testId}/questions/{questionNumber}",
+  handler: question,
+});
 
 app.storageBlob("jsonContentBinary", {
   connection: "AzureWebJobsStorage",

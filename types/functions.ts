@@ -1,16 +1,20 @@
-export type Sentence = {
-  sentence: string;
-  isIndicatedImg: boolean;
-  isEscapedTranslation: boolean;
-};
-
 export type GetHealthcheck = {
   message: "OK";
 };
 
+export type Subject = {
+  sentence: string;
+  isIndicatedImg: boolean;
+  isEscapedTranslation: boolean;
+};
+export type Choice = {
+  sentence: string;
+  img?: string;
+  isEscapedTranslation: boolean;
+};
 export type GetQuestion = {
-  subjects: Sentence[];
-  choices: Sentence[];
+  subjects: Subject[];
+  choices: Choice[];
   isMultiplied: boolean;
 };
 
