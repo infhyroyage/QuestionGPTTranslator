@@ -7,10 +7,11 @@
       </allowed-origins>
       <allowed-methods>
         <method>GET</method>
+        <method>POST</method>
         <method>PUT</method>
       </allowed-methods>
       <allowed-headers>
-        <!--X-Access-Tokenと指定すると、PUTメソッドでCORSエラーが発生するため注意-->
+        <!--X-Access-Tokenと指定すると、POST/PUTメソッドでCORSエラーが発生するため注意-->
         <header>*</header>
       </allowed-headers>
     </cors>

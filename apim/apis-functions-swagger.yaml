@@ -217,3 +217,61 @@ paths:
             application/json:
               schema:
                 type: string
+  /answer:
+    post:
+      summary: 回答API
+      description: 英語の問題文と選択肢の文章から、正解の選択肢と正解/不正解の理由を英語で推敲します
+      operationId: post-answer
+      parameters:
+        - name: X-Access-Token
+          in: header
+          description: Microsoft ID Platformから発行されたアクセストークン
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: 英語の問題文と選択肢の文章
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                subjects:
+                  type: array
+                  items:
+                    type: string
+                choices:
+                  type: array
+                  items:
+                    type: string
+        required: true
+      responses:
+        "200":
+          description: サーバー処理が正常終了しました
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  correctIdxes:
+                    type: array
+                    items:
+                      type: integer
+                      nullable: true
+                  explanations:
+                    type: array
+                    items:
+                      type: string
+                      nullable: true
+        "401":
+          description: アクセスが拒否されました
+          content:
+            application/json:
+              schema:
+                type: string
+        "500":
+          description: サーバー処理が異常終了しました
+          content:
+            application/json:
+              schema:
+                type: string

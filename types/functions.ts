@@ -31,7 +31,16 @@ export type GetTests = {
   [course: string]: Test[];
 };
 
+export type PostAnsterReq = {
+  subjects: string[];
+  choices: string[];
+};
+export type PostAnsterRes = {
+  correctIdxes?: number[];
+  explanations?: string[];
+};
+
 export type PutEn2JaReq = string[];
 export type PutEn2JaRes = string[];
 
-export type Method = "GET" | "PUT";
+export type Method = "GET" | "POST" | "PUT";

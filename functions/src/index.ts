@@ -1,4 +1,5 @@
 import { app } from "@azure/functions";
+import answer from "./answer";
 import en2ja from "./en2ja";
 import healthcheck from "./healthcheck";
 import importItems from "./importItems";
@@ -36,6 +37,13 @@ app.http("question", {
   authLevel: "function",
   route: "tests/{testId}/questions/{questionNumber}",
   handler: question,
+});
+
+app.http("answer", {
+  methods: ["POST"],
+  authLevel: "function",
+  route: "answer",
+  handler: answer,
 });
 
 app.storageBlob("jsonContentBinary", {
