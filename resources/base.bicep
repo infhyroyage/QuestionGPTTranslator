@@ -3,6 +3,10 @@ param azureAdEAContributorObjectId string
 param azureApimPublisherEmail string
 @secure()
 param deeplAuthKey string
+@secure()
+param googleApiKey string
+@secure()
+param googleCseId string
 param location string = resourceGroup().location
 param openAILocation string = 'westus'
 @secure()
@@ -46,6 +50,8 @@ var vaultSecretNames = {
   cosmosDBPrimaryKey: 'cosmos-db-primary-key'
   cosmosDBPrimaryReadonlyKey: 'cosmos-db-primary-readonly-key'
   deeplAuthKey: 'deepl-auth-key'
+  googleApiKey: 'google-api-key'
+  googleCseId: 'google-cse-id'
   insightsConnectionString: 'insights-connection-string'
   insightsInstrumentationKey: 'insights-instrumentation-key'
   openAIKey: 'openai-key'
@@ -495,6 +501,26 @@ resource vaultSecretsDeeplAuthKey 'Microsoft.KeyVault/vaults/secrets@2023-02-01'
       enabled: true
     }
     value: deeplAuthKey
+  }
+}
+resource vaultSecretsGoogleApiKey 'Microsoft.KeyVault/vaults/secrets@2023-02-01' = {
+  parent: vault
+  name: vaultSecretNames.googleApiKey
+  properties: {
+    attributes: {
+      enabled: true
+    }
+    value: googleApiKey
+  }
+}
+resource vaultSecretsGoogleCseId 'Microsoft.KeyVault/vaults/secrets@2023-02-01' = {
+  parent: vault
+  name: vaultSecretNames.googleCseId
+  properties: {
+    attributes: {
+      enabled: true
+    }
+    value: googleCseId
   }
 }
 resource vaultSecretsInsightsConnectionString 'Microsoft.KeyVault/vaults/secrets@2023-02-01' = {

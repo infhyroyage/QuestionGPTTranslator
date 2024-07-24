@@ -30,6 +30,16 @@
     "value": "@Microsoft.KeyVault(VaultName=qgtranslator-je-vault;SecretName=deepl-auth-key)"
   },
   {
+    "name": "GOOGLE_API_KEY",
+    "slotSetting": false,
+    "value": "@Microsoft.KeyVault(VaultName=qgtranslator-je-vault;SecretName=google-api-key)"
+  },
+  {
+    "name": "GOOGLE_CSE_ID",
+    "slotSetting": false,
+    "value": "@Microsoft.KeyVault(VaultName=qgtranslator-je-vault;SecretName=google-cse-id)"
+  },
+  {
     "name": "OPENAI_KEY",
     "slotSetting": false,
     "value": "@Microsoft.KeyVault(VaultName=qgtranslator-je-vault;SecretName=openai-key)"

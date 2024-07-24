@@ -43,6 +43,8 @@ jobs:
             azureAdEAContributorObjectId=${{ vars.AZURE_AD_EA_CONTRIBUTOR_OBJECT_ID }}
             azureApimPublisherEmail=${{ secrets.AZURE_APIM_PUBLISHER_EMAIL }}
             deeplAuthKey=${{ secrets.DEEPL_AUTH_KEY }}
+            googleApiKey=${{ secrets.GOOGLE_API_KEY }}
+            googleCseId=${{ secrets.GOOGLE_CSE_ID }}
             translatorKey=${{ secrets.TRANSLATOR_KEY }}
 
   # 短期間でAzure Functionsのアプリケーション設定を複数回更新すると、正常終了したのにも関わらず更新しない場合があるため
