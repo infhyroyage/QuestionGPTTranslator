@@ -15,7 +15,11 @@ updates:
     assignees:
       - "infhyroyage"
     ignore:
+      - dependency-name: "@langchain/azure-openai"
+      - dependency-name: "@langchain/community"
+      - dependency-name: "@langchain/core"
       - dependency-name: "@types/node"
+      - dependency-name: "langchain"
       - dependency-name: "typescript"
     labels: []
     reviewers:
