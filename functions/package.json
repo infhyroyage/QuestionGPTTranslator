@@ -11,7 +11,6 @@
   "dependencies": {
     "@azure/cosmos": "^4.0.0",
     "@azure/functions": "^4.5.0",
-    "@azure/identity": "^4.3.0",
     "@langchain/core": "^0.2.18",
     "@langchain/openai": "^0.2.5",
     "axios": "^1.7.2",
