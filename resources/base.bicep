@@ -359,7 +359,7 @@ resource functionsPlan 'Microsoft.Web/serverfarms@2022-09-01' = {
     name: 'Y1'
     tier: 'Dynamic'
   }
-  kind: ''
+  kind: 'linux'
 }
 resource functions 'Microsoft.Web/sites@2022-09-01' = {
   name: functionsName
@@ -393,15 +393,12 @@ resource functions 'Microsoft.Web/sites@2022-09-01' = {
           name: 'WEBSITE_ENABLE_SYNC_UPDATE_SITE'
           value: 'true'
         }
-        {
-          name: 'PYTHON_VERSION'
-          value: '3.11'
-        }
       ]
       cors: {
         allowedOrigins: ['https://portal.azure.com']
       }
       ftpsState: 'Disabled'
+      linuxFxVersion: 'python|3.11'
       keyVaultReferenceIdentity: 'SystemAssigned'
       netFrameworkVersion: 'v6.0'
       use32BitWorkerProcess: false
