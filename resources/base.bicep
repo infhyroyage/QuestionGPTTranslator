@@ -8,7 +8,7 @@ param googleApiKey string
 @secure()
 param googleCseId string
 param location string = resourceGroup().location
-param openAILocation string = 'westus'
+param openAILocation string = 'eastus'
 @secure()
 param translatorKey string
 
@@ -39,7 +39,7 @@ var insightsName = 'qgtranslator-je-insights'
 
 var lawName = 'qgtranslator-je-law'
 
-var openAIName = 'qgtranslator-je-openai'
+var openAIName = 'qgtranslator-eus-openai'
 
 var storageBlobContainerName = 'import-items'
 var storageName = 'qgtranslatorjesa'
