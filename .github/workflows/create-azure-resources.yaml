@@ -45,6 +45,10 @@ jobs:
             deeplAuthKey=${{ secrets.DEEPL_AUTH_KEY }}
             googleApiKey=${{ secrets.GOOGLE_API_KEY }}
             googleCseId=${{ secrets.GOOGLE_CSE_ID }}
+            openAIApiKey=${{ secrets.OPENAI_API_KEY }}
+            openAIApiVersion=${{ vars.OPENAI_API_VERSION }}
+            openAIDeployment=${{ vars.OPENAI_DEPLOYMENT }}
+            openAIEndpoint=${{ vars.OPENAI_ENDPOINT }}
             translatorKey=${{ secrets.TRANSLATOR_KEY }}
 
   # 短期間でAzure Functionsのアプリケーション設定を複数回更新すると、正常終了したのにも関わらず更新しない場合があるため

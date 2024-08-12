@@ -8,7 +8,11 @@ param googleApiKey string
 @secure()
 param googleCseId string
 param location string = resourceGroup().location
-param openAILocation string = 'eastus'
+@secure()
+param openAIApiKey string
+param openAIApiVersion string
+param openAIDeployment string
+param openAIEndpoint string
 @secure()
 param translatorKey string
 
@@ -39,8 +43,6 @@ var insightsName = 'qgtranslator-je-insights'
 
 var lawName = 'qgtranslator-je-law'
 
-var openAIName = 'qgtranslator-eus-openai'
-
 var storageBlobContainerName = 'import-items'
 var storageName = 'qgtranslatorjesa'
 
@@ -54,7 +56,10 @@ var vaultSecretNames = {
   googleCseId: 'google-cse-id'
   insightsConnectionString: 'insights-connection-string'
   insightsInstrumentationKey: 'insights-instrumentation-key'
-  openAIKey: 'openai-key'
+  openAIApiKey: 'openai-api-key'
+  openAIApiVersion: 'openai-api-version'
+  openAIDeployment: 'openai-deployment'
+  openAIEndpoint: 'openai-endpoint'
   storageConnectionString: 'storage-connection-string'
 }
 
@@ -256,35 +261,6 @@ resource cosmosDBDatabaseUsersContainerQuestion 'Microsoft.DocumentDb/databaseAc
         paths: ['/id']
       }
     }
-  }
-}
-
-// OpenAI
-resource openAI 'Microsoft.CognitiveServices/accounts@2023-05-01' = {
-  name: openAIName
-  location: openAILocation
-  kind: 'OpenAI'
-  sku: {
-    name: 'S0'
-  }
-  properties: {
-    publicNetworkAccess: 'Enabled'
-  }
-}
-resource openAIGPT4o 'Microsoft.CognitiveServices/accounts/deployments@2023-05-01' = {
-  parent: openAI
-  name: 'gpt-4o'
-  sku: {
-    name: 'Standard'
-    capacity: 150
-  }
-  properties: {
-    model: {
-      format: 'OpenAI'
-      name: 'gpt-4o'
-      version: '2024-05-13'
-    }
-    versionUpgradeOption: 'OnceCurrentVersionExpired'
   }
 }
 
@@ -542,14 +518,44 @@ resource vaultSecretsInsightsInstrumentationKey 'Microsoft.KeyVault/vaults/secre
     value: insights.properties.InstrumentationKey
   }
 }
-resource vaultSecretsOpenAIKey 'Microsoft.KeyVault/vaults/secrets@2023-02-01' = {
+resource vaultSecretsOpenAIApiKey 'Microsoft.KeyVault/vaults/secrets@2023-02-01' = {
   parent: vault
-  name: vaultSecretNames.openAIKey
+  name: vaultSecretNames.openAIApiKey
   properties: {
     attributes: {
       enabled: true
     }
-    value: openAI.listKeys().key1
+    value: openAIApiKey
+  }
+}
+resource vaultSecretsOpenAIApiVersion 'Microsoft.KeyVault/vaults/secrets@2023-02-01' = {
+  parent: vault
+  name: vaultSecretNames.openAIApiVersion
+  properties: {
+    attributes: {
+      enabled: true
+    }
+    value: openAIApiVersion
+  }
+}
+resource vaultSecretsOpenAIDeployment 'Microsoft.KeyVault/vaults/secrets@2023-02-01' = {
+  parent: vault
+  name: vaultSecretNames.openAIDeployment
+  properties: {
+    attributes: {
+      enabled: true
+    }
+    value: openAIDeployment
+  }
+}
+resource vaultSecretsOpenAIEndpoint 'Microsoft.KeyVault/vaults/secrets@2023-02-01' = {
+  parent: vault
+  name: vaultSecretNames.openAIEndpoint
+  properties: {
+    attributes: {
+      enabled: true
+    }
+    value: openAIEndpoint
   }
 }
 resource vaultSecretsStorageConnectionString 'Microsoft.KeyVault/vaults/secrets@2023-02-01' = {
