@@ -5,8 +5,8 @@
 
 version: 2
 updates:
-  - package-ecosystem: "npm"
-    directory: "/functions"
+  - package-ecosystem: "pip"
+    directory: "/"
     schedule:
       interval: "weekly"
       day: "monday"
@@ -15,28 +15,14 @@ updates:
     assignees:
       - "infhyroyage"
     ignore:
-      - dependency-name: "@langchain/community"
-      - dependency-name: "@langchain/core"
-      - dependency-name: "@langchain/openai"
-      - dependency-name: "@types/node"
       - dependency-name: "langchain"
-      - dependency-name: "typescript"
-    labels: []
-    reviewers:
-      - "infhyroyage"
-
-  - package-ecosystem: "npm"
-    directory: "/cosmosdb"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "10:30"
-      timezone: "Asia/Tokyo"
-    assignees:
-      - "infhyroyage"
-    ignore:
-      - dependency-name: "@types/node"
-      - dependency-name: "typescript"
+      - dependency-name: "langchain-community"
+      - dependency-name: "langchain-core"
+      - dependency-name: "langchain-google-community"
+      - dependency-name: "langchain-openai"
+      - dependency-name: "langchain-text-splitter"
+      - dependency-name: "langchainhub"
+      - dependency-name: "langsmith"
     labels: []
     reviewers:
       - "infhyroyage"
