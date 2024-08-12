@@ -355,11 +355,14 @@ resource insights 'microsoft.insights/components@2020-02-02' = {
 resource functionsPlan 'Microsoft.Web/serverfarms@2022-09-01' = {
   name: functionsPlanName
   location: location
+  kind: 'linux'
   sku: {
     name: 'Y1'
     tier: 'Dynamic'
   }
-  kind: 'linux'
+  properties: {
+    reserved: true
+  }
 }
 resource functions 'Microsoft.Web/sites@2022-09-01' = {
   name: functionsName
@@ -370,7 +373,7 @@ resource functions 'Microsoft.Web/sites@2022-09-01' = {
   identity: {
     type: 'SystemAssigned'
   }
-  kind: 'functionapp'
+  kind: 'functionapp,linux'
   properties: {
     clientAffinityEnabled: false
     httpsOnly: true
@@ -400,7 +403,6 @@ resource functions 'Microsoft.Web/sites@2022-09-01' = {
       ftpsState: 'Disabled'
       linuxFxVersion: 'python|3.11'
       keyVaultReferenceIdentity: 'SystemAssigned'
-      netFrameworkVersion: 'v6.0'
       use32BitWorkerProcess: false
     }
   }
