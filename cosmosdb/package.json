@@ -5,7 +5,7 @@
     "import": "NODE_TLS_REJECT_UNAUTHORIZED=0 ts-node src/import.ts"
   },
   "dependencies": {
-    "@azure/cosmos": "^4.0.0",
+    "@azure/cosmos": "^4.1.0",
     "uuid": "^10.0.0"
   },
   "devDependencies": {
