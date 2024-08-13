@@ -60,7 +60,6 @@ var vaultSecretNames = {
   openAIApiVersion: 'openai-api-version'
   openAIDeployment: 'openai-deployment'
   openAIEndpoint: 'openai-endpoint'
-  storageConnectionString: 'storage-connection-string'
 }
 
 // API Management
@@ -357,6 +356,10 @@ resource functions 'Microsoft.Web/sites@2022-09-01' = {
     siteConfig: {
       appSettings: [
         {
+          name: 'AzureWebJobsStorage'
+          value: 'DefaultEndpointsProtocol=https;AccountName=${storageName};AccountKey=${storage.listKeys().keys[0].value};EndpointSuffix=core.windows.net'
+        }
+        {
           name: 'COSMOSDB_URI'
           value: 'https://${cosmosDBName}.documents.azure.com:443'
         }
@@ -367,6 +370,10 @@ resource functions 'Microsoft.Web/sites@2022-09-01' = {
         {
           name: 'FUNCTIONS_WORKER_RUNTIME'
           value: 'python'
+        }
+        {
+          name: 'WEBSITE_CONTENTAZUREFILECONNECTIONSTRING'
+          value: 'DefaultEndpointsProtocol=https;AccountName=${storageName};AccountKey=${storage.listKeys().keys[0].value};EndpointSuffix=core.windows.net'
         }
         {
           name: 'WEBSITE_ENABLE_SYNC_UPDATE_SITE'
@@ -556,15 +563,5 @@ resource vaultSecretsOpenAIEndpoint 'Microsoft.KeyVault/vaults/secrets@2023-02-0
       enabled: true
     }
     value: openAIEndpoint
-  }
-}
-resource vaultSecretsStorageConnectionString 'Microsoft.KeyVault/vaults/secrets@2023-02-01' = {
-  parent: vault
-  name: vaultSecretNames.storageConnectionString
-  properties: {
-    attributes: {
-      enabled: true
-    }
-    value: 'DefaultEndpointsProtocol=https;AccountName=${storageName};AccountKey=${storage.listKeys().keys[0].value};EndpointSuffix=core.windows.net'
   }
 }
