@@ -10,7 +10,7 @@ azurite/__azurite_db_*.json
 cosmosdb/data
 
 # Azure Functions
-functions/__pycache__
+functions/**/__pycache__
 functions/local.settings.json
 
 # Bicep Parameter Files
