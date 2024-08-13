@@ -16,13 +16,10 @@ bp_tests = func.Blueprint()
 
 
 @bp_tests.route(route="tests")
-def main(req: func.HttpRequest) -> func.HttpResponse:
+def main(req: func.HttpRequest) -> func.HttpResponse:  # pylint: disable=unused-argument
     """
     Retrieve All Tests
     """
-
-    # Avoid W0613(unused-argument)
-    _ = req
 
     try:
         # Initialize Cosmos DB Client
@@ -56,6 +53,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         return func.HttpResponse(
             body=json.dumps(body), status_code=200, mimetype="application/json"
         )
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-except
         logging.error(e)
         return func.HttpResponse(body="Internal Server Error", status_code=500)

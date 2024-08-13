@@ -15,7 +15,9 @@ bp_answer = func.Blueprint()
 
 
 @bp_answer.route(route="answer", auth_level=func.AuthLevel.FUNCTION, methods=["POST"])
-def answer(req: func.HttpRequest) -> func.HttpResponse:
+def answer(
+    req: func.HttpRequest,  # pylint: disable=unused-argument
+) -> func.HttpResponse:
     """
     Generate Answers and Explanations from Subjects and Choices
     """
