@@ -7,7 +7,7 @@ import logging
 import os
 
 import azure.functions as func
-from azure.cosmos import CosmosClient
+from utils.cosmos import get_read_only_container
 
 COSMOS_DB_DATABASE_NAME = "Users"
 COSMOS_DB_CONTAINER_NAME = "Test"
@@ -26,11 +26,10 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
     try:
         # Initialize Cosmos DB Client
-        cosmos_client = CosmosClient.from_connection_string(
-            os.environ["COSMOSDB_CONNECTION_STRING"]
+        container = get_read_only_container(
+            database_name=COSMOS_DB_DATABASE_NAME,
+            container_name=COSMOS_DB_CONTAINER_NAME,
         )
-        database = cosmos_client.get_database_client(COSMOS_DB_DATABASE_NAME)
-        container = database.get_container_client(COSMOS_DB_CONTAINER_NAME)
 
         # Execute Query
         # TODO: Azure SDK for Pythonで複合インデックスをサポートしたら修正する
