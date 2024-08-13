@@ -124,6 +124,7 @@ jobs:
           template: ./resources/connect-apim-2-functions.bicep
 
   use-deploy-functions-app-workflow:
+    needs: set-functions-appsettings
     uses: ./.github/workflows/reusable-deploy-functions-app.yaml
     with:
       AZURE_AD_SP_CONTRIBUTOR_CLIENT_ID: ${{ vars.AZURE_AD_SP_CONTRIBUTOR_CLIENT_ID }}
