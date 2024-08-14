@@ -15,7 +15,9 @@ bp_tests = func.Blueprint()
 
 
 @bp_tests.route(route="tests")
-def main(req: func.HttpRequest) -> func.HttpResponse:  # pylint: disable=unused-argument
+def tests(
+    req: func.HttpRequest,  # pylint: disable=unused-argument
+) -> func.HttpResponse:
     """
     Retrieve All Tests
     """
@@ -33,9 +35,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:  # pylint: disable=unused-
             "FROM c"
             "ORDER BY c.courseName ASC, c.testName ASC"
         )
-        items = list(
-            container.query_items(query=query, enable_cross_partition_query=True)
-        )
+        items = list(container.query_items(query=query))
         logging.info({"items": items})
 
         # Format the response by grouping items by courseName
