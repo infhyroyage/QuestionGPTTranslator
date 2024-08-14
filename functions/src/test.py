@@ -14,7 +14,11 @@ COSMOS_DB_CONTAINER_NAME = "Test"
 bp_test = func.Blueprint()
 
 
-@bp_test.route(route="tests/{testId}")
+@bp_test.route(
+    route="tests/{testId}",
+    methods=["GET"],
+    auth_level=func.AuthLevel.FUNCTION,
+)
 def test(req: func.HttpRequest) -> func.HttpResponse:
     """
     Retrieve Test
@@ -22,7 +26,7 @@ def test(req: func.HttpRequest) -> func.HttpResponse:
 
     try:
         # Get Path Parameters
-        testId = req.route_params.get("testId")
+        test_id = req.route_params.get("testId")
 
         # Initialize Cosmos DB Client
         container = get_read_only_container(
@@ -39,7 +43,7 @@ def test(req: func.HttpRequest) -> func.HttpResponse:
         items = list(
             container.query_items(
                 query=query,
-                parameters=[{"name": "@testId", "value": testId}],
+                parameters=[{"name": "@testId", "value": test_id}],
             )
         )
         logging.info({"items": items})

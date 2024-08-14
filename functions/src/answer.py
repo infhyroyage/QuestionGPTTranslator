@@ -14,7 +14,11 @@ from langchain_openai import AzureChatOpenAI
 bp_answer = func.Blueprint()
 
 
-@bp_answer.route(route="answer", auth_level=func.AuthLevel.FUNCTION, methods=["POST"])
+@bp_answer.route(
+    route="answer",
+    methods=["POST"],
+    auth_level=func.AuthLevel.FUNCTION,
+)
 def answer(
     req: func.HttpRequest,  # pylint: disable=unused-argument
 ) -> func.HttpResponse:

@@ -14,7 +14,11 @@ COSMOS_DB_CONTAINER_NAME = "Test"
 bp_tests = func.Blueprint()
 
 
-@bp_tests.route(route="tests")
+@bp_tests.route(
+    route="tests",
+    methods=["GET"],
+    auth_level=func.AuthLevel.FUNCTION,
+)
 def tests(
     req: func.HttpRequest,  # pylint: disable=unused-argument
 ) -> func.HttpResponse:
