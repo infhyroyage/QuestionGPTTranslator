@@ -4,7 +4,6 @@ Module of [GET] /tests
 
 import json
 import logging
-import os
 
 import azure.functions as func
 from utils.cosmos import get_read_only_container
@@ -29,12 +28,11 @@ def main(req: func.HttpRequest) -> func.HttpResponse:  # pylint: disable=unused-
         )
 
         # Execute Query
-        # TODO: Azure SDK for Pythonで複合インデックスをサポートしたら修正する
-        # Azure上では複合インデックスを作成するインデックスポリシーを定義している
-        # 暫定的に、Azure上のみORDER BY句を設定している
-        query = "SELECT c.id, c.courseName, c.testName, c.length FROM c"
-        if os.environ["COSMOSDB_URI"] != "https://localhost:8081":
-            query += " ORDER BY c.courseName ASC, c.testName ASC"
+        query = (
+            "SELECT c.id, c.courseName, c.testName, c.length"
+            "FROM c"
+            "ORDER BY c.courseName ASC, c.testName ASC"
+        )
         items = list(
             container.query_items(query=query, enable_cross_partition_query=True)
         )
