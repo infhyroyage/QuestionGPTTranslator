@@ -42,5 +42,3 @@ export type PostAnsterRes = {
 
 export type PutEn2JaReq = string[];
 export type PutEn2JaRes = string[];
-
-export type Method = "GET" | "POST" | "PUT";

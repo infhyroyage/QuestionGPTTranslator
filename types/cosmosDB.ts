@@ -20,9 +20,3 @@ export type Test = {
   testName: string;
   length: number;
 };
-
-export type Flag = {
-  id: string;
-  year: number;
-  month: number;
-};
