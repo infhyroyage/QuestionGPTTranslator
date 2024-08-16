@@ -6,7 +6,7 @@ import json
 import logging
 
 import azure.functions as func
-from utils.cosmos import get_read_only_container
+from util.cosmos import get_read_only_container
 
 COSMOS_DB_DATABASE_NAME = "Users"
 COSMOS_DB_CONTAINER_NAME = "Test"

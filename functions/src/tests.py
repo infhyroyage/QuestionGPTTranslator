@@ -6,7 +6,8 @@ import json
 import logging
 
 import azure.functions as func
-from utils.cosmos import get_read_only_container
+from type.response import GetTestsRes
+from util.cosmos import get_read_only_container
 
 COSMOS_DB_DATABASE_NAME = "Users"
 COSMOS_DB_CONTAINER_NAME = "Test"
@@ -43,7 +44,7 @@ def tests(
         logging.info({"items": items})
 
         # Format the response by grouping items by courseName
-        body = {}
+        body: GetTestsRes = {}
         for item in items:
             tmp_item = {"id": item["id"], "testName": item["testName"]}
             if item["courseName"] in body:
