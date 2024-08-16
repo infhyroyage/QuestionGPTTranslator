@@ -6,6 +6,7 @@ import json
 import logging
 
 import azure.functions as func
+from type.response import GetTestRes
 from util.cosmos import get_read_only_container
 
 COSMOS_DB_DATABASE_NAME = "Users"
@@ -54,8 +55,9 @@ def test(req: func.HttpRequest) -> func.HttpResponse:
         if len(items) > 1:
             raise ValueError("Not Unique Test")
 
+        body: GetTestRes = items[0]
         return func.HttpResponse(
-            body=json.dumps(items[0]), status_code=200, mimetype="application/json"
+            body=json.dumps(body), status_code=200, mimetype="application/json"
         )
     except Exception as e:  # pylint: disable=broad-except
         logging.error(e)

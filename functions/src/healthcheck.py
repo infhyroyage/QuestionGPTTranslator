@@ -3,6 +3,7 @@ Module of [GET] /healthcheck
 """
 
 import azure.functions as func
+from type.response import GetHealthcheckRes
 
 bp_healthcheck = func.Blueprint()
 
@@ -19,4 +20,5 @@ def healthcheck(
     Retrieve Health Check
     """
 
-    return func.HttpResponse("OK", status_code=200)
+    body: GetHealthcheckRes = "OK"
+    return func.HttpResponse(body, status_code=200)
