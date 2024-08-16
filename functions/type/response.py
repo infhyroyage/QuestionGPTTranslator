@@ -10,7 +10,7 @@ class GetHealthcheckRes(TypedDict):
     [GET] /healthcheck Response Type
     """
 
-    message: str
+    __root__: str
 
 
 class Subject(TypedDict):
