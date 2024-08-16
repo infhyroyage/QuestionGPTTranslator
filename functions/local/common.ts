@@ -7,11 +7,11 @@ import {
   SqlQuerySpec,
   UpsertOperationInput,
 } from "@azure/cosmos";
+import { Dirent, existsSync, readFileSync, readdirSync } from "fs";
+import { join } from "path";
 import { v4 as uuidv4 } from "uuid";
 import { Question, Test } from "../../types/cosmosDB";
 import { ImportData, ImportDatabaseData, ImportItem } from "../../types/import";
-import { Dirent, existsSync, readFileSync, readdirSync } from "fs";
-import { join } from "path";
 
 /**
  * コマンドライン引数でコース名/テスト名指定した場合は、インポートデータから
@@ -68,17 +68,6 @@ export const createDatabasesAndContainers = async (
   cosmosClient: CosmosClient
 ): Promise<void> => {
   let databaseRes: DatabaseResponse;
-
-  // Systemsデータベース
-  databaseRes = await cosmosClient.databases.createIfNotExists({
-    id: "Systems",
-  });
-
-  // SystemsデータベースのFlagコンテナー
-  await databaseRes.database.containers.createIfNotExists({
-    id: "Flag",
-    partitionKey: "/id",
-  });
 
   // Usersデータベース
   databaseRes = await cosmosClient.databases.createIfNotExists({

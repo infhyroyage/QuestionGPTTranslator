@@ -4,10 +4,10 @@ import { ImportData } from "../../types/import";
 import {
   createDatabasesAndContainers,
   createImportData,
-  importTestItems,
-  generateTestItems,
   generateQuestionItems,
+  generateTestItems,
   importQuestionItemsAndSleep,
+  importTestItems,
 } from "./common";
 
 const COSMOSDB_LOCAL_KEY =
