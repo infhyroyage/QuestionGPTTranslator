@@ -6,9 +6,6 @@ import { EscapeTranslatedIdxes, Question, Test } from "../cosmosDB";
 import { ImportItem } from "../import";
 import { getReadOnlyContainer, getReadWriteContainer } from "./cosmosDBWrapper";
 
-const COSMOS_DB_DATABASE_NAME = "Users";
-const COSMOS_DB_CONTAINER_NAMES = { test: "Test", question: "Question" };
-
 export default async function (
   blob: unknown,
   context: InvocationContext
@@ -33,8 +30,8 @@ export default async function (
       ],
     };
     const insertedTestItemsRes: FeedResponse<Test> = await getReadOnlyContainer(
-      COSMOS_DB_DATABASE_NAME,
-      COSMOS_DB_CONTAINER_NAMES.test
+      "Users",
+      "Test"
     )
       .items.query<Test>(testQuery)
       .fetchAll();
@@ -61,8 +58,8 @@ export default async function (
       };
       context.info({ upsertTestItem });
       const res: ItemResponse<Test> = await getReadWriteContainer(
-        COSMOS_DB_DATABASE_NAME,
-        COSMOS_DB_CONTAINER_NAMES.test
+        "Users",
+        "Test"
       ).items.upsert<Test>(upsertTestItem);
       if (res.statusCode >= 400) {
         throw new Error(
@@ -82,10 +79,7 @@ export default async function (
         parameters: [{ name: "@testId", value: testId }],
       };
       const insertedQuestionItemsRes: FeedResponse<Question> =
-        await getReadOnlyContainer(
-          COSMOS_DB_DATABASE_NAME,
-          COSMOS_DB_CONTAINER_NAMES.question
-        )
+        await getReadOnlyContainer("Users", "Question")
           .items.query<Question>(questionQuery)
           .fetchAll();
       insertedQuestionItems = insertedQuestionItemsRes.resources;
@@ -154,8 +148,8 @@ export default async function (
           testId,
         };
         const res: ItemResponse<Question> = await getReadWriteContainer(
-          COSMOS_DB_DATABASE_NAME,
-          COSMOS_DB_CONTAINER_NAMES.question
+          "Users",
+          "Question"
         ).items.upsert<Question>(item);
         if (res.statusCode >= 400) {
           throw new Error(
