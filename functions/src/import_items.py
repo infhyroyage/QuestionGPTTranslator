@@ -2,6 +2,7 @@
 Module of Blob Triggers
 """
 
+import json
 import logging
 
 import azure.functions as func
@@ -19,7 +20,9 @@ def import_items(blob: func.InputStream):
     Import Cosmos DB Items
     """
 
-    logging.info("Python blob trigger function processed blob: %s", blob.name)
+    course_name = blob.name.split("/")[1]
+    test_name = blob.name.split("/")[2].split(".")[0]
+    logging.info({"course_name": course_name, "test_name": test_name})
 
-    file = blob.read()
+    file = json.loads(blob.read())
     logging.info(file)
