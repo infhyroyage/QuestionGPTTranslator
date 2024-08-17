@@ -6,11 +6,10 @@ import json
 import logging
 
 import azure.functions as func
+from azure.cosmos import ContainerProxy
+from type.cosmos import Test
 from type.response import GetTestRes
 from util.cosmos import get_read_only_container
-
-COSMOS_DB_DATABASE_NAME = "Users"
-COSMOS_DB_CONTAINER_NAME = "Test"
 
 bp_test = func.Blueprint()
 
@@ -26,13 +25,15 @@ def test(req: func.HttpRequest) -> func.HttpResponse:
     """
 
     try:
-        # Get Path Parameters
+        # Validate Path Parameters
         test_id = req.route_params.get("testId")
+        if test_id is None:
+            raise ValueError(f"Invalid testId: {test_id}")
 
         # Initialize Cosmos DB Client
-        container = get_read_only_container(
-            database_name=COSMOS_DB_DATABASE_NAME,
-            container_name=COSMOS_DB_CONTAINER_NAME,
+        container: ContainerProxy = get_read_only_container(
+            database_name="Users",
+            container_name="Test",
         )
 
         # Execute Query
@@ -41,11 +42,9 @@ def test(req: func.HttpRequest) -> func.HttpResponse:
             "FROM c"
             "WHERE c.id = @testId"
         )
-        items = list(
-            container.query_items(
-                query=query,
-                parameters=[{"name": "@testId", "value": test_id}],
-            )
+        parameters: list[dict[str, str]] = [{"name": "@testId", "value": test_id}]
+        items: list[Test] = list(
+            container.query_items(query=query, parameters=parameters)
         )
         logging.info({"items": items})
 
@@ -57,7 +56,9 @@ def test(req: func.HttpRequest) -> func.HttpResponse:
 
         body: GetTestRes = items[0]
         return func.HttpResponse(
-            body=json.dumps(body), status_code=200, mimetype="application/json"
+            body=json.dumps(body),
+            status_code=200,
+            mimetype="application/json",
         )
     except Exception as e:  # pylint: disable=broad-except
         logging.error(e)

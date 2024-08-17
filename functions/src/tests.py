@@ -6,11 +6,10 @@ import json
 import logging
 
 import azure.functions as func
+from azure.cosmos import ContainerProxy
+from type.cosmos import Test
 from type.response import GetTestsRes
 from util.cosmos import get_read_only_container
-
-COSMOS_DB_DATABASE_NAME = "Users"
-COSMOS_DB_CONTAINER_NAME = "Test"
 
 bp_tests = func.Blueprint()
 
@@ -29,9 +28,9 @@ def tests(
 
     try:
         # Initialize Cosmos DB Client
-        container = get_read_only_container(
-            database_name=COSMOS_DB_DATABASE_NAME,
-            container_name=COSMOS_DB_CONTAINER_NAME,
+        container: ContainerProxy = get_read_only_container(
+            database_name="Users",
+            container_name="Test",
         )
 
         # Execute Query
@@ -40,7 +39,7 @@ def tests(
             "FROM c"
             "ORDER BY c.courseName ASC, c.testName ASC"
         )
-        items = list(container.query_items(query=query))
+        items: list[Test] = list(container.query_items(query=query))
         logging.info({"items": items})
 
         # Format the response by grouping items by courseName
@@ -52,9 +51,10 @@ def tests(
             else:
                 body[item["courseName"]] = [tmp_item]
         logging.info({"body": body})
-
         return func.HttpResponse(
-            body=json.dumps(body), status_code=200, mimetype="application/json"
+            body=json.dumps(body),
+            status_code=200,
+            mimetype="application/json",
         )
     except Exception as e:  # pylint: disable=broad-except
         logging.error(e)
