@@ -7,7 +7,7 @@ azurite/__queuestorage__
 azurite/__azurite_db_*.json
 
 # Azure Functions
-functions/local/data
+functions/data
 functions/**/__pycache__
 functions/local.settings.json
 
