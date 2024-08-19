@@ -118,7 +118,7 @@ def upsert_question_items(
         inserted_import_items.append(inserted_import_item)
     logging.info({"inserted_import_items": inserted_import_items})
 
-    # 暗号化したUsersテータベースのQuestionコンテナーの各項目をupsert
+    # UsersテータベースのQuestionコンテナーの各項目をupsert
     # 比較的要求ユニット(RU)数が多いDB操作を行うため、upsertの合間に3秒間sleepする
     # https://docs.microsoft.com/ja-jp/azure/cosmos-db/sql/troubleshoot-request-rate-too-large
     for idx, json_import_item in enumerate(json_data):
