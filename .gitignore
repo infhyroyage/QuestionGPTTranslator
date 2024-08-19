@@ -6,10 +6,8 @@ azurite/__blobstorage__
 azurite/__queuestorage__
 azurite/__azurite_db_*.json
 
-# Cosmos DB
-cosmosdb/data
-
 # Azure Functions
+functions/local/data
 functions/**/__pycache__
 functions/local.settings.json
 
