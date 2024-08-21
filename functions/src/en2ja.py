@@ -9,6 +9,8 @@ from typing import Optional
 
 import azure.functions as func
 import requests
+from type.request import PutEn2JaReq
+from type.response import PutEn2JaRes
 from type.translation import AzureTranslatorRes, DeepLRes
 
 
@@ -104,23 +106,23 @@ def en2ja(req: func.HttpRequest) -> func.HttpResponse:
     """
 
     try:
-        tests_str = req.get_body().decode("utf-8")
-        texts = json.loads(tests_str)
+        texts: PutEn2JaReq = json.loads(req.get_body().decode("utf-8"))
         logging.info({"texts": texts})
 
         # Azure Translatorで翻訳
         # Azure Translatorの無料枠を使い切った場合はWarningログを出力し、代わりにDeepLで翻訳
         json_body = translate_by_azure_translator(texts)
-        if not json_body:
+        if json_body is None:
             logging.warning("Azure Translator Free Tier is used up.")
             json_body = translate_by_deep_l(texts)
 
         logging.info({"body": json_body})
-        if not json_body:
+        if json_body is None:
             raise ValueError("Cannot translate texts.")
 
+        body: PutEn2JaRes = json_body
         return func.HttpResponse(
-            body=json.dumps(json_body),
+            body=json.dumps(body),
             status_code=200,
             mimetype="application/json",
         )

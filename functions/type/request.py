@@ -5,11 +5,12 @@ Functions Application Request Type Definitions
 from typing import List, TypedDict
 
 
-class PostAnsterReq(TypedDict):
+class PostAnswerReq(TypedDict):
     """
     [POST] /answer Request Type
     """
 
+    courseName: str
     subjects: List[str]
     choices: List[str]
 
