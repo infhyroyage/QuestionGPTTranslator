@@ -5,6 +5,7 @@ Module of [POST] /answer
 import json
 import logging
 import os
+import re
 
 import azure.functions as func
 from langchain import hub
@@ -12,13 +13,14 @@ from langchain.agents import AgentExecutor, create_react_agent
 from langchain_google_community import GoogleSearchAPIWrapper, GoogleSearchRun
 from langchain_openai import AzureChatOpenAI
 from type.request import PostAnswerReq
+from type.response import PostAnswerRes
+
+MAX_RETRY_NUMBER: int = 5
 
 bp_answer = func.Blueprint()
 
 
-def create_input_prompt(
-    course_name: str, subjects: list[str], choices: list[str]
-) -> str:
+def create_input(course_name: str, subjects: list[str], choices: list[str]) -> str:
     """
     Create Input Prompt
     """
@@ -45,7 +47,7 @@ Which solution will meet these requirements?
 3. Launch the cluster instances with no SSH key pairs. Use AWS Systems Manager Run Command to remotely manage the cluster instances.
 4. Launch the cluster instances with no SSH key pairs. Use AWS Trusted Advisor to remotely manage the cluster instances.
 ---
-For the question and choices in this first example, generate a sentence that shows the correct option/options, starting with "Correct Option: ", followed by sentences that explain why each option is correct/incorrect, as follows:
+For the question and choices in this first example, generate a sentence that shows the correct option, starting with "Correct Option: ", followed by sentences that explain why each option is correct/incorrect, as follows:
 ---
 Correct Option: 3
 Option 1 is incorrect because the requirements state that the only inbound port that should be open is 443.
@@ -70,9 +72,9 @@ Which combination of actions should the solutions architect take to meet these r
 4. Migrate all EC2 instance types to Graviton2.
 5. Replace the ALB for the application tier instances with a company-managed load balancer.
 ---
-For the question and choices in this second example, generate a sentence that shows the correct option/options, starting with "Correct Option: ", followed by sentences that explain why each option is correct/incorrect, as follows:
+For the question and choices in this second example, generate a sentence that shows the correct options, starting with "Correct Options: ", followed by sentences that explain why each option is correct/incorrect, as follows:
 ---
-Correct Option: 2, 3
+Correct Options: 2, 3
 Option 1 is incorrect because additional EC2 instances will not minimize operational overhead. A managed service would be a better option.
 Option 2 is correct because you can improve availability and scalability of the web tier by placing the web tier behind an Application Load Balancer (ALB). The ALB serves as the single point of contact for clients and distributes incoming application traffic to the Amazon EC2 instances.
 Option 3 is correct because Amazon Aurora Serverless provides high performance and high availability with reduced operational complexity.
@@ -117,7 +119,7 @@ def answer(req: func.HttpRequest) -> func.HttpResponse:
         if not choices or not isinstance(choices, list) or len(choices) == 0:
             raise ValueError("Invalid choices")
 
-        # Create ReAct Agent
+        # Create ReAct agent
         llm = AzureChatOpenAI(
             api_key=os.environ["OPENAI_API_KEY"],
             api_version=os.environ["OPENAI_API_VERSION"],
@@ -138,19 +140,54 @@ def answer(req: func.HttpRequest) -> func.HttpResponse:
             prompt=hub.pull("hwchase17/react"),
         )
 
-        # Execute ReAct Agent
-        agent_executor = AgentExecutor(
-            agent=agent,
-            tools=tools,
-            handle_parsing_errors=True,
-            verbose=True,
-        )
-        result = agent_executor.invoke(
-            {"input": create_input_prompt(course_name, subjects, choices)}
-        )
-        logging.info({"output": result["output"]})
+        retry_number: int = 0
+        while retry_number < MAX_RETRY_NUMBER:
+            logging.info({"retry_number": retry_number})
 
-        return func.HttpResponse(result["output"], status_code=200)
+            # Execute ReAct agent
+            output: str = AgentExecutor(
+                agent=agent,
+                tools=tools,
+                handle_parsing_errors=True,
+                verbose=True,
+            ).invoke({"input": create_input(course_name, subjects, choices)})["output"]
+            logging.info({"output": output})
+
+            # Check if output format is "Correct Option: {raw_correct_options}\n{raw_explanations}"
+            # or "Correct Options: {raw_correct_options}\n{raw_explanations}"
+            match = re.search(r"Correct Option[s]?: (\d+(?:, \d+)*)\n([\s\S]+)", output)
+            if match and match.group(1) and match.group(2):
+                raw_correct_options: str = match.group(1)
+                raw_explanations: str = match.group(2)
+                logging.info(
+                    {
+                        "raw_correct_options": raw_correct_options,
+                        "raw_explanations": raw_explanations,
+                    }
+                )
+
+                # Clean up correct options and explanations
+                correct_indexes: list[int] = [
+                    int(option.strip()) - 1
+                    for option in raw_correct_options.split(", ")
+                    if option.strip()
+                ]
+                explanations: list[str] = [
+                    exp.strip() for exp in raw_explanations.split("\n") if exp.strip()
+                ]
+
+                body: PostAnswerRes = {
+                    "correctIdxes": correct_indexes,
+                    "explanations": explanations,
+                }
+                return func.HttpResponse(
+                    body=json.dumps(body),
+                    status_code=200,
+                )
+
+            retry_number += 1
+
+        raise RuntimeError("Too Many Retries")
     except Exception as e:  # pylint: disable=broad-except
         logging.error(e)
         return func.HttpResponse(
