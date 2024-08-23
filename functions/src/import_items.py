@@ -35,6 +35,7 @@ def upsert_test_item(
                 {"name": "@courseName", "value": course_name},
                 {"name": "@testName", "value": test_name},
             ],
+            enable_cross_partition_query=True,
         )
     )
     logging.info({"inserted_test_items": inserted_test_items})
@@ -82,6 +83,7 @@ def upsert_question_items(
             container.query_items(
                 query="SELECT * FROM c WHERE c.testId = @testId",
                 parameters=[{"name": "@testId", "value": test_id}],
+                enable_cross_partition_query=True,
             )
         )
         if is_existed_test
