@@ -43,6 +43,7 @@ var lawName = 'qgtranslator-je-law'
 
 var storageBlobContainerName = 'import-items'
 var storageName = 'qgtranslatorjesa'
+var storageQueueName = 'answers'
 
 var vaultName = 'qgtranslator-je-vault'
 var vaultSecretNames = {
@@ -241,7 +242,7 @@ resource cosmosDBDatabaseUsersContainerQuestion 'Microsoft.DocumentDb/databaseAc
 }
 
 // Storage Account
-resource storage 'Microsoft.Storage/storageAccounts@2023-01-01' = {
+resource storage 'Microsoft.Storage/storageAccounts@2023-05-01' = {
   name: storageName
   location: location
   kind: 'StorageV2'
@@ -253,7 +254,7 @@ resource storage 'Microsoft.Storage/storageAccounts@2023-01-01' = {
     supportsHttpsTrafficOnly: true
   }
 }
-resource storageBlob 'Microsoft.Storage/storageAccounts/blobServices@2023-01-01' = {
+resource storageBlob 'Microsoft.Storage/storageAccounts/blobServices@2023-05-01' = {
   parent: storage
   name: 'default'
   properties: {
@@ -266,7 +267,7 @@ resource storageBlob 'Microsoft.Storage/storageAccounts/blobServices@2023-01-01'
     }
   }
 }
-resource storageBlobContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-01-01' = {
+resource storageBlobContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' = {
   parent: storageBlob
   name: storageBlobContainerName
   properties: {
@@ -277,6 +278,14 @@ resource storageBlobContainer 'Microsoft.Storage/storageAccounts/blobServices/co
     denyEncryptionScopeOverride: false
     publicAccess: 'None'
   }
+}
+resource storageQueue 'Microsoft.Storage/storageAccounts/queueServices@2023-05-01' = {
+  parent: storage
+  name: 'default'
+}
+resource storageQueueQueue 'Microsoft.Storage/storageAccounts/queueServices/queues@2023-05-01' = {
+  parent: storageQueue
+  name: storageQueueName
 }
 
 // Log Analytics Workspaces
