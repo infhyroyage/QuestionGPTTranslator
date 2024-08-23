@@ -149,31 +149,25 @@ def import_items(blob: func.InputStream):
     Import Cosmos DB Items
     """
 
-    try:
-        # Blobトリガーで受け取ったメタデータから可変パラメーターを取得
-        split_path = blob.name.split("/")
-        course_name = split_path[1]
-        test_name = split_path[2].split(".")[0]
-        logging.info({"course_name": course_name, "test_name": test_name})
+    # Blobトリガーで受け取ったメタデータから可変パラメーターを取得
+    split_path = blob.name.split("/")
+    course_name = split_path[1]
+    test_name = split_path[2].split(".")[0]
+    logging.info({"course_name": course_name, "test_name": test_name})
 
-        # Blobトリガーで受け取ったjsonファイルのバイナリデータをImportItem[]型として読込み
-        json_data: list[ImportItem] = json.loads(blob.read())
+    # Blobトリガーで受け取ったjsonファイルのバイナリデータをImportItem[]型として読込み
+    json_data: list[ImportItem] = json.loads(blob.read())
 
-        # UsersテータベースのTestコンテナーの項目をupsert
-        test_id, is_existed_test = upsert_test_item(
-            course_name=course_name,
-            test_name=test_name,
-            json_data=json_data,
-        )
+    # UsersテータベースのTestコンテナーの項目をupsert
+    test_id, is_existed_test = upsert_test_item(
+        course_name=course_name,
+        test_name=test_name,
+        json_data=json_data,
+    )
 
-        # UsersテータベースのQuestionコンテナーの項目をupsert
-        upsert_question_items(
-            test_id=test_id,
-            is_existed_test=is_existed_test,
-            json_data=json_data,
-        )
-
-        return func.HttpResponse(body="OK", status_code=200)
-    except Exception as e:  # pylint: disable=broad-except
-        logging.error(e)
-        return func.HttpResponse(body="Internal Server Error", status_code=500)
+    # UsersテータベースのQuestionコンテナーの項目をupsert
+    upsert_question_items(
+        test_id=test_id,
+        is_existed_test=is_existed_test,
+        json_data=json_data,
+    )
