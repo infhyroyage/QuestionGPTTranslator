@@ -26,6 +26,7 @@ var apimNamedValuesNames = {
 var apimOrgName = 'qgtranslator-je-apim-org'
 
 var cosmosDBContainerNames = {
+  answer: 'Answer'
   question: 'Question'
   test: 'Test'
 }
@@ -234,6 +235,18 @@ resource cosmosDBDatabaseUsersContainerQuestion 'Microsoft.DocumentDb/databaseAc
   properties: {
     resource: {
       id: cosmosDBContainerNames.question
+      partitionKey: {
+        paths: ['/id']
+      }
+    }
+  }
+}
+resource cosmosDBDatabaseUsersContainerAnswer 'Microsoft.DocumentDb/databaseAccounts/sqlDatabases/containers@2023-04-15' = {
+  parent: cosmosDBDatabaseUsers
+  name: cosmosDBContainerNames.answer
+  properties: {
+    resource: {
+      id: cosmosDBContainerNames.answer
       partitionKey: {
         paths: ['/id']
       }
