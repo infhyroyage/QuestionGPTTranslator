@@ -3,6 +3,18 @@
 from typing import List, Optional, TypedDict
 
 
+class Answer(TypedDict):
+    """
+    Answer Type of Answer Container
+    """
+
+    id: str
+    questionNumber: int
+    correctIdxes: List[int]
+    explanations: List[str]
+    testId: str
+
+
 class EscapeTranslatedIdxes(TypedDict, total=False):
     """
     Type of escapeTranslatedIdxes in Question
@@ -14,7 +26,7 @@ class EscapeTranslatedIdxes(TypedDict, total=False):
 
 class Question(TypedDict):
     """
-    Question Type of Test Container
+    Question Type of Question Container
     """
 
     id: str
