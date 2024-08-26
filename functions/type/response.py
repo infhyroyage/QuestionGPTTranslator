@@ -76,8 +76,8 @@ class PostAnswerRes(TypedDict, total=False):
     [POST] /answer Response Type
     """
 
-    correctIdxes: Optional[List[int]]
-    explanations: Optional[List[str]]
+    correctIdxes: List[int]
+    explanations: List[str]
 
 
 class PutEn2JaRes(TypedDict):
