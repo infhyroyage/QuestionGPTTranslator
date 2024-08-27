@@ -8,7 +8,9 @@ class MessageAnswer(TypedDict):
     Message Type for Answer Item
     """
 
-    questionNumber: int
-    correctIdxes: List[int]
-    explanations: List[str]
     testId: str
+    questionNumber: int
+    subjects: List[str]
+    choices: List[str]
+    correctIndexes: List[int]
+    explanations: List[str]

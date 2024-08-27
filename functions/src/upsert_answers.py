@@ -7,7 +7,7 @@ import logging
 
 import azure.functions as func
 from azure.cosmos import ContainerProxy
-from type.cosmos import Answer
+from type.cosmos import Answer, Question
 from type.message import MessageAnswer
 from util.cosmos import get_read_write_container
 
@@ -28,18 +28,41 @@ def upsert_answers(msg: func.QueueMessage):
     message_answer: MessageAnswer = json.loads(msg.get_body().decode("utf-8"))
     logging.info({"message_answer": message_answer})
 
-    # Initialize Cosmos DB Client
-    container: ContainerProxy = get_read_write_container(
+    # メッセージに該当するUsersテータベースのQuestionコンテナーの項目を取得
+    container_question: ContainerProxy = get_read_write_container(
         database_name="Users",
-        container_name="Answer",
+        container_name="Question",
     )
+    query = "SELECT c.subjects, c.choices FROM c WHERE c.id = @id"
+    parameters = [
+        {
+            "name": "@id",
+            "value": f"{message_answer['testId']}_{message_answer['questionNumber']}",
+        },
+    ]
+    items: list[Question] = list(
+        container_question.query_items(query=query, parameters=parameters)
+    )
+    logging.info({"items": items})
 
-    # UsersテータベースのAnswerコンテナーの項目をupsert
-    answer_item: Answer = {
-        "id": f"{message_answer['testId']}_{message_answer['questionNumber']}",
-        "questionNumber": message_answer["questionNumber"],
-        "correctIdxes": message_answer["correctIdxes"],
-        "explanations": message_answer["explanations"],
-        "testId": message_answer["testId"],
-    }
-    container.upsert_item(answer_item)
+    # 1項目のみ取得し、取得した項目とメッセージとのsubjects/choicesがすべて一致する場合のみ、
+    # UsersテータベースのAnswerコンテナーの項目をupsertする
+    # 上記以外の場合は不正なメッセージとみなし、その場で正常終了する
+    if (
+        len(items) == 1
+        and items[0]["subjects"] == message_answer["subjects"]
+        and items[0]["choices"] == message_answer["choices"]
+    ):
+        container_answer: ContainerProxy = get_read_write_container(
+            database_name="Users",
+            container_name="Answer",
+        )
+        answer_item: Answer = {
+            "id": f"{message_answer['testId']}_{message_answer['questionNumber']}",
+            "questionNumber": message_answer["questionNumber"],
+            "correctIndexes": message_answer["correctIndexes"],
+            "explanations": message_answer["explanations"],
+            "testId": message_answer["testId"],
+        }
+        logging.info({"answer_item": answer_item})
+        container_answer.upsert_item(answer_item)
