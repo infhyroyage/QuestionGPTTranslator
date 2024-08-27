@@ -94,6 +94,67 @@ Unless there is an instruction such as "Select THREE" in the question, there wil
 ---"""
 
 
+def check_output_format(output: str) -> tuple[list[int] | None, list[str] | None]:
+    """
+    Check if output format is "Correct Option: {raw_correct_options}\n{raw_explanations}"
+    or "Correct Options: {raw_correct_options}\n{raw_explanations}".
+    If the output format is not correct, return (None, None).
+    """
+
+    correct_indexes: list[int] | None = None
+    explanations: list[str] | None = None
+    try:
+        match = re.search(r"Correct Option[s]?: (\d+(?:, \d+)*)\n([\s\S]+)", output)
+        if match and match.group(1) and match.group(2):
+            raw_correct_options: str = match.group(1)
+            raw_explanations: str = match.group(2)
+            logging.info(
+                {
+                    "raw_correct_options": raw_correct_options,
+                    "raw_explanations": raw_explanations,
+                }
+            )
+
+            # Clean up correct options and explanations
+            correct_indexes = [
+                int(option.strip()) - 1
+                for option in raw_correct_options.split(", ")
+                if option.strip()
+            ]
+            explanations = [
+                exp.strip() for exp in raw_explanations.split("\n") if exp.strip()
+            ]
+    except Exception as e:  # pylint: disable=broad-except
+        logging.error(e)
+
+    return correct_indexes, explanations
+
+
+def queue_message_answer(
+    question_number: int,
+    correct_indexes: list[int],
+    explanations: list[str],
+    test_id: str,
+) -> None:
+    """
+    Queue Message for Answer Item to Queue Storage
+    """
+
+    queue_client = QueueClient.from_connection_string(
+        conn_str=os.environ["AzureWebJobsStorage"],
+        queue_name="answers",
+        message_encode_policy=BinaryBase64EncodePolicy(),
+    )
+    message_answer: MessageAnswer = {
+        "questionNumber": question_number,
+        "correctIdxes": correct_indexes,
+        "explanations": explanations,
+        "testId": test_id,
+    }
+    logging.info({"message_answer": message_answer})
+    queue_client.send_message(json.dumps(message_answer).encode("utf-8"))
+
+
 @bp_answer.route(
     route="answer",
     methods=["POST"],
@@ -169,29 +230,9 @@ def answer(req: func.HttpRequest) -> func.HttpResponse:
             ).invoke({"input": create_input(course_name, subjects, choices)})["output"]
             logging.info({"output": output})
 
-            # Check if output format is "Correct Option: {raw_correct_options}\n{raw_explanations}"
-            # or "Correct Options: {raw_correct_options}\n{raw_explanations}"
-            match = re.search(r"Correct Option[s]?: (\d+(?:, \d+)*)\n([\s\S]+)", output)
-            if match and match.group(1) and match.group(2):
-                raw_correct_options: str = match.group(1)
-                raw_explanations: str = match.group(2)
-                logging.info(
-                    {
-                        "raw_correct_options": raw_correct_options,
-                        "raw_explanations": raw_explanations,
-                    }
-                )
-
-                # Clean up correct options and explanations
-                correct_indexes = [
-                    int(option.strip()) - 1
-                    for option in raw_correct_options.split(", ")
-                    if option.strip()
-                ]
-                explanations = [
-                    exp.strip() for exp in raw_explanations.split("\n") if exp.strip()
-                ]
-
+            # Check output format
+            correct_indexes, explanations = check_output_format(output)
+            if correct_indexes and explanations:
                 break
 
         # Check if max retries reached
@@ -199,19 +240,12 @@ def answer(req: func.HttpRequest) -> func.HttpResponse:
             raise RuntimeError("Too Many Retries")
 
         # Queue answer to queue storage
-        queue_client = QueueClient.from_connection_string(
-            conn_str=os.environ["AzureWebJobsStorage"],
-            queue_name="answers",
-            message_encode_policy=BinaryBase64EncodePolicy(),
+        queue_message_answer(
+            question_number=question_number,
+            correct_indexes=correct_indexes,
+            explanations=explanations,
+            test_id=test_id,
         )
-        message_answer: MessageAnswer = {
-            "questionNumber": question_number,
-            "correctIdxes": correct_indexes,
-            "explanations": explanations,
-            "testId": test_id,
-        }
-        logging.info({"message_answer": message_answer})
-        queue_client.send_message(json.dumps(message_answer).encode("utf-8"))
 
         body: PostAnswerRes = {
             "correctIdxes": correct_indexes,
