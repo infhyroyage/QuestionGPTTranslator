@@ -211,6 +211,7 @@ def answer(req: func.HttpRequest) -> func.HttpResponse:
             "explanations": explanations,
             "testId": test_id,
         }
+        logging.info({"message_answer": message_answer})
         queue_client.send_message(json.dumps(message_answer))
 
         body: PostAnswerRes = {

@@ -26,6 +26,7 @@ def upsert_answers(msg: func.QueueMessage):
 
     # Queueトリガーで受け取ったjson形式のメッセージをMessage型として読込み
     message_answer: MessageAnswer = json.loads(msg.get_body().decode("utf-8"))
+    logging.info({"message_answer": message_answer})
 
     # Initialize Cosmos DB Client
     container: ContainerProxy = get_read_write_container(
@@ -41,5 +42,4 @@ def upsert_answers(msg: func.QueueMessage):
         "explanations": message_answer["explanations"],
         "testId": message_answer["testId"],
     }
-    logging.info({"answer_item": answer_item})
     container.upsert_item(answer_item)
