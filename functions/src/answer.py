@@ -144,7 +144,7 @@ def generate_correct_indexes_explanations(
                 exp.strip() for exp in raw_explanations.split("\n") if exp.strip()
             ]
     except Exception as e:  # pylint: disable=broad-except
-        logging.error(e)
+        logging.warning(e)
 
     return correct_indexes, explanations
 
