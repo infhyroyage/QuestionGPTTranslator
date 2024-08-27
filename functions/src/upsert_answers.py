@@ -8,8 +8,8 @@ from typing import List, TypedDict
 
 import azure.functions as func
 from azure.cosmos import ContainerProxy
-from util.cosmos import get_read_write_container
 from type.cosmos import Answer
+from util.cosmos import get_read_write_container
 
 
 class MessageAnswer(TypedDict):
@@ -47,7 +47,7 @@ def upsert_answers(msg: func.QueueMessage):
 
     # UsersテータベースのAnswerコンテナーの項目をupsert
     answer_item: Answer = {
-        "id": f"{message_answer["testId"]}_{message_answer["questionNumber"]}",
+        "id": f"{message_answer['testId']}_{message_answer['questionNumber']}",
         "questionNumber": message_answer["questionNumber"],
         "correctIdxes": message_answer["correctIdxes"],
         "explanations": message_answer["explanations"],
