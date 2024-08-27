@@ -149,14 +149,7 @@ def generate_correct_indexes_explanations(
     return correct_indexes, explanations
 
 
-def queue_message_answer(
-    test_id: str,
-    question_number: int,
-    subjects: list[str],
-    choices: list[str],
-    correct_indexes: list[int],
-    explanations: list[str],
-) -> None:
+def queue_message_answer(message_answer: MessageAnswer) -> None:
     """
     Queue Message for Answer Item to Queue Storage
     """
@@ -166,14 +159,6 @@ def queue_message_answer(
         queue_name="answers",
         message_encode_policy=BinaryBase64EncodePolicy(),
     )
-    message_answer: MessageAnswer = {
-        "testId": test_id,
-        "questionNumber": question_number,
-        "subjects": subjects,
-        "choices": choices,
-        "correctIndexes": correct_indexes,
-        "explanations": explanations,
-    }
     logging.info({"message_answer": message_answer})
     queue_client.send_message(json.dumps(message_answer).encode("utf-8"))
 
@@ -265,12 +250,14 @@ def answer(req: func.HttpRequest) -> func.HttpResponse:
 
         # Queue answer to queue storage
         queue_message_answer(
-            test_id=test_id,
-            question_number=question_number,
-            subjects=subjects,
-            choices=choices,
-            correct_indexes=correct_indexes,
-            explanations=explanations,
+            {
+                "testId": test_id,
+                "questionNumber": question_number,
+                "subjects": subjects,
+                "choices": choices,
+                "correctIndexes": correct_indexes,
+                "explanations": explanations,
+            }
         )
 
         body: PostAnswerRes = {
