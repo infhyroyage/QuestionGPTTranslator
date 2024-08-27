@@ -92,15 +92,15 @@ def translate_by_deep_l(texts: list[str]) -> Optional[list[str]]:
         raise e
 
 
-bp_en2ja = func.Blueprint()
+bp_put_en2ja = func.Blueprint()
 
 
-@bp_en2ja.route(
+@bp_put_en2ja.route(
     route="en2ja",
     methods=["PUT"],
     auth_level=func.AuthLevel.FUNCTION,
 )
-def en2ja(req: func.HttpRequest) -> func.HttpResponse:
+def put_en2ja(req: func.HttpRequest) -> func.HttpResponse:
     """
     Translate English texts to Japanese texts
     """

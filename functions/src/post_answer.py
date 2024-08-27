@@ -22,8 +22,6 @@ from type.response import PostAnswerRes
 
 MAX_RETRY_NUMBER: int = 5
 
-bp_answer = func.Blueprint()
-
 
 def create_input(course_name: str, subjects: list[str], choices: list[str]) -> str:
     """
@@ -163,12 +161,15 @@ def queue_message_answer(message_answer: MessageAnswer) -> None:
     queue_client.send_message(json.dumps(message_answer).encode("utf-8"))
 
 
-@bp_answer.route(
+bp_post_answer = func.Blueprint()
+
+
+@bp_post_answer.route(
     route="tests/{testId}/answers/{questionNumber}",
     methods=["POST"],
     auth_level=func.AuthLevel.FUNCTION,
 )
-def answer(req: func.HttpRequest) -> func.HttpResponse:
+def post_answer(req: func.HttpRequest) -> func.HttpResponse:
     """
     Generate Answers and Explanations
     """

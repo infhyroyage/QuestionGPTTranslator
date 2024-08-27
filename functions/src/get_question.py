@@ -12,15 +12,15 @@ from type.cosmos import Question
 from type.response import GetQuestionRes
 from util.cosmos import get_read_only_container
 
-bp_question = func.Blueprint()
+bp_get_question = func.Blueprint()
 
 
-@bp_question.route(
+@bp_get_question.route(
     route="tests/{testId}/questions/{questionNumber}",
     methods=["GET"],
     auth_level=func.AuthLevel.FUNCTION,
 )
-def question(req: func.HttpRequest) -> func.HttpResponse:
+def get_question(req: func.HttpRequest) -> func.HttpResponse:
     """
     Retrieve Question
     """

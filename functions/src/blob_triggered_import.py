@@ -1,5 +1,5 @@
 """
-Module of Blob Triggers
+Module of Blob Triggered Function for Importing Items
 """
 
 import json
@@ -136,15 +136,15 @@ def upsert_question_items(
             time.sleep(3)
 
 
-bp_import_items = func.Blueprint()
+bp_blob_triggered_import = func.Blueprint()
 
 
-@bp_import_items.blob_trigger(
+@bp_blob_triggered_import.blob_trigger(
     arg_name="blob",
     connection="AzureWebJobsStorage",
     path="import-items/{courseName}/{testName}.json",
 )
-def import_items(blob: func.InputStream):
+def blob_triggered_import(blob: func.InputStream):
     """
     Import Cosmos DB Items
     """

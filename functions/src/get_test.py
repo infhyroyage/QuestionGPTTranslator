@@ -11,15 +11,15 @@ from type.cosmos import Test
 from type.response import GetTestRes
 from util.cosmos import get_read_only_container
 
-bp_test = func.Blueprint()
+bp_get_test = func.Blueprint()
 
 
-@bp_test.route(
+@bp_get_test.route(
     route="tests/{testId}",
     methods=["GET"],
     auth_level=func.AuthLevel.FUNCTION,
 )
-def test(req: func.HttpRequest) -> func.HttpResponse:
+def get_test(req: func.HttpRequest) -> func.HttpResponse:
     """
     Retrieve Test
     """

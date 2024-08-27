@@ -3,22 +3,22 @@ Entry Point of Functions Application
 """
 
 import azure.functions as func
-from src.answer import bp_answer
-from src.en2ja import bp_en2ja
-from src.healthcheck import bp_healthcheck
-from src.import_items import bp_import_items
-from src.question import bp_question
-from src.test import bp_test
-from src.tests import bp_tests
-from src.upsert_answer import bp_upsert_answer
+from src.blob_triggered_import import bp_blob_triggered_import
+from src.get_healthcheck import bp_get_healthcheck
+from src.get_question import bp_get_question
+from src.get_test import bp_get_test
+from src.get_tests import bp_get_tests
+from src.post_answer import bp_post_answer
+from src.put_en2ja import bp_put_en2ja
+from src.queue_triggered_answer import bp_queue_triggered_answer
 
 app = func.FunctionApp()
 
-app.register_blueprint(bp_answer)
-app.register_blueprint(bp_en2ja)
-app.register_blueprint(bp_healthcheck)
-app.register_blueprint(bp_import_items)
-app.register_blueprint(bp_question)
-app.register_blueprint(bp_test)
-app.register_blueprint(bp_tests)
-app.register_blueprint(bp_upsert_answer)
+app.register_blueprint(bp_blob_triggered_import)
+app.register_blueprint(bp_get_healthcheck)
+app.register_blueprint(bp_get_question)
+app.register_blueprint(bp_get_test)
+app.register_blueprint(bp_get_tests)
+app.register_blueprint(bp_post_answer)
+app.register_blueprint(bp_put_en2ja)
+app.register_blueprint(bp_queue_triggered_answer)

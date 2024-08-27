@@ -1,5 +1,5 @@
 """
-Module of Queue Triggers
+Module of Queue Triggered Function for Answer
 """
 
 import json
@@ -11,15 +11,15 @@ from type.cosmos import Answer, Question
 from type.message import MessageAnswer
 from util.cosmos import get_read_write_container
 
-bp_upsert_answer = func.Blueprint()
+bp_queue_triggered_answer = func.Blueprint()
 
 
-@bp_upsert_answer.queue_trigger(
+@bp_queue_triggered_answer.queue_trigger(
     arg_name="msg",
     connection="AzureWebJobsStorage",
     queue_name="answers",
 )
-def upsert_answer(msg: func.QueueMessage):
+def queue_triggered_answer(msg: func.QueueMessage):
     """
     Upsert Answer Item
     """
