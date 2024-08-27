@@ -204,7 +204,6 @@ def answer(req: func.HttpRequest) -> func.HttpResponse:
             queue_name="answers",
             message_encode_policy=BinaryBase64EncodePolicy(),
         )
-
         message_answer: MessageAnswer = {
             "questionNumber": question_number,
             "correctIdxes": correct_indexes,
@@ -212,7 +211,7 @@ def answer(req: func.HttpRequest) -> func.HttpResponse:
             "testId": test_id,
         }
         logging.info({"message_answer": message_answer})
-        queue_client.send_message(json.dumps(message_answer))
+        queue_client.send_message(json.dumps(message_answer).encode("utf-8"))
 
         body: PostAnswerRes = {
             "correctIdxes": correct_indexes,
