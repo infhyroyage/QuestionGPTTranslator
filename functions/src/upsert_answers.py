@@ -4,24 +4,12 @@ Module of Queue Triggers
 
 import json
 import logging
-from typing import List, TypedDict
 
 import azure.functions as func
 from azure.cosmos import ContainerProxy
 from type.cosmos import Answer
+from type.message import MessageAnswer
 from util.cosmos import get_read_write_container
-
-
-class MessageAnswer(TypedDict):
-    """
-    Message Type for Answer Item
-    """
-
-    questionNumber: int
-    correctIdxes: List[int]
-    explanations: List[str]
-    testId: str
-
 
 bp_upsert_answers = func.Blueprint()
 

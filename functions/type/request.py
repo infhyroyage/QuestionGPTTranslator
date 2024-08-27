@@ -1,6 +1,4 @@
-"""
-Functions Application Request Type Definitions
-"""
+"""Functions Application Request Type Definitions"""
 
 from typing import List, TypedDict
 
@@ -11,6 +9,8 @@ class PostAnswerReq(TypedDict):
     """
 
     courseName: str
+    questionNumber: int
+    testId: str
     subjects: List[str]
     choices: List[str]
 

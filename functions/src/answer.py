@@ -8,10 +8,12 @@ import os
 import re
 
 import azure.functions as func
+from azure.storage.queue import BinaryBase64EncodePolicy, QueueClient
 from langchain import hub
 from langchain.agents import AgentExecutor, create_react_agent
 from langchain_google_community import GoogleSearchAPIWrapper, GoogleSearchRun
 from langchain_openai import AzureChatOpenAI
+from type.message import MessageAnswer
 from type.request import PostAnswerReq
 from type.response import PostAnswerRes
 
@@ -105,10 +107,18 @@ def answer(req: func.HttpRequest) -> func.HttpResponse:
     try:
         req_body: PostAnswerReq = json.loads(req.get_body().decode("utf-8"))
         course_name: str = req_body["courseName"]
+        question_number: int = req_body["questionNumber"]
+        test_id: str = req_body["testId"]
         subjects: list[str] = req_body["subjects"]
         choices: list[str] = req_body["choices"]
         logging.info(
-            {"course_name": course_name, "subjects": subjects, "choices": choices}
+            {
+                "course_name": course_name,
+                "question_number": question_number,
+                "test_id": test_id,
+                "subjects": subjects,
+                "choices": choices,
+            }
         )
 
         # Validate course name, subjects and choices
@@ -140,8 +150,10 @@ def answer(req: func.HttpRequest) -> func.HttpResponse:
             prompt=hub.pull("hwchase17/react"),
         )
 
-        retry_number: int = 0
-        while retry_number < MAX_RETRY_NUMBER:
+        # Generate correct indexes and explanations
+        correct_indexes: list[int] | None = None
+        explanations: list[str] | None = None
+        for retry_number in range(MAX_RETRY_NUMBER):
             logging.info({"retry_number": retry_number})
 
             # Execute ReAct agent
@@ -167,27 +179,44 @@ def answer(req: func.HttpRequest) -> func.HttpResponse:
                 )
 
                 # Clean up correct options and explanations
-                correct_indexes: list[int] = [
+                correct_indexes = [
                     int(option.strip()) - 1
                     for option in raw_correct_options.split(", ")
                     if option.strip()
                 ]
-                explanations: list[str] = [
+                explanations = [
                     exp.strip() for exp in raw_explanations.split("\n") if exp.strip()
                 ]
 
-                body: PostAnswerRes = {
-                    "correctIdxes": correct_indexes,
-                    "explanations": explanations,
-                }
-                return func.HttpResponse(
-                    body=json.dumps(body),
-                    status_code=200,
-                )
+                break
 
-            retry_number += 1
+        # Check if max retries reached
+        if not correct_indexes or not explanations:
+            raise RuntimeError("Too Many Retries")
 
-        raise RuntimeError("Too Many Retries")
+        # Queue answer to queue storage
+        queue_client = QueueClient.from_connection_string(
+            conn_str=os.environ["AzureWebJobsStorage"],
+            queue_name="answers",
+            message_encode_policy=BinaryBase64EncodePolicy(),
+        )
+
+        message_answer: MessageAnswer = {
+            "questionNumber": question_number,
+            "correctIdxes": correct_indexes,
+            "explanations": explanations,
+            "testId": test_id,
+        }
+        queue_client.send_message(json.dumps(message_answer))
+
+        body: PostAnswerRes = {
+            "correctIdxes": correct_indexes,
+            "explanations": explanations,
+        }
+        return func.HttpResponse(
+            body=json.dumps(body),
+            status_code=200,
+        )
     except Exception as e:  # pylint: disable=broad-except
         logging.error(e)
         return func.HttpResponse(
