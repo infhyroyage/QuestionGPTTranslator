@@ -31,7 +31,7 @@ def upsert_answers(msg: func.QueueMessage):
     # Initialize Cosmos DB Client
     container: ContainerProxy = get_read_write_container(
         database_name="Users",
-        container_name="Test",
+        container_name="Answer",
     )
 
     # UsersテータベースのAnswerコンテナーの項目をupsert
