@@ -1,5 +1,5 @@
 """
-Module of [GET] /question
+Module of [GET] /tests/{testId}/questions/{questionNumber}
 """
 
 import json
@@ -16,7 +16,7 @@ bp_question = func.Blueprint()
 
 
 @bp_question.route(
-    route="questions/{testId}/questions/{questionNumber}",
+    route="tests/{testId}/questions/{questionNumber}",
     methods=["GET"],
     auth_level=func.AuthLevel.FUNCTION,
 )

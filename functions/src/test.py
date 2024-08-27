@@ -1,5 +1,5 @@
 """
-Module of [GET] /test
+Module of [GET] /tests/{testId}
 """
 
 import json
