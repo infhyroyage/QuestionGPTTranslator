@@ -10,7 +10,7 @@ from src.import_items import bp_import_items
 from src.question import bp_question
 from src.test import bp_test
 from src.tests import bp_tests
-from src.upsert_answers import bp_upsert_answers
+from src.upsert_answer import bp_upsert_answer
 
 app = func.FunctionApp()
 
@@ -21,4 +21,4 @@ app.register_blueprint(bp_import_items)
 app.register_blueprint(bp_question)
 app.register_blueprint(bp_test)
 app.register_blueprint(bp_tests)
-app.register_blueprint(bp_upsert_answers)
+app.register_blueprint(bp_upsert_answer)

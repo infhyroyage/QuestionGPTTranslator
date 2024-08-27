@@ -11,17 +11,17 @@ from type.cosmos import Answer, Question
 from type.message import MessageAnswer
 from util.cosmos import get_read_write_container
 
-bp_upsert_answers = func.Blueprint()
+bp_upsert_answer = func.Blueprint()
 
 
-@bp_upsert_answers.queue_trigger(
+@bp_upsert_answer.queue_trigger(
     arg_name="msg",
     connection="AzureWebJobsStorage",
     queue_name="answers",
 )
-def upsert_answers(msg: func.QueueMessage):
+def upsert_answer(msg: func.QueueMessage):
     """
-    Upsert Answer Items
+    Upsert Answer Item
     """
 
     # Queueトリガーで受け取ったjson形式のメッセージをMessage型として読込み
