@@ -107,7 +107,7 @@ def answer(req: func.HttpRequest) -> func.HttpResponse:
     try:
         req_body: PostAnswerReq = json.loads(req.get_body().decode("utf-8"))
         course_name: str = req_body["courseName"]
-        question_number: int = req_body["questionNumber"]
+        question_number: int = int(req_body["questionNumber"])
         test_id: str = req_body["testId"]
         subjects: list[str] = req_body["subjects"]
         choices: list[str] = req_body["choices"]
@@ -121,9 +121,13 @@ def answer(req: func.HttpRequest) -> func.HttpResponse:
             }
         )
 
-        # Validate course name, subjects and choices
+        # Validate body
         if not course_name or course_name == "":
             raise ValueError("Invalid courseName")
+        if not question_number or question_number == "NaN":
+            raise ValueError("Invalid questionNumber")
+        if not test_id or test_id == "":
+            raise ValueError("Invalid testId")
         if not subjects or not isinstance(subjects, list) or len(subjects) == 0:
             raise ValueError("Invalid subjects")
         if not choices or not isinstance(choices, list) or len(choices) == 0:
