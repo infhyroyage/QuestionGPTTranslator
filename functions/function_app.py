@@ -4,6 +4,7 @@ Entry Point of Functions Application
 
 import azure.functions as func
 from src.blob_triggered_import import bp_blob_triggered_import
+from src.get_answer import bp_get_answer
 from src.get_healthcheck import bp_get_healthcheck
 from src.get_question import bp_get_question
 from src.get_test import bp_get_test
@@ -15,6 +16,7 @@ from src.queue_triggered_answer import bp_queue_triggered_answer
 app = func.FunctionApp()
 
 app.register_blueprint(bp_blob_triggered_import)
+app.register_blueprint(bp_get_answer)
 app.register_blueprint(bp_get_healthcheck)
 app.register_blueprint(bp_get_question)
 app.register_blueprint(bp_get_test)

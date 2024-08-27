@@ -5,6 +5,15 @@ Functions Application Response Type Definitions
 from typing import List, Optional, TypedDict
 
 
+class GetAnswerRes(TypedDict):
+    """
+    [GET] /tests/{testId}/answers/{questionNumber} Response Type
+    """
+
+    correctIdxes: List[int]
+    explanations: List[str]
+
+
 class GetHealthcheckRes(TypedDict):
     """
     [GET] /healthcheck Response Type
