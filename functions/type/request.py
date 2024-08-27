@@ -9,8 +9,6 @@ class PostAnswerReq(TypedDict):
     """
 
     courseName: str
-    questionNumber: int
-    testId: str
     subjects: List[str]
     choices: List[str]
 

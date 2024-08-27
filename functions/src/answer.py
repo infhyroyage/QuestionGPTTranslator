@@ -1,16 +1,19 @@
 """
-Module of [POST] /answer
+Module of [POST] /tests/{testId}/answers/{questionNumber}
 """
 
 import json
 import logging
 import os
 import re
+from typing import Sequence
 
 import azure.functions as func
 from azure.storage.queue import BinaryBase64EncodePolicy, QueueClient
 from langchain import hub
 from langchain.agents import AgentExecutor, create_react_agent
+from langchain_core.runnables import Runnable
+from langchain_core.tools import BaseTool
 from langchain_google_community import GoogleSearchAPIWrapper, GoogleSearchRun
 from langchain_openai import AzureChatOpenAI
 from type.message import MessageAnswer
@@ -94,16 +97,32 @@ Unless there is an instruction such as "Select THREE" in the question, there wil
 ---"""
 
 
-def check_output_format(output: str) -> tuple[list[int] | None, list[str] | None]:
+def generate_correct_indexes_explanations(
+    agent: Runnable,
+    tools: Sequence[BaseTool],
+    course_name: str,
+    subjects: list[str],
+    choices: list[str],
+) -> tuple[list[int] | None, list[str] | None]:
     """
-    Check if output format is "Correct Option: {raw_correct_options}\n{raw_explanations}"
-    or "Correct Options: {raw_correct_options}\n{raw_explanations}".
-    If the output format is not correct, return (None, None).
+    Generate correct indexes and explanations from Subjects and Choices
+    If failed, return (None, None).
     """
 
     correct_indexes: list[int] | None = None
     explanations: list[str] | None = None
     try:
+        # Execute ReAct agent
+        output: str = AgentExecutor(
+            agent=agent,
+            tools=tools,
+            handle_parsing_errors=True,
+            verbose=True,
+        ).invoke({"input": create_input(course_name, subjects, choices)})["output"]
+        logging.info({"output": output})
+
+        # Check if output format is "Correct Option: {raw_correct_options}\n{raw_explanations}"
+        # or "Correct Options: {raw_correct_options}\n{raw_explanations}"
         match = re.search(r"Correct Option[s]?: (\d+(?:, \d+)*)\n([\s\S]+)", output)
         if match and match.group(1) and match.group(2):
             raw_correct_options: str = match.group(1)
@@ -156,20 +175,20 @@ def queue_message_answer(
 
 
 @bp_answer.route(
-    route="answer",
+    route="tests/{testId}/answers/{questionNumber}",
     methods=["POST"],
     auth_level=func.AuthLevel.FUNCTION,
 )
 def answer(req: func.HttpRequest) -> func.HttpResponse:
     """
-    Generate Answers and Explanations from Subjects and Choices
+    Generate Answers and Explanations
     """
 
     try:
+        test_id = req.route_params.get("testId")
+        question_number = req.route_params.get("questionNumber")
         req_body: PostAnswerReq = json.loads(req.get_body().decode("utf-8"))
         course_name: str = req_body["courseName"]
-        question_number: int = int(req_body["questionNumber"])
-        test_id: str = req_body["testId"]
         subjects: list[str] = req_body["subjects"]
         choices: list[str] = req_body["choices"]
         logging.info(
@@ -182,13 +201,17 @@ def answer(req: func.HttpRequest) -> func.HttpResponse:
             }
         )
 
-        # Validate body
+        # Validate Path Parameters and Body
+        if test_id is None or question_number is None:
+            raise ValueError(
+                f"Invalid testId or questionNumber: {test_id}, {question_number}"
+            )
+        if not question_number.isdigit():
+            return func.HttpResponse(
+                body=f"Invalid questionNumber: {question_number}", status_code=400
+            )
         if not course_name or course_name == "":
             raise ValueError("Invalid courseName")
-        if not question_number or question_number == "NaN":
-            raise ValueError("Invalid questionNumber")
-        if not test_id or test_id == "":
-            raise ValueError("Invalid testId")
         if not subjects or not isinstance(subjects, list) or len(subjects) == 0:
             raise ValueError("Invalid subjects")
         if not choices or not isinstance(choices, list) or len(choices) == 0:
@@ -201,7 +224,7 @@ def answer(req: func.HttpRequest) -> func.HttpResponse:
             azure_deployment=os.environ["OPENAI_DEPLOYMENT"],
             azure_endpoint=os.environ["OPENAI_ENDPOINT"],
         )
-        tools = [
+        tools: Sequence[BaseTool] = [
             GoogleSearchRun(
                 api_wrapper=GoogleSearchAPIWrapper(
                     google_api_key=os.environ["GOOGLE_API_KEY"],
@@ -209,29 +232,22 @@ def answer(req: func.HttpRequest) -> func.HttpResponse:
                 )
             )
         ]
-        agent = create_react_agent(
+        agent: Runnable = create_react_agent(
             llm=llm,
             tools=tools,
             prompt=hub.pull("hwchase17/react"),
         )
 
-        # Generate correct indexes and explanations
+        # Generate correct indexes and explanations within MAX_RETRY_NUMBER retries
         correct_indexes: list[int] | None = None
         explanations: list[str] | None = None
         for retry_number in range(MAX_RETRY_NUMBER):
             logging.info({"retry_number": retry_number})
+            correct_indexes, explanations = generate_correct_indexes_explanations(
+                agent, tools, course_name, subjects, choices
+            )
 
-            # Execute ReAct agent
-            output: str = AgentExecutor(
-                agent=agent,
-                tools=tools,
-                handle_parsing_errors=True,
-                verbose=True,
-            ).invoke({"input": create_input(course_name, subjects, choices)})["output"]
-            logging.info({"output": output})
-
-            # Check output format
-            correct_indexes, explanations = check_output_format(output)
+            # Check if correct indexes and explanations are valid
             if correct_indexes and explanations:
                 break
 
