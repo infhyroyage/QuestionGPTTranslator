@@ -6,16 +6,10 @@ import json
 import logging
 import os
 import re
-from typing import Sequence
 
 import azure.functions as func
 from azure.storage.queue import BinaryBase64EncodePolicy, QueueClient
-from langchain import hub
-from langchain.agents import AgentExecutor, create_react_agent
-from langchain_core.runnables import Runnable
-from langchain_core.tools import BaseTool
-from langchain_google_community import GoogleSearchAPIWrapper, GoogleSearchRun
-from langchain_openai import AzureChatOpenAI
+from openai import AzureOpenAI
 from type.message import MessageAnswer
 from type.request import PostAnswerReq
 from type.response import PostAnswerRes
@@ -23,9 +17,18 @@ from type.response import PostAnswerRes
 MAX_RETRY_NUMBER: int = 5
 
 
-def create_input(course_name: str, subjects: list[str], choices: list[str]) -> str:
+def create_system_prompt(course_name: str) -> str:
     """
-    Create Input Prompt
+    Create System Prompt for Chat Completion
+    """
+
+    # pylint: disable=line-too-long
+    return f'You are a professional who provides correct explanations for candidates of the exam named "{course_name}".'
+
+
+def create_user_prompt(subjects: list[str], choices: list[str]) -> str:
+    """
+    Create User Prompt for Chat Completion
     """
 
     joined_subjects: str = "\n".join(subjects)
@@ -34,8 +37,7 @@ def create_input(course_name: str, subjects: list[str], choices: list[str]) -> s
     )
 
     # pylint: disable=line-too-long
-    return f"""You are a professional who provides correct explanations for candidates of the exam named "{course_name}".
-For a given question and the choices, you must generate sentences that show the correct option/options and explain why each option is correct/incorrect.
+    return f"""For a given question and the choices, you must generate sentences that show the correct option/options and explain why each option is correct/incorrect.
 Unless there is an instruction such as "Select THREE" in the question, there is basically only one correct option.
 For reference, here are two examples.
 
@@ -93,58 +95,6 @@ Unless there is an instruction such as "Select THREE" in the question, there wil
 
 {joined_choices}
 ---"""
-
-
-def generate_correct_indexes_explanations(
-    agent: Runnable,
-    tools: Sequence[BaseTool],
-    course_name: str,
-    subjects: list[str],
-    choices: list[str],
-) -> tuple[list[int] | None, list[str] | None]:
-    """
-    Generate correct indexes and explanations from Subjects and Choices
-    If failed, return (None, None).
-    """
-
-    correct_indexes: list[int] | None = None
-    explanations: list[str] | None = None
-    try:
-        # Execute ReAct agent
-        output: str = AgentExecutor(
-            agent=agent,
-            tools=tools,
-            handle_parsing_errors=True,
-            verbose=True,
-        ).invoke({"input": create_input(course_name, subjects, choices)})["output"]
-        logging.info({"output": output})
-
-        # Check if output format is "Correct Option: {raw_correct_options}\n{raw_explanations}"
-        # or "Correct Options: {raw_correct_options}\n{raw_explanations}"
-        match = re.search(r"Correct Option[s]?: (\d+(?:, \d+)*)\n([\s\S]+)", output)
-        if match and match.group(1) and match.group(2):
-            raw_correct_options: str = match.group(1)
-            raw_explanations: str = match.group(2)
-            logging.info(
-                {
-                    "raw_correct_options": raw_correct_options,
-                    "raw_explanations": raw_explanations,
-                }
-            )
-
-            # Clean up correct options and explanations
-            correct_indexes = [
-                int(option.strip()) - 1
-                for option in raw_correct_options.split(", ")
-                if option.strip()
-            ]
-            explanations = [
-                exp.strip() for exp in raw_explanations.split("\n") if exp.strip()
-            ]
-    except Exception as e:  # pylint: disable=broad-except
-        logging.warning(e)
-
-    return correct_indexes, explanations
 
 
 def queue_message_answer(message_answer: MessageAnswer) -> None:
@@ -207,43 +157,54 @@ def post_answer(req: func.HttpRequest) -> func.HttpResponse:
         if not choices or not isinstance(choices, list) or len(choices) == 0:
             raise ValueError("Invalid choices")
 
-        # Create ReAct agent
-        llm = AzureChatOpenAI(
-            api_key=os.environ["OPENAI_API_KEY"],
-            api_version=os.environ["OPENAI_API_VERSION"],
-            azure_deployment=os.environ["OPENAI_DEPLOYMENT"],
-            azure_endpoint=os.environ["OPENAI_ENDPOINT"],
-        )
-        tools: Sequence[BaseTool] = [
-            GoogleSearchRun(
-                api_wrapper=GoogleSearchAPIWrapper(
-                    google_api_key=os.environ["GOOGLE_API_KEY"],
-                    google_cse_id=os.environ["GOOGLE_CSE_ID"],
-                )
-            )
-        ]
-        agent: Runnable = create_react_agent(
-            llm=llm,
-            tools=tools,
-            prompt=hub.pull("hwchase17/react"),
-        )
-
         # Generate correct indexes and explanations within MAX_RETRY_NUMBER retries
         correct_indexes: list[int] | None = None
         explanations: list[str] | None = None
         for retry_number in range(MAX_RETRY_NUMBER):
             logging.info({"retry_number": retry_number})
-            correct_indexes, explanations = generate_correct_indexes_explanations(
-                agent=agent,
-                tools=tools,
-                course_name=course_name,
-                subjects=subjects,
-                choices=choices,
-            )
+            try:
+                # Execute Chat Completion
+                response = AzureOpenAI(
+                    api_key=os.environ["OPENAI_API_KEY"],
+                    api_version=os.environ["OPENAI_API_VERSION"],
+                    azure_deployment=os.environ["OPENAI_DEPLOYMENT"],
+                    azure_endpoint=os.environ["OPENAI_ENDPOINT"],
+                ).chat.completions.create(
+                    model=os.environ["OPENAI_DEPLOYMENT"],
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": create_system_prompt(course_name),
+                        },
+                        {
+                            "role": "user",
+                            "content": create_user_prompt(subjects, choices),
+                        },
+                    ],
+                )
+                logging.info({"content": response.choices[0].message.content})
 
-            # Check if correct indexes and explanations are valid
-            if correct_indexes and explanations:
-                break
+                # Check if output format is as follows:
+                # * "Correct Option: {correct_indexes}\n{explanations}"
+                # * "Correct Options: {correct_indexes}\n{explanations}"
+                match = re.search(
+                    r"Correct Option[s]?: (\d+(?:, \d+)*)\n([\s\S]+)",
+                    response.choices[0].message.content,
+                )
+                if match and match.group(1) and match.group(2):
+                    # Clean up correct options and explanations
+                    correct_indexes = [
+                        int(option.strip()) - 1
+                        for option in match.group(1).split(", ")
+                        if option.strip()
+                    ]
+                    explanations = [
+                        exp.strip() for exp in match.group(2).split("\n") if exp.strip()
+                    ]
+
+                    break
+            except Exception as e:  # pylint: disable=broad-except
+                logging.warning(e)
 
         # Check if max retries reached
         if not correct_indexes or not explanations:
