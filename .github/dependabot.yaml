@@ -15,14 +15,6 @@ updates:
     assignees:
       - "infhyroyage"
     ignore:
-      - dependency-name: "langchain"
-      - dependency-name: "langchain-community"
-      - dependency-name: "langchain-core"
-      - dependency-name: "langchain-google-community"
-      - dependency-name: "langchain-openai"
-      - dependency-name: "langchain-text-splitter"
-      - dependency-name: "langchainhub"
-      - dependency-name: "langsmith"
       - dependency-name: "openai"
     labels: []
     reviewers:
