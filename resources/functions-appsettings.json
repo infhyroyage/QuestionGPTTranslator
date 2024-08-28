@@ -25,34 +25,9 @@
     "value": "@Microsoft.KeyVault(VaultName=qgtranslator-je-vault;SecretName=deepl-auth-key)"
   },
   {
-    "name": "GOOGLE_API_KEY",
-    "slotSetting": false,
-    "value": "@Microsoft.KeyVault(VaultName=qgtranslator-je-vault;SecretName=google-api-key)"
-  },
-  {
-    "name": "GOOGLE_CSE_ID",
-    "slotSetting": false,
-    "value": "@Microsoft.KeyVault(VaultName=qgtranslator-je-vault;SecretName=google-cse-id)"
-  },
-  {
     "name": "OPENAI_API_KEY",
     "slotSetting": false,
     "value": "@Microsoft.KeyVault(VaultName=qgtranslator-je-vault;SecretName=openai-api-key)"
-  },
-  {
-    "name": "OPENAI_API_VERSION",
-    "slotSetting": false,
-    "value": "@Microsoft.KeyVault(VaultName=qgtranslator-je-vault;SecretName=openai-api-version)"
-  },
-  {
-    "name": "OPENAI_DEPLOYMENT",
-    "slotSetting": false,
-    "value": "@Microsoft.KeyVault(VaultName=qgtranslator-je-vault;SecretName=openai-deployment)"
-  },
-  {
-    "name": "OPENAI_ENDPOINT",
-    "slotSetting": false,
-    "value": "@Microsoft.KeyVault(VaultName=qgtranslator-je-vault;SecretName=openai-endpoint)"
   },
   {
     "name": "TRANSLATOR_KEY",

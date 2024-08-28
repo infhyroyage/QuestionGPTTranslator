@@ -3,16 +3,13 @@ param azureAdEAContributorObjectId string
 param azureApimPublisherEmail string
 @secure()
 param deeplAuthKey string
-@secure()
-param googleApiKey string
-@secure()
-param googleCseId string
 param location string = resourceGroup().location
 @secure()
 param openAIApiKey string
 param openAIApiVersion string
 param openAIDeployment string
 param openAIEndpoint string
+param openAIModel string
 @secure()
 param translatorKey string
 
@@ -52,8 +49,6 @@ var vaultSecretNames = {
   cosmosDBPrimaryKey: 'cosmos-db-primary-key'
   cosmosDBPrimaryReadonlyKey: 'cosmos-db-primary-readonly-key'
   deeplAuthKey: 'deepl-auth-key'
-  googleApiKey: 'google-api-key'
-  googleCseId: 'google-cse-id'
   insightsConnectionString: 'insights-connection-string'
   insightsInstrumentationKey: 'insights-instrumentation-key'
   openAIApiKey: 'openai-api-key'
@@ -371,6 +366,22 @@ resource functions 'Microsoft.Web/sites@2022-09-01' = {
           value: 'python'
         }
         {
+          name: 'OPENAI_API_VERSION'
+          value: openAIApiVersion
+        }
+        {
+          name: 'OPENAI_DEPLOYMENT'
+          value: openAIDeployment
+        }
+        {
+          name: 'OPENAI_ENDPOINT'
+          value: openAIEndpoint
+        }
+        {
+          name: 'OPENAI_MODEL'
+          value: openAIModel
+        }
+        {
           name: 'WEBSITE_CONTENTAZUREFILECONNECTIONSTRING'
           value: 'DefaultEndpointsProtocol=https;AccountName=${storageName};AccountKey=${storage.listKeys().keys[0].value};EndpointSuffix=core.windows.net'
         }
@@ -444,16 +455,6 @@ resource vault 'Microsoft.KeyVault/vaults@2023-02-01' = {
     tenantId: tenant().tenantId
   }
 }
-resource vaultSecretsTranslatorKey 'Microsoft.KeyVault/vaults/secrets@2023-02-01' = {
-  parent: vault
-  name: vaultSecretNames.translatorKey
-  properties: {
-    attributes: {
-      enabled: true
-    }
-    value: translatorKey
-  }
-}
 resource vaultSecretsCosmosDBPrimaryKey 'Microsoft.KeyVault/vaults/secrets@2023-02-01' = {
   parent: vault
   name: vaultSecretNames.cosmosDBPrimaryKey
@@ -482,26 +483,6 @@ resource vaultSecretsDeeplAuthKey 'Microsoft.KeyVault/vaults/secrets@2023-02-01'
       enabled: true
     }
     value: deeplAuthKey
-  }
-}
-resource vaultSecretsGoogleApiKey 'Microsoft.KeyVault/vaults/secrets@2023-02-01' = {
-  parent: vault
-  name: vaultSecretNames.googleApiKey
-  properties: {
-    attributes: {
-      enabled: true
-    }
-    value: googleApiKey
-  }
-}
-resource vaultSecretsGoogleCseId 'Microsoft.KeyVault/vaults/secrets@2023-02-01' = {
-  parent: vault
-  name: vaultSecretNames.googleCseId
-  properties: {
-    attributes: {
-      enabled: true
-    }
-    value: googleCseId
   }
 }
 resource vaultSecretsInsightsConnectionString 'Microsoft.KeyVault/vaults/secrets@2023-02-01' = {
@@ -534,33 +515,13 @@ resource vaultSecretsOpenAIApiKey 'Microsoft.KeyVault/vaults/secrets@2023-02-01'
     value: openAIApiKey
   }
 }
-resource vaultSecretsOpenAIApiVersion 'Microsoft.KeyVault/vaults/secrets@2023-02-01' = {
+resource vaultSecretsTranslatorKey 'Microsoft.KeyVault/vaults/secrets@2023-02-01' = {
   parent: vault
-  name: vaultSecretNames.openAIApiVersion
+  name: vaultSecretNames.translatorKey
   properties: {
     attributes: {
       enabled: true
     }
-    value: openAIApiVersion
-  }
-}
-resource vaultSecretsOpenAIDeployment 'Microsoft.KeyVault/vaults/secrets@2023-02-01' = {
-  parent: vault
-  name: vaultSecretNames.openAIDeployment
-  properties: {
-    attributes: {
-      enabled: true
-    }
-    value: openAIDeployment
-  }
-}
-resource vaultSecretsOpenAIEndpoint 'Microsoft.KeyVault/vaults/secrets@2023-02-01' = {
-  parent: vault
-  name: vaultSecretNames.openAIEndpoint
-  properties: {
-    attributes: {
-      enabled: true
-    }
-    value: openAIEndpoint
+    value: translatorKey
   }
 }
