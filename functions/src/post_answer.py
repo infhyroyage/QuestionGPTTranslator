@@ -170,7 +170,7 @@ def post_answer(req: func.HttpRequest) -> func.HttpResponse:
                     azure_deployment=os.environ["OPENAI_DEPLOYMENT"],
                     azure_endpoint=os.environ["OPENAI_ENDPOINT"],
                 ).chat.completions.create(
-                    model=os.environ["OPENAI_DEPLOYMENT"],
+                    model=os.environ["OPENAI_MODEL"],
                     messages=[
                         {
                             "role": "system",
