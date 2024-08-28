@@ -44,7 +44,10 @@ var lawName = 'qgtranslator-je-law'
 
 var storageBlobContainerName = 'import-items'
 var storageName = 'qgtranslatorjesa'
-var storageQueueName = 'answers'
+var storageQueueNames = {
+  answers: 'answers'
+  translations: 'translations'
+}
 
 var vaultName = 'qgtranslator-je-vault'
 var vaultSecretNames = {
@@ -298,7 +301,11 @@ resource storageQueue 'Microsoft.Storage/storageAccounts/queueServices@2023-05-0
 }
 resource storageQueueQueue 'Microsoft.Storage/storageAccounts/queueServices/queues@2023-05-01' = {
   parent: storageQueue
-  name: storageQueueName
+  name: storageQueueNames.answers
+}
+resource storageQueueQueueTranslations 'Microsoft.Storage/storageAccounts/queueServices/queues@2023-05-01' = {
+  parent: storageQueue
+  name: storageQueueNames.translations
 }
 
 // Log Analytics Workspaces
