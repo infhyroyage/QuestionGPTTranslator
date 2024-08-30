@@ -1,6 +1,4 @@
-"""
-Utility functions for Cosmos DB
-"""
+"""Cosmos DBのユーティリティ関数"""
 
 import os
 
@@ -9,14 +7,14 @@ from azure.cosmos import ContainerProxy, CosmosClient
 
 def get_read_only_container(database_name: str, container_name: str) -> ContainerProxy:
     """
-    Get a read-only container from Cosmos DB
+    指定したCosmos DBアカウントのコンテナーの読み取り専用インスタンスを返す
 
     Args:
-        database_name (str): Database Name
-        container_name (str): Container Name
+        database_name (str): Cosmos DBアカウントのデータベース名
+        container_name (str): Cosmos DBアカウントのコンテナー名
 
     Returns:
-        ContainerProxy: Read-only Container
+        ContainerProxy: Cosmos DBアカウントのコンテナーの読み取り専用インスタンス
     """
 
     return (
@@ -31,14 +29,14 @@ def get_read_only_container(database_name: str, container_name: str) -> Containe
 
 def get_read_write_container(database_name: str, container_name: str) -> ContainerProxy:
     """
-    Get a read-write container from Cosmos DB
+    指定したCosmos DBアカウントのコンテナーのインスタンスを返す
 
     Args:
-        database_name (str): Database Name
-        container_name (str): Container Name
+        database_name (str): Cosmos DBアカウントのデータベース名
+        container_name (str): Cosmos DBアカウントのコンテナー名
 
     Returns:
-        ContainerProxy: Read-write Container
+        ContainerProxy: Cosmos DBアカウントのコンテナーのインスタンス
     """
 
     return (

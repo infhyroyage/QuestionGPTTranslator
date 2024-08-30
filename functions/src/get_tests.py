@@ -1,6 +1,4 @@
-"""
-Module of [GET] /tests
-"""
+"""[GET] /tests のモジュール"""
 
 import json
 import logging
@@ -23,17 +21,17 @@ def get_tests(
     req: func.HttpRequest,  # pylint: disable=unused-argument
 ) -> func.HttpResponse:
     """
-    Retrieve All Tests
+    各コースに属するテストをすべて取得します
     """
 
     try:
-        # Initialize Cosmos DB Client
+        # Testコンテナーの読み取り専用インスタンスを取得
         container: ContainerProxy = get_read_only_container(
             database_name="Users",
             container_name="Test",
         )
 
-        # Execute Query
+        # Testコンテナーから全項目取得
         query = (
             "SELECT c.id, c.courseName, c.testName, c.length"
             "FROM c"
@@ -42,7 +40,7 @@ def get_tests(
         items: list[Test] = list(container.query_items(query=query))
         logging.info({"items": items})
 
-        # Format the response by grouping items by courseName
+        # 各項目をcourseName単位でまとめるようにレスポンス整形
         body: GetTestsRes = {}
         for item in items:
             tmp_item = {"id": item["id"], "testName": item["testName"]}

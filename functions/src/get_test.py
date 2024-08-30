@@ -1,6 +1,4 @@
-"""
-Module of [GET] /tests/{testId}
-"""
+"""[GET] /tests/{testId} のモジュール"""
 
 import json
 import logging
@@ -21,22 +19,22 @@ bp_get_test = func.Blueprint()
 )
 def get_test(req: func.HttpRequest) -> func.HttpResponse:
     """
-    Retrieve Test
+    指定したテストIDでのテストの詳細情報を取得します
     """
 
     try:
-        # Validate Path Parameters
+        # パスパラメーターのバリデーションチェック
         test_id = req.route_params.get("testId")
         if test_id is None:
             raise ValueError(f"Invalid testId: {test_id}")
 
-        # Initialize Cosmos DB Client
+        # Testコンテナーの読み取り専用インスタンスを取得
         container: ContainerProxy = get_read_only_container(
             database_name="Users",
             container_name="Test",
         )
 
-        # Execute Query
+        # Testコンテナーから項目取得
         query = (
             "SELECT c.id, c.courseName, c.testName, c.length"
             "FROM c"
@@ -48,7 +46,7 @@ def get_test(req: func.HttpRequest) -> func.HttpResponse:
         )
         logging.info({"items": items})
 
-        # Check the number of items
+        # 項目数のチェック
         if len(items) == 0:
             return func.HttpResponse(body="Not Found Test", status_code=404)
         if len(items) > 1:

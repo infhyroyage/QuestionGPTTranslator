@@ -1,11 +1,11 @@
-"""Translation Type Definitions"""
+"""翻訳エンジンのレスポンスの型定義"""
 
 from typing import List, TypedDict
 
 
 class DeepLTranslation(TypedDict):
     """
-    Type of elements in the translations array of DeepL response
+    DeepLのレスポンスのtranslationsフィールドの型
     """
 
     detected_source_language: str
@@ -14,7 +14,7 @@ class DeepLTranslation(TypedDict):
 
 class DeepLRes(TypedDict):
     """
-    Type of DeepL Response
+    DeepLのレスポンスの型
     """
 
     translations: List[DeepLTranslation]
@@ -22,7 +22,7 @@ class DeepLRes(TypedDict):
 
 class AzureTranslatorTranslationsItem(TypedDict):
     """
-    Type of elements in the translations array
+    Azure Translatorのレスポンスの各要素のtranslationsフィールドの型
     """
 
     text: str
@@ -31,7 +31,7 @@ class AzureTranslatorTranslationsItem(TypedDict):
 
 class AzureTranslatorTranslations(TypedDict):
     """
-    Type of elements in the Azure Translator response array
+    Azure Translatorのレスポンスの各要素の型
     """
 
     translations: List[AzureTranslatorTranslationsItem]
@@ -39,7 +39,7 @@ class AzureTranslatorTranslations(TypedDict):
 
 class AzureTranslatorRes(TypedDict):
     """
-    Type of Azure Translator Response
+    Azure Translatorのレスポンスの型
     """
 
     __root__: List[AzureTranslatorTranslations]

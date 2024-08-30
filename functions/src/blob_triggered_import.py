@@ -1,6 +1,4 @@
-"""
-Module of Blob Triggered Function for Importing Items
-"""
+"""インポートデータファイルの項目をインポートするBlobトリガーの関数アプリのモジュール"""
 
 import json
 import logging
@@ -18,16 +16,24 @@ def upsert_test_item(
     course_name: str, test_name: str, json_data: list[ImportItem]
 ) -> tuple[str, bool]:
     """
-    Upsert Test Item
+    Testコンテナーの項目をupsertする
+
+    Args:
+        course_name (str): コース名
+        test_name (str): テスト名
+        json_data (list[ImportItem]): インポートデータ
+
+    Returns:
+        tuple[str, bool]: Testコンテナーの項目のIDと、その項目が既に存在するかどうか
     """
 
-    # Initialize Cosmos DB Client
+    # Testコンテナーのインスタンスを取得
     container: ContainerProxy = get_read_write_container(
         database_name="Users",
         container_name="Test",
     )
 
-    # UsersテータベースのTestコンテナーの項目を取得
+    # Testコンテナーの項目を取得
     inserted_test_items: list[Test] = list(
         container.query_items(
             query="SELECT * FROM c WHERE c.courseName = @courseName and c.testName = @testName",
@@ -43,7 +49,7 @@ def upsert_test_item(
         raise ValueError("Not Unique Test")
     is_existed_test: bool = len(inserted_test_items) == 1
 
-    # 取得したUsersテータベースのTestコンテナーの項目が存在し差分がない場合以外はupsert
+    # 取得したTestコンテナーの項目が存在し差分がない場合以外はupsert
     test_id: str
     if not is_existed_test or (
         is_existed_test and inserted_test_items[0]["length"] != len(json_data)
@@ -69,15 +75,21 @@ def upsert_question_items(
     test_id: str, is_existed_test: bool, json_data: list[ImportItem]
 ) -> None:
     """
-    Upsert Question Items
+    Questionコンテナーの項目をupsertする
+
+    Args:
+        test_id (str): Testコンテナーの項目のidフィールドの値
+        is_existed_test (bool): Testコンテナーの項目が取得できた場合はTrue、取得できない場合はFalse
+        json_data (list[ImportItem]): インポートデータ
     """
 
+    # Questionコンテナーのインスタンスを取得
     container: ContainerProxy = get_read_write_container(
         database_name="Users",
         container_name="Question",
     )
 
-    # UsersテータベースのTestコンテナーの項目が取得できた場合のみ、クエリを実行して項目を全取得
+    # Testコンテナーの項目が取得できた場合のみ、クエリを実行して項目を全取得
     inserted_question_items: list[Question] = (
         list(
             container.query_items(
@@ -90,7 +102,7 @@ def upsert_question_items(
         else []
     )
 
-    # 読み込んだjsonファイルの各ImportItemにて、取得したUsersテータベースのQuestionコンテナーに存在して差分がない項目を抽出
+    # 読み込んだjsonファイルの各ImportItemにて、取得したQuestionコンテナーに存在して差分がない項目を抽出
     inserted_import_items: list[ImportItem] = []
     for inserted_question_item in inserted_question_items:
         inserted_import_item: ImportItem = {
@@ -120,7 +132,7 @@ def upsert_question_items(
         inserted_import_items.append(inserted_import_item)
     logging.info({"inserted_import_items": inserted_import_items})
 
-    # UsersテータベースのQuestionコンテナーの各項目をupsert
+    # Questionコンテナーの各項目をupsert
     # 比較的要求ユニット(RU)数が多いDB操作を行うため、upsertの合間に3秒間sleepする
     # https://docs.microsoft.com/ja-jp/azure/cosmos-db/sql/troubleshoot-request-rate-too-large
     for idx, json_import_item in enumerate(json_data):
@@ -146,26 +158,26 @@ bp_blob_triggered_import = func.Blueprint()
 )
 def blob_triggered_import(blob: func.InputStream):
     """
-    Import Cosmos DB Items
+    アップロードしたインポートデータファイルからCosmos DBにインポートします
     """
 
-    # Blobトリガーで受け取ったメタデータから可変パラメーターを取得
+    # インポートデータファイルのメタデータから可変パラメーターを取得
     split_path = blob.name.split("/")
     course_name = split_path[1]
     test_name = split_path[2].split(".")[0]
     logging.info({"course_name": course_name, "test_name": test_name})
 
-    # Blobトリガーで受け取ったjsonファイルのバイナリデータをImportItem[]型として読込み
+    # インポートデータファイルの読込み
     json_data: list[ImportItem] = json.loads(blob.read())
 
-    # UsersテータベースのTestコンテナーの項目をupsert
+    # Testコンテナーの項目をupsert
     test_id, is_existed_test = upsert_test_item(
         course_name=course_name,
         test_name=test_name,
         json_data=json_data,
     )
 
-    # UsersテータベースのQuestionコンテナーの項目をupsert
+    # Questionコンテナーの項目をupsert
     upsert_question_items(
         test_id=test_id,
         is_existed_test=is_existed_test,

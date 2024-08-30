@@ -1,6 +1,4 @@
-"""
-ローカル環境でのインポート処理
-"""
+"""ローカル環境でのインポート処理"""
 
 import json
 import os
@@ -63,7 +61,7 @@ def create_databases_and_containers(client: CosmosClient) -> None:
     # Usersデータベース
     database_res = client.create_database_if_not_exists(id="Users")
 
-    # UsersデータベースのTestコンテナー
+    # Testコンテナー
     database_res.create_container_if_not_exists(
         id="Test",
         partition_key=PartitionKey(path="/id"),
@@ -77,7 +75,7 @@ def create_databases_and_containers(client: CosmosClient) -> None:
         },
     )
 
-    # UsersデータベースのQuestionコンテナー
+    # Questionコンテナー
     database_res.create_container_if_not_exists(
         id="Question", partition_key=PartitionKey(path="/id")
     )
@@ -199,9 +197,11 @@ def import_question_items(question_items: list[Question], client: CosmosClient) 
 
 
 if __name__ == "__main__":
+    # インポートデータ作成
     created_import_data = create_import_data()
     print("create_import_data: OK")
 
+    # 各データベース・コンテナー作成
     cosmos_client = CosmosClient(
         "https://localhost:8081",
         "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==",
@@ -209,16 +209,20 @@ if __name__ == "__main__":
     create_databases_and_containers(cosmos_client)
     print("create_databases_and_containers: OK")
 
+    # Testコンテナーの項目を生成
     generated_test_items = generate_test_items(created_import_data, cosmos_client)
     print("generate_test_items: OK")
 
+    # Testコンテナーの項目をインポート
     import_test_items(generated_test_items, cosmos_client)
     print("import_test_items: OK")
 
+    # Questionコンテナーの項目を生成
     generated_question_items = generate_question_items(
         created_import_data, cosmos_client, generated_test_items
     )
     print("generate_question_items: OK")
 
+    # Questionコンテナーの項目をインポート
     import_question_items(generated_question_items, cosmos_client)
     print("import_question_items: OK")

@@ -1,6 +1,4 @@
-"""
-Entry Point of Functions Application
-"""
+"""関数アプリのエントリーポイント"""
 
 import azure.functions as func
 from src.blob_triggered_import import bp_blob_triggered_import

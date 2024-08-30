@@ -1,13 +1,11 @@
-"""
-Functions Application Response Type Definitions
-"""
+"""関数アプリのHTTPトリガーのレスポンスボディの型定義"""
 
 from typing import List, Optional, TypedDict
 
 
 class GetAnswerRes(TypedDict):
     """
-    [GET] /tests/{testId}/answers/{questionNumber} Response Type
+    [GET] /tests/{testId}/answers/{questionNumber} のレスポンスボディの型
     """
 
     correctIdxes: List[int]
@@ -16,7 +14,7 @@ class GetAnswerRes(TypedDict):
 
 class GetHealthcheckRes(TypedDict):
     """
-    [GET] /healthcheck Response Type
+    [GET] /healthcheck のレスポンスボディの型
     """
 
     __root__: str
@@ -24,8 +22,7 @@ class GetHealthcheckRes(TypedDict):
 
 class Subject(TypedDict):
     """
-    Type of array element in the subjects array of the response for
-    [GET] /tests/{testId}/questions/{questionNumber}
+    [GET] /tests/{testId}/questions/{questionNumber} のレスポンスボディのsubjectsフィールドの各要素の型
     """
 
     sentence: str
@@ -35,8 +32,7 @@ class Subject(TypedDict):
 
 class Choice(TypedDict):
     """
-    Type of array element in the choices array of the response for
-    [GET] /tests/{testId}/questions/{questionNumber}
+    [GET] /tests/{testId}/questions/{questionNumber} のレスポンスボディのchoicesフィールドの各要素の型
     """
 
     sentence: str
@@ -46,7 +42,7 @@ class Choice(TypedDict):
 
 class GetQuestionRes(TypedDict):
     """
-    [GET] /tests/{testId}/questions/{questionNumber} Response Type
+    [GET] /tests/{testId}/questions/{questionNumber} のレスポンスボディの型
     """
 
     subjects: List[Subject]
@@ -56,7 +52,7 @@ class GetQuestionRes(TypedDict):
 
 class GetTestRes(TypedDict):
     """
-    [GET] /tests/{testId} Response Type
+    [GET] /tests/{testId} のレスポンスボディの型
     """
 
     testName: str
@@ -65,7 +61,7 @@ class GetTestRes(TypedDict):
 
 class Test(TypedDict):
     """
-    Type of array element in the response of [GET] /tests
+    [GET] /tests のレスポンスボディの各要素の型
     """
 
     id: str
@@ -74,7 +70,7 @@ class Test(TypedDict):
 
 class GetTestsRes(TypedDict):
     """
-    [GET] /tests Response Type
+    [GET] /tests のレスポンスボディの型
     """
 
     __root__: dict[str, List[Test]]
@@ -82,7 +78,7 @@ class GetTestsRes(TypedDict):
 
 class PostAnswerRes(TypedDict, total=False):
     """
-    [POST] /answer Response Type
+    [POST] /answer のレスポンスボディの型
     """
 
     correctIdxes: List[int]
@@ -91,7 +87,7 @@ class PostAnswerRes(TypedDict, total=False):
 
 class PutEn2JaRes(TypedDict):
     """
-    [PUT] /en2ja Response Type
+    [PUT] /en2ja のレスポンスボディの型
     """
 
     __root__: List[str]

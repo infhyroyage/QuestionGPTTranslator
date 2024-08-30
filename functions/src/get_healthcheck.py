@@ -1,6 +1,4 @@
-"""
-Module of [GET] /healthcheck
-"""
+"""[GET] /healthcheck のモジュール"""
 
 import azure.functions as func
 from type.response import GetHealthcheckRes
@@ -17,7 +15,7 @@ def get_healthcheck(
     req: func.HttpRequest,  # pylint: disable=unused-argument
 ) -> func.HttpResponse:
     """
-    Retrieve Health Check
+    ヘルスチェックの結果を取得する
     """
 
     body: GetHealthcheckRes = "OK"

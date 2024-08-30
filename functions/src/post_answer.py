@@ -1,6 +1,4 @@
-"""
-Module of [POST] /tests/{testId}/answers/{questionNumber}
-"""
+"""[POST] /tests/{testId}/answers/{questionNumber} のモジュール"""
 
 import json
 import logging
@@ -19,7 +17,13 @@ MAX_RETRY_NUMBER: int = 5
 
 def create_system_prompt(course_name: str) -> str:
     """
-    Create System Prompt for Chat Completion
+    Azure OpenAIのシステムプロンプトを作成する
+
+    Args:
+        course_name (str): コース名
+
+    Returns:
+        str: Azure OpenAIのシステムプロンプト
     """
 
     # pylint: disable=line-too-long
@@ -28,7 +32,14 @@ def create_system_prompt(course_name: str) -> str:
 
 def create_user_prompt(subjects: list[str], choices: list[str]) -> str:
     """
-    Create User Prompt for Chat Completion
+    Azure OpenAIのユーザープロンプトを作成する
+
+    Args:
+        subjects (list[str]): 問題文
+        choices (list[str]): 選択肢
+
+    Returns:
+        str: Azure OpenAIのユーザープロンプト
     """
 
     joined_subjects: str = "\n".join(subjects)
@@ -99,7 +110,10 @@ Unless there is an instruction such as "Select THREE" in the question, there wil
 
 def queue_message_answer(message_answer: MessageAnswer) -> None:
     """
-    Queue Message for Answer Item to Queue Storage
+    キューストレージにAnswerコンテナーの項目用のメッセージを格納する
+
+    Args:
+        message_answer (MessageAnswer): Answerコンテナーの項目用のメッセージ
     """
 
     queue_client = QueueClient.from_connection_string(
@@ -121,7 +135,7 @@ bp_post_answer = func.Blueprint()
 )
 def post_answer(req: func.HttpRequest) -> func.HttpResponse:
     """
-    Generate Answers and Explanations
+    英語の問題文・選択肢の文章から、英語の正解の選択肢・正解/不正解の理由を生成します
     """
 
     try:
@@ -141,7 +155,7 @@ def post_answer(req: func.HttpRequest) -> func.HttpResponse:
             }
         )
 
-        # Validate Path Parameters and Body
+        # パスパラメーター・リクエストボディのバリデーションチェック
         if test_id is None or question_number is None:
             raise ValueError(
                 f"Invalid testId or questionNumber: {test_id}, {question_number}"
@@ -157,13 +171,14 @@ def post_answer(req: func.HttpRequest) -> func.HttpResponse:
         if not choices or not isinstance(choices, list) or len(choices) == 0:
             raise ValueError("Invalid choices")
 
-        # Generate correct indexes and explanations within MAX_RETRY_NUMBER retries
+        # 正解の選択肢・正解/不正解の理由を生成
+        # 決められた出力フォーマットで生成されるまで最大MAX_RETRY_NUMBER回リトライ
         correct_indexes: list[int] | None = None
         explanations: list[str] | None = None
         for retry_number in range(MAX_RETRY_NUMBER):
             logging.info({"retry_number": retry_number})
             try:
-                # Execute Chat Completion
+                # Azure OpenAIでLLM実行
                 response = AzureOpenAI(
                     api_key=os.environ["OPENAI_API_KEY"],
                     api_version=os.environ["OPENAI_API_VERSION"],
@@ -184,7 +199,7 @@ def post_answer(req: func.HttpRequest) -> func.HttpResponse:
                 )
                 logging.info({"content": response.choices[0].message.content})
 
-                # Check if output format is as follows:
+                # 以下の出力フォーマットが生成されているかチェック
                 # * "Correct Option: {correct_indexes}\n{explanations}"
                 # * "Correct Options: {correct_indexes}\n{explanations}"
                 match = re.search(
@@ -192,7 +207,7 @@ def post_answer(req: func.HttpRequest) -> func.HttpResponse:
                     response.choices[0].message.content,
                 )
                 if match and match.group(1) and match.group(2):
-                    # Clean up correct options and explanations
+                    # 正解の選択肢・正解/不正解の理由をクレンジングして取得
                     correct_indexes = [
                         int(option.strip()) - 1
                         for option in match.group(1).split(", ")
@@ -206,11 +221,11 @@ def post_answer(req: func.HttpRequest) -> func.HttpResponse:
             except Exception as e:  # pylint: disable=broad-except
                 logging.warning(e)
 
-        # Check if max retries reached
+        # リトライ回数超過チェック
         if not correct_indexes or not explanations:
             raise RuntimeError("Too Many Retries")
 
-        # Queue answer to queue storage
+        # キューストレージにメッセージを格納
         queue_message_answer(
             {
                 "testId": test_id,

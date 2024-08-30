@@ -1,11 +1,11 @@
-"""Functions Application Request Type Definitions"""
+"""関数アプリのHTTPトリガーのリクエストボディの型定義"""
 
 from typing import List, TypedDict
 
 
 class PostAnswerReq(TypedDict):
     """
-    [POST] /answer Request Type
+    [POST] /answer のリクエストボディの型
     """
 
     courseName: str
@@ -15,7 +15,7 @@ class PostAnswerReq(TypedDict):
 
 class PutEn2JaReq(TypedDict):
     """
-    [PUT] /en2ja Request Type
+    [PUT] /en2ja のリクエストボディの型
     """
 
     __root__: List[str]

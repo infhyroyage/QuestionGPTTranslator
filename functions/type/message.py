@@ -1,11 +1,11 @@
-"""Queue Message Type Definitions"""
+"""キューストレージのメッセージの型定義"""
 
 from typing import List, TypedDict
 
 
 class MessageAnswer(TypedDict):
     """
-    Message Type for Answer Item
+    Answerコンテナーの項目用のメッセージの型
     """
 
     testId: str

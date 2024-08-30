@@ -1,6 +1,4 @@
-"""
-Module of Queue Triggered Function for Answer
-"""
+"""Answerコンテナーの項目をupsertするQueueトリガーの関数アプリのモジュール"""
 
 import json
 import logging
@@ -21,14 +19,14 @@ bp_queue_triggered_answer = func.Blueprint()
 )
 def queue_triggered_answer(msg: func.QueueMessage):
     """
-    Upsert Answer Item
+    キューストレージに格納したメッセージからAnswerコンテナーの項目をupsertします
     """
 
-    # Queueトリガーで受け取ったjson形式のメッセージをMessage型として読込み
+    # メッセージをMessage型として読込み
     message_answer: MessageAnswer = json.loads(msg.get_body().decode("utf-8"))
     logging.info({"message_answer": message_answer})
 
-    # メッセージに該当するUsersテータベースのQuestionコンテナーの項目を取得
+    # メッセージに該当するQuestionコンテナーの項目を取得
     container_question: ContainerProxy = get_read_write_container(
         database_name="Users",
         container_name="Question",
@@ -46,7 +44,7 @@ def queue_triggered_answer(msg: func.QueueMessage):
     logging.info({"items": items})
 
     # 1項目のみ取得し、取得した項目とメッセージとのsubjects/choicesがすべて一致する場合のみ、
-    # UsersテータベースのAnswerコンテナーの項目をupsertする
+    # Answerコンテナーの項目をupsertする
     # 上記以外の場合は不正なメッセージとみなし、その場で正常終了する
     if (
         len(items) == 1

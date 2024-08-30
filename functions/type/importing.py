@@ -1,11 +1,11 @@
-"""Import Data Type Definitions"""
+"""インポートデータの型定義"""
 
 from typing import List, Optional, TypedDict
 
 
 class EscapeTranslatedIdxes(TypedDict, total=False):
     """
-    Type of escapeTranslatedIdxes in the array elements of the import data file
+    インポートデータファイルのescapeTranslatedIdxesフィールドの各要素の型
     """
 
     subjects: Optional[List[int]]
@@ -14,7 +14,7 @@ class EscapeTranslatedIdxes(TypedDict, total=False):
 
 class ImportItem(TypedDict):
     """
-    Type of array elements in the import data file
+    インポートデータファイルの各要素の型
     """
 
     subjects: List[str]
@@ -27,7 +27,7 @@ class ImportItem(TypedDict):
 
 class ImportDatabaseData(TypedDict):
     """
-    Type that aggregates all import data files for each test
+    インポートデータをテストごとに集めた型
     """
 
     __root__: dict[str, List[ImportItem]]
@@ -35,7 +35,7 @@ class ImportDatabaseData(TypedDict):
 
 class ImportData(TypedDict):
     """
-    Type that aggregates all import data files for tests by course
+    全テストのインポートデータをコースごとに集めた型
     """
 
     __root__: dict[str, ImportDatabaseData]

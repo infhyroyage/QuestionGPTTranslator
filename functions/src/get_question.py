@@ -22,11 +22,11 @@ bp_get_question = func.Blueprint()
 )
 def get_question(req: func.HttpRequest) -> func.HttpResponse:
     """
-    Retrieve Question
+    指定したテストID・問題番号での問題・選択肢を取得します
     """
 
     try:
-        # Validate Path Parameters
+        # パスパラメーターのバリデーションチェック
         test_id = req.route_params.get("testId")
         question_number = req.route_params.get("questionNumber")
         if test_id is None or question_number is None:
@@ -38,13 +38,13 @@ def get_question(req: func.HttpRequest) -> func.HttpResponse:
                 body=f"Invalid questionNumber: {question_number}", status_code=400
             )
 
-        # Initialize Cosmos DB Client
+        # Questionコンテナーの読み取り専用インスタンスを取得
         container: ContainerProxy = get_read_only_container(
             database_name="Users",
             container_name="Question",
         )
 
-        # Execute Query
+        # Questionコンテナーから項目取得
         query = (
             "SELECT c.subjects, c.choices, c.communityVotes, c.indicateSubjectImgIdxes, "
             "c.indicateChoiceImgs, c.escapeTranslatedIdxes "
@@ -59,6 +59,7 @@ def get_question(req: func.HttpRequest) -> func.HttpResponse:
         )
         logging.info({"items": items})
 
+        # 項目数のチェック
         if len(items) == 0:
             return func.HttpResponse(body="Not Found Question", status_code=404)
         if len(items) > 1:
@@ -71,6 +72,7 @@ def get_question(req: func.HttpRequest) -> func.HttpResponse:
             re.match(r"^[A-Z]{2,} \(\d+%\)$", result["communityVotes"][0])
         )
 
+        # レスポンス整形
         body: GetQuestionRes = {
             "subjects": [
                 {

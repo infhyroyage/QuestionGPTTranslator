@@ -1,6 +1,4 @@
-"""
-Module of [PUT] /en2ja
-"""
+"""[PUT] /en2ja のモジュール"""
 
 import json
 import logging
@@ -18,6 +16,12 @@ def translate_by_azure_translator(texts: list[str]) -> Optional[list[str]]:
     """
     指定した英語の文字列群をAzure Translatorでそれぞれ日本語に翻訳する
     Azure Translatorの無料枠を使い切った場合はNoneを返す
+
+    Args:
+        texts (list[str]): 英語の文字列群
+
+    Returns:
+        Optional[list[str]]: 日本語に翻訳した文字列群(Azure Translatorの無料枠を使い切った場合はNone)
     """
 
     if not texts:
@@ -61,6 +65,12 @@ def translate_by_deep_l(texts: list[str]) -> Optional[list[str]]:
     """
     指定した英語の文字列群をDeepLでそれぞれ日本語に翻訳する
     DeepLの無料枠を使い切った場合はNoneを返す
+
+    Args:
+        texts (list[str]): 英語の文字列群
+
+    Returns:
+        Optional[list[str]]: 日本語に翻訳した文字列群(DeepLの無料枠を使い切った場合はNone)
     """
 
     if not texts:
@@ -102,7 +112,7 @@ bp_put_en2ja = func.Blueprint()
 )
 def put_en2ja(req: func.HttpRequest) -> func.HttpResponse:
     """
-    Translate English texts to Japanese texts
+    英語の各メッセージを日本語に翻訳します
     """
 
     try:

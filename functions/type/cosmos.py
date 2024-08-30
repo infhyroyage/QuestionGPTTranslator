@@ -1,11 +1,11 @@
-"""Cosmos DB Type Definitions"""
+"""Cosmos DBの項目の型定義"""
 
 from typing import List, Optional, TypedDict
 
 
 class Answer(TypedDict):
     """
-    Answer Type of Answer Container
+    Answerコンテナーの項目の型
     """
 
     id: str
@@ -17,7 +17,7 @@ class Answer(TypedDict):
 
 class EscapeTranslatedIdxes(TypedDict, total=False):
     """
-    Type of escapeTranslatedIdxes in Question
+    QuestionコンテナーのescapeTranslatedIdxesフィールドの型
     """
 
     subjects: Optional[List[int]]
@@ -26,7 +26,7 @@ class EscapeTranslatedIdxes(TypedDict, total=False):
 
 class Question(TypedDict):
     """
-    Question Type of Question Container
+    Questionコンテナーの項目の型
     """
 
     id: str
@@ -42,7 +42,7 @@ class Question(TypedDict):
 
 class Test(TypedDict):
     """
-    Item Type of Test Container
+    Testコンテナーの項目の型
     """
 
     id: str

@@ -1,6 +1,4 @@
-"""
-Module of [GET] /tests/{testId}/answers/{questionNumber}
-"""
+"""[GET] /tests/{testId}/answers/{questionNumber} のモジュール"""
 
 import json
 import logging
@@ -21,24 +19,25 @@ bp_get_answer = func.Blueprint()
 )
 def get_answer(req: func.HttpRequest) -> func.HttpResponse:
     """
-    Retrieve Answer
+    指定したテストID・問題番号での正解の選択肢・正解/不正解の理由を取得します
     """
 
     try:
-        # Validate Path Parameters
+        # パスパラメーターのバリデーションチェック
         test_id = req.route_params.get("testId")
         question_number = req.route_params.get("questionNumber")
         if test_id is None or question_number is None:
             raise ValueError(
                 f"Invalid testId or questionNumber: {test_id}, {question_number}"
             )
-        # Initialize Cosmos DB Client
+
+        # Answerコンテナーの読み取り専用インスタンスを取得
         container: ContainerProxy = get_read_only_container(
             database_name="Users",
             container_name="Answer",
         )
 
-        # Execute Query
+        # Answerコンテナーから項目取得
         query = "SELECT c.correctIdxes, c.explanations FROM c WHERE c.id = @id"
         parameters: list[dict[str, str]] = [
             {"name": "@id", "value": f"{test_id}_{question_number}"}
@@ -48,7 +47,7 @@ def get_answer(req: func.HttpRequest) -> func.HttpResponse:
         )
         logging.info({"items": items})
 
-        # Check the number of items
+        # 項目数のチェック
         if len(items) == 0:
             return func.HttpResponse(body="Not Found Answer", status_code=404)
         if len(items) > 1:
