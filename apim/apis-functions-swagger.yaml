@@ -178,7 +178,7 @@ paths:
   /tests/{testId}/answers/{questionNumber}:
     post:
       summary: 回答生成API
-      description: 英語の問題文・選択肢の文章から、正解の選択肢・正解/不正解の理由を生成します
+      description: 英語の問題文・選択肢の文章から、英語の正解の選択肢・正解/不正解の理由を生成します
       operationId: post-answer
       parameters:
         - name: testId
