@@ -4,7 +4,6 @@ Module of [GET] /tests/{testId}/questions/{questionNumber}
 
 import json
 import logging
-import re
 
 import azure.functions as func
 from azure.cosmos import ContainerProxy
@@ -46,7 +45,7 @@ def get_question(req: func.HttpRequest) -> func.HttpResponse:
 
         # Questionコンテナーから項目取得
         query = (
-            "SELECT c.subjects, c.choices, c.communityVotes, c.indicateSubjectImgIdxes, "
+            "SELECT c.subjects, c.choices, c.isMultiplied, c.indicateSubjectImgIdxes, "
             "c.indicateChoiceImgs, c.escapeTranslatedIdxes "
             "FROM c WHERE c.testId = @testId AND c.number = @number"
         )
@@ -65,12 +64,6 @@ def get_question(req: func.HttpRequest) -> func.HttpResponse:
         if len(items) > 1:
             raise ValueError("Not Unique Question")
         result: Question = items[0]
-
-        # communityVotesの最初の要素が「AB (100%)」のような形式の場合は回答が複数個、
-        # 「A (100%)」のような形式の場合は回答が1個のみ存在すると判定
-        is_multiplied: bool = bool(
-            re.match(r"^[A-Z]{2,} \(\d+%\)$", result["communityVotes"][0])
-        )
 
         # レスポンス整形
         body: GetQuestionRes = {
@@ -101,7 +94,7 @@ def get_question(req: func.HttpRequest) -> func.HttpResponse:
                 }
                 for idx, choice in enumerate(result["choices"])
             ],
-            "isMultiplied": is_multiplied,
+            "isMultiplied": result["isMultiplied"],
         }
         logging.info({"body": body})
 

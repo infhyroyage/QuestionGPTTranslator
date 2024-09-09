@@ -33,6 +33,7 @@ class Question(TypedDict):
     number: int
     subjects: List[str]
     choices: List[str]
+    isMultiplied: bool
     communityVotes: List[str]
     indicateSubjectImgIdxes: Optional[List[int]]
     indicateChoiceImgs: Optional[List[Optional[str]]]

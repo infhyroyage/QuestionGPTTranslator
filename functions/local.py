@@ -2,6 +2,7 @@
 
 import json
 import os
+import re
 import time
 from uuid import uuid4
 
@@ -168,12 +169,21 @@ def generate_question_items(
             test_id = test_item["id"]
             for idx, item in enumerate(items):
                 if f"{test_id}_{idx + 1}" not in inserted_question_ids:
+                    # communityVotesの最初の要素が「AB (100%)」のような形式の場合は回答が複数個、
+                    # 「A (100%)」のような形式の場合は回答が1個のみ存在すると判定
+                    is_multiplied: bool = bool(
+                        re.match(
+                            r"^[A-Z]{2,} \(\d+%\)$",
+                            item["communityVotes"][0],
+                        )
+                    )
                     question_items.append(
                         {
                             **item,
                             "id": f"{test_id}_{idx + 1}",
                             "number": idx + 1,
                             "testId": test_id,
+                            "isMultiplied": is_multiplied,
                         }
                     )
 
