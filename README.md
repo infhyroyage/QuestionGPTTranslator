@@ -23,8 +23,11 @@
 | `qgtranslator-je-cosmosdb` | Functions からアクセスする Cosmos DB                                                                   |
 | `qgtranslator-je-vault`    | シークレットを管理する Key Vault                                                                       |
 | `qgtranslator-je-insights` | App Service/API Management/Functions を一括で監視する Application Insights                             |
-| `(Your Own OpenAI)`        | Functions からアクセスする事前に作成した Azure OpenAI                                                  |
+| `(Your Own OpenAI)`        | Functions からアクセスする事前に作成した Structured outputs をサポートする Azure OpenAI                |
 | `(Your Own Translator)`    | Functions からアクセスする事前に作成した Translator(枠を使い切った場合は代わりに DeepL へアクセスする) |
+
+> [!TIP]  
+> 2024/09/17 時点で、モデル`gpt-4o` の Azure OpenAI は、モデルバージョン`2024-08-06`のみ [Structured outputs](https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/structured-outputs?tabs=rest) をサポートする。
 
 ## 使用する主要なパッケージのバージョン
 
@@ -205,7 +208,7 @@ Azure にリソースを構築せず、localhost 上で以下のサーバーを�
 | Queue ストレージ                               | [Azurite](https://learn.microsoft.com/ja-jp/azure/storage/common/storage-use-azurite)                    | 10001      |
 | Table ストレージ                               | [Azurite](https://learn.microsoft.com/ja-jp/azure/storage/common/storage-use-azurite)                    | 10002      |
 
-> [!TIP]
+> [!TIP]  
 > localhost 環境構築後、 [Azure Cosmos DB Emulator の index.html](https://localhost:8081/_explorer/index.html) にアクセスすると、Cosmos DB 内のデータを参照・更新することができる。
 
 > [!CAUTION]  

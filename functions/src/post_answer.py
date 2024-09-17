@@ -3,7 +3,6 @@
 import json
 import logging
 import os
-import re
 
 import azure.functions as func
 from azure.storage.queue import BinaryBase64EncodePolicy, QueueClient
@@ -11,6 +10,7 @@ from openai import AzureOpenAI
 from type.message import MessageAnswer
 from type.request import PostAnswerReq
 from type.response import PostAnswerRes
+from type.structured import AnswerFormat
 
 MAX_RETRY_NUMBER: int = 5
 
@@ -171,20 +171,19 @@ def post_answer(req: func.HttpRequest) -> func.HttpResponse:
         if not choices or not isinstance(choices, list) or len(choices) == 0:
             raise ValueError("Invalid choices")
 
-        # 正解の選択肢・正解/不正解の理由を生成
-        # 決められた出力フォーマットで生成されるまで最大MAX_RETRY_NUMBER回リトライ
+        # 正解の選択肢・正解/不正解の理由をAzure OpenAIのStructured Outputsでparseして生成
+        # 正常にparseされるまで最大MAX_RETRY_NUMBER回リトライ
         correct_indexes: list[int] | None = None
         explanations: list[str] | None = None
         for retry_number in range(MAX_RETRY_NUMBER):
             logging.info({"retry_number": retry_number})
             try:
-                # Azure OpenAIでLLM実行
                 response = AzureOpenAI(
                     api_key=os.environ["OPENAI_API_KEY"],
                     api_version=os.environ["OPENAI_API_VERSION"],
                     azure_deployment=os.environ["OPENAI_DEPLOYMENT"],
                     azure_endpoint=os.environ["OPENAI_ENDPOINT"],
-                ).chat.completions.create(
+                ).beta.chat.completions.parse(
                     model=os.environ["OPENAI_MODEL"],
                     messages=[
                         {
@@ -196,27 +195,14 @@ def post_answer(req: func.HttpRequest) -> func.HttpResponse:
                             "content": create_user_prompt(subjects, choices),
                         },
                     ],
+                    response_format=AnswerFormat,
                 )
-                logging.info({"content": response.choices[0].message.content})
+                logging.info({"message": response.choices[0].message})
 
-                # 以下の出力フォーマットが生成されているかチェック
-                # * "Correct Option: {correct_indexes}\n{explanations}"
-                # * "Correct Options: {correct_indexes}\n{explanations}"
-                match = re.search(
-                    r"Correct Option[s]?: (\d+(?:, \d+)*)\n([\s\S]+)",
-                    response.choices[0].message.content,
-                )
-                if match and match.group(1) and match.group(2):
-                    # 正解の選択肢・正解/不正解の理由をクレンジングして取得
-                    correct_indexes = [
-                        int(option.strip()) - 1
-                        for option in match.group(1).split(", ")
-                        if option.strip()
-                    ]
-                    explanations = [
-                        exp.strip() for exp in match.group(2).split("\n") if exp.strip()
-                    ]
-
+                # parseできるかのチェック
+                if response.choices[0].message.parsed is not None:
+                    correct_indexes = response.choices[0].message.parsed.correct_indexes
+                    explanations = response.choices[0].message.parsed.explanations
                     break
             except Exception as e:  # pylint: disable=broad-except
                 logging.warning(e)
