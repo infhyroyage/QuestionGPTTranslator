@@ -1,0 +1,21 @@
+"""[GET] /healthcheck のテスト"""
+
+import unittest
+from unittest.mock import MagicMock
+
+import azure.functions as func
+from src.get_healthcheck import get_healthcheck
+
+
+class TestGetHealthcheck(unittest.TestCase):
+    """[GET] /healthcheck のテストケース"""
+
+    def test_response(self):
+        """レスポンスが正常であることのテスト"""
+
+        req = MagicMock(spec=func.HttpRequest)
+        response = get_healthcheck(req)
+
+        # ステータスコード・レスポンスボディの確認
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_body().decode(), "OK")
