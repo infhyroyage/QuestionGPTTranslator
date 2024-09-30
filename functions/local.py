@@ -92,7 +92,7 @@ def generate_test_items(import_data: ImportData, client: CosmosClient) -> list[T
     try:
         container = client.get_database_client("Users").get_container_client("Test")
         inserted_test_items = list(container.read_all_items())
-    except Exception:  # pylint: disable=broad-except
+    except Exception:
         print("generateTestItems: Not Found Items")
 
     test_items: list[Test] = []

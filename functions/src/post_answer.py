@@ -204,7 +204,7 @@ def post_answer(req: func.HttpRequest) -> func.HttpResponse:
                     correct_indexes = response.choices[0].message.parsed.correct_indexes
                     explanations = response.choices[0].message.parsed.explanations
                     break
-            except Exception as e:  # pylint: disable=broad-except
+            except Exception as e:
                 logging.warning(e)
 
         # リトライ回数超過チェック
@@ -231,7 +231,7 @@ def post_answer(req: func.HttpRequest) -> func.HttpResponse:
             body=json.dumps(body),
             status_code=200,
         )
-    except Exception as e:  # pylint: disable=broad-except
+    except Exception as e:
         logging.error(e)
         return func.HttpResponse(
             body="Internal Server Error",

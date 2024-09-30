@@ -57,6 +57,6 @@ def get_tests(
             status_code=200,
             mimetype="application/json",
         )
-    except Exception as e:  # pylint: disable=broad-except
+    except Exception as e:
         logging.error(e)
         return func.HttpResponse(body="Internal Server Error", status_code=500)
