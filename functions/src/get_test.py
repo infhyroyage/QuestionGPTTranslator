@@ -35,14 +35,15 @@ def get_test(req: func.HttpRequest) -> func.HttpResponse:
         )
 
         # Testコンテナーから項目取得
-        query = (
-            "SELECT c.id, c.courseName, c.testName, c.length"
-            "FROM c"
-            "WHERE c.id = @testId"
-        )
-        parameters: list[dict[str, str]] = [{"name": "@testId", "value": test_id}]
         items: list[Test] = list(
-            container.query_items(query=query, parameters=parameters)
+            container.query_items(
+                query=(
+                    "SELECT c.id, c.courseName, c.testName, c.length"
+                    "FROM c"
+                    "WHERE c.id = @testId"
+                ),
+                parameters=[{"name": "@testId", "value": test_id}],
+            )
         )
         logging.info({"items": items})
 

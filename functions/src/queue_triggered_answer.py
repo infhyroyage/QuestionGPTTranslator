@@ -31,15 +31,16 @@ def queue_triggered_answer(msg: func.QueueMessage):
         database_name="Users",
         container_name="Question",
     )
-    query = "SELECT c.subjects, c.choices FROM c WHERE c.id = @id"
-    parameters = [
-        {
-            "name": "@id",
-            "value": f"{message_answer['testId']}_{message_answer['questionNumber']}",
-        },
-    ]
     items: list[Question] = list(
-        container_question.query_items(query=query, parameters=parameters)
+        container_question.query_items(
+            query="SELECT c.subjects, c.choices FROM c WHERE c.id = @id",
+            parameters=[
+                {
+                    "name": "@id",
+                    "value": f"{message_answer['testId']}_{message_answer['questionNumber']}",
+                },
+            ],
+        )
     )
     logging.info({"items": items})
 

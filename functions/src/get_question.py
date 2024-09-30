@@ -44,17 +44,18 @@ def get_question(req: func.HttpRequest) -> func.HttpResponse:
         )
 
         # Questionコンテナーから項目取得
-        query = (
-            "SELECT c.subjects, c.choices, c.isMultiplied, c.indicateSubjectImgIdxes, "
-            "c.indicateChoiceImgs, c.escapeTranslatedIdxes "
-            "FROM c WHERE c.testId = @testId AND c.number = @number"
-        )
-        parameters = [
-            {"name": "@testId", "value": test_id},
-            {"name": "@number", "value": int(question_number)},
-        ]
         items: list[Question] = list(
-            container.query_items(query=query, parameters=parameters)
+            container.query_items(
+                query=(
+                    "SELECT c.subjects, c.choices, c.isMultiplied, c.indicateSubjectImgIdxes, "
+                    "c.indicateChoiceImgs, c.escapeTranslatedIdxes "
+                    "FROM c WHERE c.testId = @testId AND c.number = @number"
+                ),
+                parameters=[
+                    {"name": "@testId", "value": test_id},
+                    {"name": "@number", "value": int(question_number)},
+                ],
+            )
         )
         logging.info({"items": items})
 

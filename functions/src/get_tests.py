@@ -32,12 +32,15 @@ def get_tests(
         )
 
         # Testコンテナーから全項目取得
-        query = (
-            "SELECT c.id, c.courseName, c.testName, c.length"
-            "FROM c"
-            "ORDER BY c.courseName ASC, c.testName ASC"
+        items: list[Test] = list(
+            container.query_items(
+                query=(
+                    "SELECT c.id, c.courseName, c.testName, c.length"
+                    "FROM c"
+                    "ORDER BY c.courseName ASC, c.testName ASC"
+                )
+            )
         )
-        items: list[Test] = list(container.query_items(query=query))
         logging.info({"items": items})
 
         # 各項目をcourseName単位でまとめるようにレスポンス整形

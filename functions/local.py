@@ -139,14 +139,12 @@ def generate_question_items(
     インポートデータからUsersテータベースのQuestionコンテナーの未格納の項目のみ生成する
     """
 
-    # UsersテータベースのQuestionコンテナーの全項目のidをquery
-    container = client.get_database_client("Users").get_container_client("Question")
-    query = "SELECT c.id FROM c"
+    # UsersテータベースのQuestionコンテナーの全idを取得
     inserted_question_ids = [
         item["id"]
-        for item in container.query_items(
-            query=query, enable_cross_partition_query=True
-        )
+        for item in client.get_database_client("Users")
+        .get_container_client("Question")
+        .query_items(query="SELECT c.id FROM c", enable_cross_partition_query=True)
     ]
 
     question_items: list[Question] = []

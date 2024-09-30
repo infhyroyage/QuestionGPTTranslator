@@ -38,12 +38,11 @@ def get_answer(req: func.HttpRequest) -> func.HttpResponse:
         )
 
         # Answerコンテナーから項目取得
-        query = "SELECT c.correctIdxes, c.explanations FROM c WHERE c.id = @id"
-        parameters: list[dict[str, str]] = [
-            {"name": "@id", "value": f"{test_id}_{question_number}"}
-        ]
         items: list[Answer] = list(
-            container.query_items(query=query, parameters=parameters)
+            container.query_items(
+                query="SELECT c.correctIdxes, c.explanations FROM c WHERE c.id = @id",
+                parameters=[{"name": "@id", "value": f"{test_id}_{question_number}"}],
+            )
         )
         logging.info({"items": items})
 
