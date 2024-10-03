@@ -20,8 +20,9 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Generate Swagger UI
-        uses: Legion2/swagger-ui-action@v1.2.0
+        uses: Legion2/swagger-ui-action@v1.3.0
         with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           output: swagger-ui
           spec-file: apim/apis-functions-swagger.yaml
 
