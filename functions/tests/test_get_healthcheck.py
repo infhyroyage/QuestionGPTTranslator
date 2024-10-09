@@ -13,8 +13,8 @@ class TestGetHealthcheck(unittest.TestCase):
     def test_response(self):
         """レスポンスが正常であることのテスト"""
 
-        req = MagicMock(spec=func.HttpRequest)
-        response = get_healthcheck(req)
+        req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
+        response: func.HttpResponse = get_healthcheck(req)
 
         # ステータスコード・レスポンスボディの確認
         self.assertEqual(response.status_code, 200)
