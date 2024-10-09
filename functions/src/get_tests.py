@@ -35,7 +35,7 @@ def get_tests(
         items: list[Test] = list(
             container.query_items(
                 query=(
-                    "SELECT c.id, c.courseName, c.testName, c.length"
+                    "SELECT c.id, c.courseName, c.testName"
                     "FROM c"
                     "ORDER BY c.courseName ASC, c.testName ASC"
                 )
