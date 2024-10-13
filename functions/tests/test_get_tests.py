@@ -1,7 +1,7 @@
 """[GET] /tests のテスト"""
 
 import json
-import unittest
+from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
 import azure.functions as func
@@ -10,7 +10,7 @@ from type.cosmos import Test
 from type.response import GetTestsRes
 
 
-class TestGetTests(unittest.TestCase):
+class TestGetTests(TestCase):
     """[GET] /tests のテストケース"""
 
     @patch("src.get_tests.get_read_only_container")

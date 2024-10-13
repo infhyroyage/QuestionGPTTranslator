@@ -1,13 +1,13 @@
 """[GET] /healthcheck のテスト"""
 
-import unittest
+from unittest import TestCase
 from unittest.mock import MagicMock
 
 import azure.functions as func
 from src.get_healthcheck import get_healthcheck
 
 
-class TestGetHealthcheck(unittest.TestCase):
+class TestGetHealthcheck(TestCase):
     """[GET] /healthcheck のテストケース"""
 
     def test_response(self):

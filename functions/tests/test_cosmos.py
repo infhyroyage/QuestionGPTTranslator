@@ -1,14 +1,14 @@
 """Cosmos DBのユーティリティ関数のテスト"""
 
 import os
-import unittest
+from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
 from azure.cosmos import ContainerProxy
 from util.cosmos import get_read_only_container, get_read_write_container
 
 
-class TestCosmosUtils(unittest.TestCase):
+class TestCosmosUtils(TestCase):
     """Cosmos DBのユーティリティ関数のテストケース"""
 
     @patch("util.cosmos.CosmosClient")
