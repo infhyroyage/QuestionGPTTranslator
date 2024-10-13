@@ -1,4 +1,4 @@
-"""ローカル環境でのインポート処理"""
+"""ローカル環境でのインポート処理のユーティリティ関数"""
 
 import json
 import os
@@ -9,12 +9,13 @@ from uuid import uuid4
 from azure.cosmos import CosmosClient, PartitionKey
 from type.cosmos import Question, Test
 from type.importing import ImportData, ImportDatabaseData, ImportItem
+from util.cosmos import get_read_write_container
 
 
 def create_import_data() -> ImportData:
     """
-    コマンドライン引数でコース名/テスト名指定した場合は、インポートデータから
-    指定したコース名/テスト名における項目を抽出して、インポートデータを生成する
+    インポートデータを生成する
+    コマンドライン引数でコース名/テスト名指定した場合は、インポートデータから指定したコース名/テスト名における項目を抽出する
     """
 
     # dataファイル/ディレクトリが存在しない場合は空オブジェクトをreturn
@@ -54,10 +55,15 @@ def create_import_data() -> ImportData:
     return import_data
 
 
-def create_databases_and_containers(client: CosmosClient) -> None:
+def create_databases_and_containers() -> None:
     """
     インポートデータの格納に必要な各データベース、コンテナーをすべて作成する
     """
+
+    client: CosmosClient = CosmosClient(
+        os.environ["COSMOSDB_URI"],
+        os.environ["COSMOSDB_KEY"],
+    )
 
     # Usersデータベース
     database_res = client.create_database_if_not_exists(id="Users")
@@ -82,7 +88,7 @@ def create_databases_and_containers(client: CosmosClient) -> None:
     )
 
 
-def generate_test_items(import_data: ImportData, client: CosmosClient) -> list[Test]:
+def generate_test_items(import_data: ImportData) -> list[Test]:
     """
     インポートデータのテスト項目を取得する
     """
@@ -90,7 +96,7 @@ def generate_test_items(import_data: ImportData, client: CosmosClient) -> list[T
     # UsersテータベースのTestコンテナーをreadAll
     inserted_test_items = []
     try:
-        container = client.get_database_client("Users").get_container_client("Test")
+        container = get_read_write_container("Users", "Test")
         inserted_test_items = list(container.read_all_items())
     except Exception:
         print("generateTestItems: Not Found Items")
@@ -122,18 +128,18 @@ def generate_test_items(import_data: ImportData, client: CosmosClient) -> list[T
     return test_items
 
 
-def import_test_items(test_items: list[Test], client: CosmosClient) -> None:
+def import_test_items(test_items: list[Test]) -> None:
     """
     UsersテータベースのTestコンテナーの項目をインポートする
     """
 
-    container = client.get_database_client("Users").get_container_client("Test")
+    container = get_read_write_container("Users", "Test")
     for item in test_items:
         container.upsert_item(item)
 
 
 def generate_question_items(
-    import_data: ImportData, client: CosmosClient, test_items: list[Test]
+    import_data: ImportData, test_items: list[Test]
 ) -> list[Question]:
     """
     インポートデータからUsersテータベースのQuestionコンテナーの未格納の項目のみ生成する
@@ -142,9 +148,9 @@ def generate_question_items(
     # UsersテータベースのQuestionコンテナーの全idを取得
     inserted_question_ids = [
         item["id"]
-        for item in client.get_database_client("Users")
-        .get_container_client("Question")
-        .query_items(query="SELECT c.id FROM c", enable_cross_partition_query=True)
+        for item in get_read_write_container("Users", "Question").query_items(
+            query="SELECT c.id FROM c", enable_cross_partition_query=True
+        )
     ]
 
     question_items: list[Question] = []
@@ -188,49 +194,17 @@ def generate_question_items(
     return question_items
 
 
-def import_question_items(question_items: list[Question], client: CosmosClient) -> None:
+def import_question_items(question_items: list[Question]) -> None:
     """
     UsersテータベースのQuestionコンテナーの項目をインポートする
     比較的要求ユニット(RU)数が多いDB操作を行うため、upsertの合間に3秒間sleepする
     https://docs.microsoft.com/ja-jp/azure/cosmos-db/sql/troubleshoot-request-rate-too-large
     """
 
-    container = client.get_database_client("Users").get_container_client("Question")
+    container = get_read_write_container("Users", "Question")
     for i, item in enumerate(question_items):
         res = container.upsert_item(item)
         if res["statusCode"] >= 400:
             raise ValueError(f"Status Code {res['statusCode']}: {json.dumps(item)}")
         print(f"{i + 1}th Response OK")
         time.sleep(3)
-
-
-if __name__ == "__main__":
-    # インポートデータ作成
-    created_import_data = create_import_data()
-    print("create_import_data: OK")
-
-    # 各データベース・コンテナー作成
-    cosmos_client = CosmosClient(
-        "https://localhost:8081",
-        "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==",
-    )
-    create_databases_and_containers(cosmos_client)
-    print("create_databases_and_containers: OK")
-
-    # Testコンテナーの項目を生成
-    generated_test_items = generate_test_items(created_import_data, cosmos_client)
-    print("generate_test_items: OK")
-
-    # Testコンテナーの項目をインポート
-    import_test_items(generated_test_items, cosmos_client)
-    print("import_test_items: OK")
-
-    # Questionコンテナーの項目を生成
-    generated_question_items = generate_question_items(
-        created_import_data, cosmos_client, generated_test_items
-    )
-    print("generate_question_items: OK")
-
-    # Questionコンテナーの項目をインポート
-    import_question_items(generated_question_items, cosmos_client)
-    print("import_question_items: OK")

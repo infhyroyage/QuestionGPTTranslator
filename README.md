@@ -270,7 +270,7 @@ Azure にリソースを構築せず、localhost 上で以下のサーバーを�
 6. 5 とは別のターミナルで以下のコマンドを実行し、4 で作成した仮想環境の有効後、起動した Cosmos DB サーバーに対し、インポートデータファイルからインポートする。
    ```bash
    ./venv/Scripts/activate
-   python functions/local.py
+   python functions/import_local.py
    ```
    - タイムアウトなどで失敗した場合、もう一度実行し直すこと。
 
