@@ -1,7 +1,7 @@
 azure-cosmos==4.7.0
 azure-functions==1.21.0
 azure-storage-queue==12.12.0
-coverage==7.6.1
+coverage==7.6.3
 openai==1.42.0
 pydantic==2.9.2
 pylint==3.3.1
