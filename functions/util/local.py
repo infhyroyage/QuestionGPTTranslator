@@ -19,7 +19,7 @@ def create_import_data() -> ImportData:
     """
 
     # dataファイル/ディレクトリが存在しない場合は空オブジェクトをreturn
-    data_path = os.path.join(os.path.dirname(__file__), "data")
+    data_path = os.path.join(os.getcwd(), "data")
     if not os.path.exists(data_path):
         return {}
 
