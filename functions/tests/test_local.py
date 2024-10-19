@@ -21,6 +21,17 @@ from util.local import (
 class TestLocalUtils(unittest.TestCase):
     """ローカル環境でのインポート処理のユーティリティ関数のテストケース"""
 
+    @patch("util.local.os.path.exists")
+    def test_create_import_data_when_data_not_exists(self, mock_exists):
+        """dataファイル/ディレクトリが存在しない場合のcreate_import_data関数のテスト"""
+
+        mock_exists.return_value = False
+
+        import_data = create_import_data()
+
+        expected_data = {}
+        self.assertEqual(import_data, expected_data)
+
     @patch(
         "builtins.open",
         new_callable=mock_open,
@@ -29,10 +40,10 @@ class TestLocalUtils(unittest.TestCase):
     @patch("util.local.os.path.exists")
     @patch("util.local.os.listdir")
     @patch("util.local.os.path.isdir")
-    def test_create_import_data(
+    def test_create_import_data_when_data_exists(
         self, mock_isdir, mock_listdir, mock_exists, mock_builtins_open
     ):
-        """create_import_data関数のテスト"""
+        """dataファイル/ディレクトリが存在する場合のcreate_import_data関数のテスト"""
 
         mock_exists.return_value = True
         mock_isdir.return_value = True
@@ -101,8 +112,10 @@ class TestLocalUtils(unittest.TestCase):
         )
 
     @patch("util.local.get_read_write_container")
-    def test_generate_test_items(self, mock_get_read_write_container):
-        """generate_test_items関数のテスト"""
+    def test_generate_test_items_when_retrieved_successfully(
+        self, mock_get_read_write_container
+    ):
+        """テスト項目を正常取得した場合のgenerate_test_items関数のテスト"""
         mock_container = MagicMock()
         mock_container.read_all_items.return_value = [
             {"courseName": "Math", "testName": "Algebra", "id": "1", "length": 10}
@@ -117,20 +130,44 @@ class TestLocalUtils(unittest.TestCase):
         }
         test_items = generate_test_items(import_data)
 
-        expected_items = [
-            {"courseName": "Math", "testName": "Algebra", "id": "1", "length": 10},
-            {
-                "courseName": "Math",
-                "testName": "Geometry",
-                "id": str(uuid4()),
-                "length": 1,
-            },
-        ]
         self.assertEqual(len(test_items), 2)
-        self.assertEqual(test_items[0], expected_items[0])
-        self.assertEqual(test_items[1]["courseName"], expected_items[1]["courseName"])
-        self.assertEqual(test_items[1]["testName"], expected_items[1]["testName"])
-        self.assertEqual(test_items[1]["length"], expected_items[1]["length"])
+        self.assertEqual(
+            test_items[0],
+            {"courseName": "Math", "testName": "Algebra", "id": "1", "length": 10},
+        )
+        self.assertEqual(test_items[1]["courseName"], "Math")
+        self.assertEqual(test_items[1]["testName"], "Geometry")
+        self.assertEqual(test_items[1]["length"], 1)
+        self.assertIn("id", test_items[1])
+
+    @patch("util.local.get_read_write_container")
+    def test_generate_test_items_when_retrieved_failed(
+        self, mock_get_read_write_container
+    ):
+        """テスト項目の取得に失敗した場合のgenerate_test_items関数のテスト"""
+        mock_container = MagicMock()
+        mock_container.read_all_items.side_effect = Exception(
+            "Error in util.local.get_read_write_container"
+        )
+        mock_get_read_write_container.return_value = mock_container
+
+        import_data: ImportData = {
+            "Math": {
+                "Algebra": [{"question": "Q1"}],
+                "Geometry": [{"question": "Q2"}],
+            }
+        }
+        test_items = generate_test_items(import_data)
+
+        self.assertEqual(len(test_items), 2)
+        self.assertEqual(test_items[0]["courseName"], "Math")
+        self.assertEqual(test_items[0]["testName"], "Algebra")
+        self.assertEqual(test_items[0]["length"], 1)
+        self.assertIn("id", test_items[0])
+        self.assertEqual(test_items[1]["courseName"], "Math")
+        self.assertEqual(test_items[1]["testName"], "Geometry")
+        self.assertEqual(test_items[1]["length"], 1)
+        self.assertIn("id", test_items[1])
 
     @patch("util.local.get_read_write_container")
     def test_import_test_items(self, mock_get_read_write_container):
@@ -146,8 +183,10 @@ class TestLocalUtils(unittest.TestCase):
         mock_container.upsert_item.assert_called_once_with(test_items[0])
 
     @patch("util.local.get_read_write_container")
-    def test_generate_question_items(self, mock_get_read_write_container):
-        """generate_question_items関数のテスト"""
+    def test_generate_question_items_without_value_error(
+        self, mock_get_read_write_container
+    ):
+        """途中でValueErrorが発生しない場合のgenerate_question_items関数のテスト"""
         mock_container = MagicMock()
         mock_container.query_items.return_value = [{"id": "2"}]
         mock_get_read_write_container.return_value = mock_container
@@ -173,6 +212,31 @@ class TestLocalUtils(unittest.TestCase):
             }
         ]
         self.assertEqual(question_items, expected_items)
+
+    @patch("util.local.get_read_write_container")
+    def test_generate_question_items_with_value_error(
+        self, mock_get_read_write_container
+    ):
+        """途中でValueErrorが発生した場合のgenerate_question_items関数のテスト"""
+        mock_container = MagicMock()
+        mock_container.query_items.return_value = [{"id": "2"}]
+        mock_get_read_write_container.return_value = mock_container
+
+        import_data: ImportData = {
+            "Math": {
+                "Algebra": [{"question": "Q1", "communityVotes": ["AB (100%)"]}],
+            }
+        }
+        test_items: list[Test] = [
+            {"courseName": "Science", "testName": "Physics", "id": "1", "length": 1}
+        ]
+
+        with self.assertRaises(ValueError) as context:
+            generate_question_items(import_data, test_items)
+
+        self.assertEqual(
+            str(context.exception), "Course Name Math and Test Name Algebra Not Found."
+        )
 
     @patch("util.local.get_read_write_container")
     def test_import_question_items(self, mock_get_read_write_container):
