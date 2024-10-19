@@ -203,8 +203,6 @@ def import_question_items(question_items: list[Question]) -> None:
 
     container = get_read_write_container("Users", "Question")
     for i, item in enumerate(question_items):
-        res = container.upsert_item(item)
-        if res["statusCode"] >= 400:
-            raise ValueError(f"Status Code {res['statusCode']}: {json.dumps(item)}")
+        container.upsert_item(item)
         print(f"{i + 1}th Response OK")
         time.sleep(3)
