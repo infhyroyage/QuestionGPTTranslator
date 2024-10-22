@@ -28,10 +28,10 @@ def get_question(req: func.HttpRequest) -> func.HttpResponse:
         # パスパラメーターのバリデーションチェック
         test_id = req.route_params.get("testId")
         question_number = req.route_params.get("questionNumber")
-        if test_id is None or question_number is None:
-            raise ValueError(
-                f"Invalid testId or questionNumber: {test_id}, {question_number}"
-            )
+        if test_id is None:
+            return func.HttpResponse(body="testId is empty", status_code=400)
+        if question_number is None:
+            return func.HttpResponse(body="questionNumber is empty", status_code=400)
         if not question_number.isdigit():
             return func.HttpResponse(
                 body=f"Invalid questionNumber: {question_number}", status_code=400
