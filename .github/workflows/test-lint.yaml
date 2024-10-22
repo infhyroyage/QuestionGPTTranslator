@@ -70,6 +70,6 @@ jobs:
       - name: Get Cover
         uses: orgoro/coverage@v3.2
         with:
-          coverageFile: coverage.xml
+          coverageFile: functions/coverage.xml
           thresholdAll: 80
           token: ${{ secrets.GITHUB_TOKEN }}
