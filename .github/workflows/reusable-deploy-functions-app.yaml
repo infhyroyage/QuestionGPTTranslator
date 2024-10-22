@@ -42,6 +42,7 @@ jobs:
           python -m pip install --upgrade pip
           cp ../requirements.txt .
           pip install -r requirements.txt --target=".python_packages/lib/site-packages"
+          echo "PYTHONPATH=.python_packages/lib/site-packages" >> $GITHUB_ENV
           popd
 
       - name: Run Tests
