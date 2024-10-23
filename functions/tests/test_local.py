@@ -3,7 +3,6 @@
 import os
 import unittest
 from unittest.mock import MagicMock, mock_open, patch
-from uuid import uuid4
 
 from azure.cosmos import PartitionKey
 from type.cosmos import Question, Test
@@ -41,7 +40,11 @@ class TestLocalUtils(unittest.TestCase):
     @patch("util.local.os.listdir")
     @patch("util.local.os.path.isdir")
     def test_create_import_data_when_data_exists(
-        self, mock_isdir, mock_listdir, mock_exists, mock_builtins_open
+        self,
+        mock_isdir,
+        mock_listdir,
+        mock_exists,
+        mock_builtins_open,  # pylint: disable=W0613
     ):
         """dataファイル/ディレクトリが存在する場合のcreate_import_data関数のテスト"""
 
