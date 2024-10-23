@@ -1,5 +1,8 @@
 [MESSAGES CONTROL]
-disable=R0801,W0613,W0718
+disable=R0801,W0718
 
 [FILE PATTERNS]
 test_.*\.py$
+
+[MESSAGES CONTROL]
+disable=W0613
