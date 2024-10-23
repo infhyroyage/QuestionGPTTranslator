@@ -3,7 +3,6 @@
 import os
 import unittest
 from unittest.mock import MagicMock, mock_open, patch
-from uuid import uuid4
 
 from azure.cosmos import PartitionKey
 from type.cosmos import Question, Test
