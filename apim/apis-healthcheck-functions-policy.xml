@@ -3,9 +3,8 @@
     <set-backend-service id="backends-functions-policy" backend-id="backends-functions" />
   </inbound>
   <backend>
-    <base />
-    <!--バックエンドへのリクエストのタイムアウト設定(30秒)-->
-    <forward-request timeout="30" />
+    <!--バックエンドへのリクエストのタイムアウト設定(5秒)-->
+    <forward-request timeout="5" />
   </backend>
   <outbound>
   </outbound>
