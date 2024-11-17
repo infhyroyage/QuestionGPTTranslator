@@ -42,6 +42,8 @@
   </inbound>
   <backend>
     <base />
+    <!--バックエンドへのリクエストのタイムアウト設定(30秒)-->
+    <forward-request timeout="30" />
   </backend>
   <outbound>
     <base />
