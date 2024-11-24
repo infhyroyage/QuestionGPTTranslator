@@ -12,7 +12,7 @@ from util.local import (
 )
 
 # Azure Cosmos DB EmulatorのURIとキーを設定
-os.environ["COSMOSDB_URI"] = "https://localhost:8081"
+os.environ["COSMOSDB_URI"] = "http://localhost:8081"
 os.environ["COSMOSDB_KEY"] = (
     "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw=="
 )

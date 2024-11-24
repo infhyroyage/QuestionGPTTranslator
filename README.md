@@ -200,19 +200,16 @@ API Management のデプロイは、この Swagger を使用する。
 
 Azure にリソースを構築せず、localhost 上で以下のサーバーをそれぞれ起動することもできる。
 
-| サーバー名                                     | 使用するサービス名                                                                                       | ポート番号 |
-| ---------------------------------------------- | -------------------------------------------------------------------------------------------------------- | ---------- |
-| Azure Functions(HTTP Trigger の関数アプリのみ) | [Azure Functions Core Tools](https://docs.microsoft.com/ja-jp/azure/azure-functions/functions-run-local) | 9229       |
-| Cosmos DB                                      | [Azure Cosmos DB Linux Emulator](https://docs.microsoft.com/ja-jp/azure/cosmos-db/local-emulator)        | 8081       |
-| Blob ストレージ                                | [Azurite](https://learn.microsoft.com/ja-jp/azure/storage/common/storage-use-azurite)                    | 10000      |
-| Queue ストレージ                               | [Azurite](https://learn.microsoft.com/ja-jp/azure/storage/common/storage-use-azurite)                    | 10001      |
-| Table ストレージ                               | [Azurite](https://learn.microsoft.com/ja-jp/azure/storage/common/storage-use-azurite)                    | 10002      |
+| サーバー名                                     | 使用するサービス名                                                                                                 | ポート番号 |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ---------- |
+| Azure Functions(HTTP Trigger の関数アプリのみ) | [Azure Functions Core Tools](https://docs.microsoft.com/ja-jp/azure/azure-functions/functions-run-local)           | 9229       |
+| Cosmos DB                                      | [Azure Cosmos DB Linux-based Emulator (preview)](https://learn.microsoft.com/ja-jp/azure/cosmos-db/emulator-linux) | 8081       |
+| Blob ストレージ                                | [Azurite](https://learn.microsoft.com/ja-jp/azure/storage/common/storage-use-azurite)                              | 10000      |
+| Queue ストレージ                               | [Azurite](https://learn.microsoft.com/ja-jp/azure/storage/common/storage-use-azurite)                              | 10001      |
+| Table ストレージ                               | [Azurite](https://learn.microsoft.com/ja-jp/azure/storage/common/storage-use-azurite)                              | 10002      |
 
 > [!TIP]  
-> localhost 環境構築後、 [Azure Cosmos DB Emulator の index.html](https://localhost:8081/_explorer/index.html) にアクセスすると、Cosmos DB 内のデータを参照・更新することができる。
-
-> [!CAUTION]  
-> [Azure Cosmos DB Emulator のリポジトリの Issue](https://github.com/Azure/azure-cosmos-db-emulator-docker/issues/54)で議論されている通り、Apple シリコンの macOS は、Azure Cosmos DB Emulator がサポートされていないため、localhost 環境を構築することができない。
+> localhost 環境構築後、ブラウザから [データエクスプローラー](http://localhost:1234) にアクセスすると、Cosmos DB 内のデータを GUI で参照・更新できる。
 
 ### 構築手順
 
@@ -228,7 +225,7 @@ Azure にリソースを構築せず、localhost 上で以下のサーバーを�
        "AzureWebJobsStorage": "UseDevelopmentStorage=true",
        "COSMOSDB_KEY": "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==",
        "COSMOSDB_READONLY_KEY": "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==",
-       "COSMOSDB_URI": "https://localhost:8081",
+       "COSMOSDB_URI": "http://localhost:8081",
        "DEEPL_AUTH_KEY": "(Azureリソース環境構築時にGitHubへ登録したシークレットDEEPL_AUTH_KEYの値)",
        "OPENAI_API_KEY": "(Azureリソース環境構築時にGitHubへ登録したシークレットOPENAI_API_KEYの値)",
        "OPENAI_API_VERSION": "(Azureリソース環境構築時にGitHubへ登録した変数OPENAI_API_VERSIONの値)",

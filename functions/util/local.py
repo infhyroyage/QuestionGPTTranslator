@@ -72,14 +72,17 @@ def create_databases_and_containers() -> None:
     database_res.create_container_if_not_exists(
         id="Test",
         partition_key=PartitionKey(path="/id"),
-        indexing_policy={
-            "compositeIndexes": [
-                [
-                    {"path": "/courseName", "order": "ascending"},
-                    {"path": "/testName", "order": "ascending"},
-                ]
-            ]
-        },
+        # Azure Cosmos DBでは複合インデックスのインデックスポリシーをサポートするが
+        # 2024/11/24現在、Azure Cosmos DB Linux-based Emulator (preview)では未サポートのため
+        # そのインデックスポリシーを定義しない
+        # indexing_policy={
+        #     "compositeIndexes": [
+        #         [
+        #             {"path": "/courseName", "order": "ascending"},
+        #             {"path": "/testName", "order": "ascending"},
+        #         ]
+        #     ]
+        # },
     )
 
     # Questionコンテナー
