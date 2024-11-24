@@ -101,14 +101,17 @@ class TestLocalUtils(unittest.TestCase):
         mock_database.create_container_if_not_exists.assert_any_call(
             id="Test",
             partition_key=PartitionKey(path="/id"),
-            indexing_policy={
-                "compositeIndexes": [
-                    [
-                        {"path": "/courseName", "order": "ascending"},
-                        {"path": "/testName", "order": "ascending"},
-                    ]
-                ]
-            },
+            # Azure Cosmos DBでは複合インデックスのインデックスポリシーをサポートするが
+            # 2024/11/24現在、Azure Cosmos DB Linux-based Emulator (preview)では未サポートのため
+            # そのインデックスポリシーを定義しない
+            # indexing_policy={
+            #     "compositeIndexes": [
+            #         [
+            #             {"path": "/courseName", "order": "ascending"},
+            #             {"path": "/testName", "order": "ascending"},
+            #         ]
+            #     ]
+            # },
         )
         mock_database.create_container_if_not_exists.assert_any_call(
             id="Question", partition_key=PartitionKey(path="/id")
