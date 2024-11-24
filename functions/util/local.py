@@ -3,7 +3,6 @@
 import json
 import os
 import re
-import time
 from uuid import uuid4
 
 from azure.cosmos import CosmosClient, PartitionKey
@@ -200,7 +199,6 @@ def generate_question_items(
 def import_question_items(question_items: list[Question]) -> None:
     """
     UsersテータベースのQuestionコンテナーの項目をインポートする
-    比較的要求ユニット(RU)数が多いDB操作を行うため、upsertの合間に1秒間sleepする
     https://docs.microsoft.com/ja-jp/azure/cosmos-db/sql/troubleshoot-request-rate-too-large
     """
 
@@ -208,4 +206,3 @@ def import_question_items(question_items: list[Question]) -> None:
     for i, item in enumerate(question_items):
         container.upsert_item(item)
         print(f"{i + 1}th Response OK")
-        time.sleep(1)
