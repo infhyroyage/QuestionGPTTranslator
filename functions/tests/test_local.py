@@ -48,18 +48,22 @@ class TestLocalUtils(unittest.TestCase):
     ):
         """dataファイル/ディレクトリが存在する場合のcreate_import_data関数のテスト"""
 
+        data_path = os.path.abspath(
+            os.path.join(os.path.dirname(__file__), "..", "data")
+        )
+
         mock_exists.return_value = True
         mock_isdir.return_value = True
         mock_listdir.side_effect = lambda path: {
-            f"{os.getcwd()}/data": [
+            data_path: [
                 "Math",
                 "Science",
             ],
-            f"{os.getcwd()}/data/Math": [
+            f"{data_path}/Math": [
                 "Algebra.json",
                 "Geometry.json",
             ],
-            f"{os.getcwd()}/data/Science": [
+            f"{data_path}/Science": [
                 "Algebra.json",
                 "Geometry.json",
             ],

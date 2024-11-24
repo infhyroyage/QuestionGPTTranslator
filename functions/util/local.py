@@ -19,7 +19,7 @@ def create_import_data() -> ImportData:
     """
 
     # dataファイル/ディレクトリが存在しない場合は空オブジェクトをreturn
-    data_path = os.path.join(os.getcwd(), "data")
+    data_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data"))
     if not os.path.exists(data_path):
         return {}
 
@@ -200,7 +200,7 @@ def generate_question_items(
 def import_question_items(question_items: list[Question]) -> None:
     """
     UsersテータベースのQuestionコンテナーの項目をインポートする
-    比較的要求ユニット(RU)数が多いDB操作を行うため、upsertの合間に3秒間sleepする
+    比較的要求ユニット(RU)数が多いDB操作を行うため、upsertの合間に1秒間sleepする
     https://docs.microsoft.com/ja-jp/azure/cosmos-db/sql/troubleshoot-request-rate-too-large
     """
 
@@ -208,4 +208,4 @@ def import_question_items(question_items: list[Question]) -> None:
     for i, item in enumerate(question_items):
         container.upsert_item(item)
         print(f"{i + 1}th Response OK")
-        time.sleep(3)
+        time.sleep(1)
