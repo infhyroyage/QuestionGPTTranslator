@@ -227,15 +227,15 @@ Azure にリソースを構築せず、localhost 上で以下のサーバーを�
        "COSMOSDB_READONLY_KEY": "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==",
        "COSMOSDB_URI": "http://localhost:8081",
        "DEEPL_AUTH_KEY": "(Azureリソース環境構築時にGitHubへ登録したシークレットDEEPL_AUTH_KEYの値)",
+       "FUNCTIONS_WORKER_RUNTIME": "python",
+       "NODE_TLS_REJECT_UNAUTHORIZED": "0",
        "OPENAI_API_KEY": "(Azureリソース環境構築時にGitHubへ登録したシークレットOPENAI_API_KEYの値)",
        "OPENAI_API_VERSION": "(Azureリソース環境構築時にGitHubへ登録した変数OPENAI_API_VERSIONの値)",
        "OPENAI_DEPLOYMENT": "(Azureリソース環境構築時にGitHubへ登録した変数OPENAI_DEPLOYMENTの値)",
        "OPENAI_ENDPOINT": "(Azureリソース環境構築時にGitHubへ登録した変数OPENAI_ENDPOINTの値)",
        "OPENAI_MODEL": "(Azureリソース環境構築時にGitHubへ登録した変数OPENAI_MODELの値)",
        "PYTHON_PATH": "./venv/bin/python",
-       "TRANSLATOR_KEY": "(Azureリソース環境構築時にGitHubへ登録したシークレットTRANSLATOR_KEYの値)",
-       "FUNCTIONS_WORKER_RUNTIME": "python",
-       "NODE_TLS_REJECT_UNAUTHORIZED": "0"
+       "TRANSLATOR_KEY": "(Azureリソース環境構築時にGitHubへ登録したシークレットTRANSLATOR_KEYの値)"
      },
      "Host": {
        "CORS": "*",
