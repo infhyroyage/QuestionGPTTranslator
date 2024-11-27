@@ -13,6 +13,10 @@ from type.response import PostAnswerRes
 from type.structured import AnswerFormat
 
 MAX_RETRY_NUMBER: int = 5
+# pylint: disable=line-too-long
+AZURITE_QUEUE_STORAGE_CONNECTION_STRING: str = (
+    "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;QueueEndpoint=http://127.0.0.1:10001/devstoreaccount1;"
+)
 
 
 def create_system_prompt(course_name: str) -> str:
@@ -116,8 +120,12 @@ def queue_message_answer(message_answer: MessageAnswer) -> None:
         message_answer (MessageAnswer): Answerコンテナーの項目用のメッセージ
     """
 
+    connection_string: str = os.environ["AzureWebJobsStorage"]
+    if connection_string == "UseDevelopmentStorage=true":
+        connection_string = AZURITE_QUEUE_STORAGE_CONNECTION_STRING
+
     queue_client = QueueClient.from_connection_string(
-        conn_str=os.environ["AzureWebJobsStorage"],
+        conn_str=connection_string,
         queue_name="answers",
         message_encode_policy=BinaryBase64EncodePolicy(),
     )
