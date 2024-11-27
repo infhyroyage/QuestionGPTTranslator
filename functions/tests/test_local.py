@@ -10,15 +10,69 @@ from type.importing import ImportData
 from util.local import (
     create_databases_and_containers,
     create_import_data,
+    create_queue_storages,
     generate_question_items,
     generate_test_items,
     import_question_items,
     import_test_items,
 )
+from util.queue import AZURITE_QUEUE_STORAGE_CONNECTION_STRING
 
 
 class TestLocalUtils(unittest.TestCase):
     """ローカル環境でのインポート処理のユーティリティ関数のテストケース"""
+
+    @patch("util.local.QueueClient.from_connection_string")
+    def test_create_queue_storages(self, mock_from_connection_string):
+        """create_queue_storages関数のテスト"""
+        mock_queue_client = MagicMock()
+        mock_from_connection_string.return_value = mock_queue_client
+
+        create_queue_storages()
+
+        mock_from_connection_string.assert_called_once_with(
+            conn_str=AZURITE_QUEUE_STORAGE_CONNECTION_STRING,
+            queue_name="answers",
+        )
+        mock_queue_client.create_queue.assert_called_once()
+
+    @patch("util.local.CosmosClient")
+    @patch(
+        "util.local.os.environ",
+        {
+            "COSMOSDB_URI": "https://fake-uri",
+            "COSMOSDB_KEY": "fake-key",
+        },
+    )
+    def test_create_databases_and_containers(self, mock_cosmos_client):
+        """create_databases_and_containers関数のテスト"""
+        mock_client_instance = mock_cosmos_client.return_value
+        mock_database = mock_client_instance.create_database_if_not_exists.return_value
+
+        create_databases_and_containers()
+
+        mock_cosmos_client.assert_called_once_with("https://fake-uri", "fake-key")
+        mock_client_instance.create_database_if_not_exists.assert_called_once_with(
+            id="Users"
+        )
+        mock_database.create_container_if_not_exists.assert_any_call(
+            id="Test",
+            partition_key=PartitionKey(path="/id"),
+            # Azure Cosmos DBでは複合インデックスのインデックスポリシーをサポートするが
+            # 2024/11/24現在、Azure Cosmos DB Linux-based Emulator (preview)では未サポートのため
+            # そのインデックスポリシーを定義しない
+            # indexing_policy={
+            #     "compositeIndexes": [
+            #         [
+            #             {"path": "/courseName", "order": "ascending"},
+            #             {"path": "/testName", "order": "ascending"},
+            #         ]
+            #     ]
+            # },
+        )
+        mock_database.create_container_if_not_exists.assert_any_call(
+            id="Question", partition_key=PartitionKey(path="/id")
+        )
 
     @patch("util.local.os.path.exists")
     def test_create_import_data_when_data_not_exists(self, mock_exists):
@@ -82,44 +136,6 @@ class TestLocalUtils(unittest.TestCase):
             },
         }
         self.assertEqual(import_data, expected_data)
-
-    @patch("util.local.CosmosClient")
-    @patch(
-        "util.local.os.environ",
-        {
-            "COSMOSDB_URI": "https://fake-uri",
-            "COSMOSDB_KEY": "fake-key",
-        },
-    )
-    def test_create_databases_and_containers(self, mock_cosmos_client):
-        """create_databases_and_containers関数のテスト"""
-        mock_client_instance = mock_cosmos_client.return_value
-        mock_database = mock_client_instance.create_database_if_not_exists.return_value
-
-        create_databases_and_containers()
-
-        mock_cosmos_client.assert_called_once_with("https://fake-uri", "fake-key")
-        mock_client_instance.create_database_if_not_exists.assert_called_once_with(
-            id="Users"
-        )
-        mock_database.create_container_if_not_exists.assert_any_call(
-            id="Test",
-            partition_key=PartitionKey(path="/id"),
-            # Azure Cosmos DBでは複合インデックスのインデックスポリシーをサポートするが
-            # 2024/11/24現在、Azure Cosmos DB Linux-based Emulator (preview)では未サポートのため
-            # そのインデックスポリシーを定義しない
-            # indexing_policy={
-            #     "compositeIndexes": [
-            #         [
-            #             {"path": "/courseName", "order": "ascending"},
-            #             {"path": "/testName", "order": "ascending"},
-            #         ]
-            #     ]
-            # },
-        )
-        mock_database.create_container_if_not_exists.assert_any_call(
-            id="Question", partition_key=PartitionKey(path="/id")
-        )
 
     @patch("util.local.get_read_write_container")
     def test_generate_test_items_when_retrieved_successfully(

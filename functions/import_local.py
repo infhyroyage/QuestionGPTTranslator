@@ -5,6 +5,7 @@ import os
 from util.local import (
     create_databases_and_containers,
     create_import_data,
+    create_queue_storages,
     generate_question_items,
     generate_test_items,
     import_question_items,
@@ -17,13 +18,17 @@ os.environ["COSMOSDB_KEY"] = (
     "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw=="
 )
 
-# インポートデータ作成
-created_import_data = create_import_data()
-print(f"create_import_data: OK(length: {len(created_import_data)})")
+# Queue Storageを作成
+create_queue_storages()
+print("create_queue_storages: OK")
 
 # 各データベース・コンテナー作成
 create_databases_and_containers()
 print("create_databases_and_containers: OK")
+
+# インポートデータ作成
+created_import_data = create_import_data()
+print(f"create_import_data: OK(length: {len(created_import_data)})")
 
 # Testコンテナーの項目を生成
 generated_test_items = generate_test_items(created_import_data)

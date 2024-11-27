@@ -11,12 +11,9 @@ from type.message import MessageAnswer
 from type.request import PostAnswerReq
 from type.response import PostAnswerRes
 from type.structured import AnswerFormat
+from util.queue import AZURITE_QUEUE_STORAGE_CONNECTION_STRING
 
 MAX_RETRY_NUMBER: int = 5
-# pylint: disable=line-too-long
-AZURITE_QUEUE_STORAGE_CONNECTION_STRING: str = (
-    "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;QueueEndpoint=http://127.0.0.1:10001/devstoreaccount1;"
-)
 
 
 def create_system_prompt(course_name: str) -> str:

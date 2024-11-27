@@ -6,9 +6,64 @@ import re
 from uuid import uuid4
 
 from azure.cosmos import CosmosClient, PartitionKey
+from azure.storage.queue import QueueClient
 from type.cosmos import Question, Test
 from type.importing import ImportData, ImportDatabaseData, ImportItem
 from util.cosmos import get_read_write_container
+from util.queue import AZURITE_QUEUE_STORAGE_CONNECTION_STRING
+
+
+def create_queue_storages() -> None:
+    """
+    Queueトリガーの関数アプリのためのQueue Storageを作成する
+    """
+
+    queue_client = QueueClient.from_connection_string(
+        conn_str=AZURITE_QUEUE_STORAGE_CONNECTION_STRING,
+        queue_name="answers",
+    )
+    queue_client.create_queue()
+
+
+def create_databases_and_containers() -> None:
+    """
+    インポートデータの格納に必要な各データベース、コンテナーをすべて作成する
+    """
+
+    client: CosmosClient = CosmosClient(
+        os.environ["COSMOSDB_URI"],
+        os.environ["COSMOSDB_KEY"],
+    )
+
+    # Usersデータベース
+    database_res = client.create_database_if_not_exists(id="Users")
+
+    # Testコンテナー
+    database_res.create_container_if_not_exists(
+        id="Test",
+        partition_key=PartitionKey(path="/id"),
+        # Azure Cosmos DBでは複合インデックスのインデックスポリシーをサポートするが
+        # 2024/11/24現在、Azure Cosmos DB Linux-based Emulator (preview)では未サポートのため
+        # そのインデックスポリシーを定義しない
+        # indexing_policy={
+        #     "compositeIndexes": [
+        #         [
+        #             {"path": "/courseName", "order": "ascending"},
+        #             {"path": "/testName", "order": "ascending"},
+        #         ]
+        #     ]
+        # },
+    )
+
+    # Questionコンテナー
+    database_res.create_container_if_not_exists(
+        id="Question", partition_key=PartitionKey(path="/id")
+    )
+
+    # Answerコンテナー
+    database_res.create_container_if_not_exists(
+        id="Answer", partition_key=PartitionKey(path="/id")
+    )
 
 
 def create_import_data() -> ImportData:
@@ -52,42 +107,6 @@ def create_import_data() -> ImportData:
         import_data[course_name] = import_database_data
 
     return import_data
-
-
-def create_databases_and_containers() -> None:
-    """
-    インポートデータの格納に必要な各データベース、コンテナーをすべて作成する
-    """
-
-    client: CosmosClient = CosmosClient(
-        os.environ["COSMOSDB_URI"],
-        os.environ["COSMOSDB_KEY"],
-    )
-
-    # Usersデータベース
-    database_res = client.create_database_if_not_exists(id="Users")
-
-    # Testコンテナー
-    database_res.create_container_if_not_exists(
-        id="Test",
-        partition_key=PartitionKey(path="/id"),
-        # Azure Cosmos DBでは複合インデックスのインデックスポリシーをサポートするが
-        # 2024/11/24現在、Azure Cosmos DB Linux-based Emulator (preview)では未サポートのため
-        # そのインデックスポリシーを定義しない
-        # indexing_policy={
-        #     "compositeIndexes": [
-        #         [
-        #             {"path": "/courseName", "order": "ascending"},
-        #             {"path": "/testName", "order": "ascending"},
-        #         ]
-        #     ]
-        # },
-    )
-
-    # Questionコンテナー
-    database_res.create_container_if_not_exists(
-        id="Question", partition_key=PartitionKey(path="/id")
-    )
 
 
 def generate_test_items(import_data: ImportData) -> list[Test]:
