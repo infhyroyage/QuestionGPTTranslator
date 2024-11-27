@@ -7,7 +7,7 @@ import azure.functions as func
 from azure.cosmos import ContainerProxy
 from type.cosmos import Answer, Question
 from type.message import MessageAnswer
-from util.cosmos import get_read_write_container
+from util.cosmos import get_read_only_container, get_read_write_container
 
 bp_queue_triggered_answer = func.Blueprint()
 
@@ -27,7 +27,7 @@ def queue_triggered_answer(msg: func.QueueMessage):
     logging.info({"message_answer": message_answer})
 
     # メッセージに該当するQuestionコンテナーの項目を取得
-    container_question: ContainerProxy = get_read_write_container(
+    container_question: ContainerProxy = get_read_only_container(
         database_name="Users",
         container_name="Question",
     )
