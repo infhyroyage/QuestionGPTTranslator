@@ -1,3 +1,4 @@
-local.py
+data/
+import_local.py
 local.settings.json
 tests/
