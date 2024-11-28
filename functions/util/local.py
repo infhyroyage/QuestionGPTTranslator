@@ -5,6 +5,7 @@ import os
 import re
 from uuid import uuid4
 
+from azure.core.exceptions import ResourceExistsError
 from azure.cosmos import CosmosClient, PartitionKey
 from azure.storage.queue import QueueClient
 from type.cosmos import Question, Test
@@ -18,11 +19,15 @@ def create_queue_storages() -> None:
     Queueトリガーの関数アプリのためのQueue Storageを作成する
     """
 
+    # 既にQueueが存在する場合は、Queueを作成しない
     queue_client = QueueClient.from_connection_string(
         conn_str=AZURITE_QUEUE_STORAGE_CONNECTION_STRING,
         queue_name="answers",
     )
-    queue_client.create_queue()
+    try:
+        queue_client.create_queue()
+    except ResourceExistsError:
+        pass
 
 
 def create_databases_and_containers() -> None:
