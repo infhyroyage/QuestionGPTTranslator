@@ -4,6 +4,7 @@ import os
 import unittest
 from unittest.mock import MagicMock, mock_open, patch
 
+from azure.core.exceptions import ResourceExistsError
 from azure.cosmos import PartitionKey
 from type.cosmos import Question, Test
 from type.importing import ImportData
@@ -23,10 +24,27 @@ class TestLocalUtils(unittest.TestCase):
     """ローカル環境でのインポート処理のユーティリティ関数のテストケース"""
 
     @patch("util.local.QueueClient.from_connection_string")
-    def test_create_queue_storages(self, mock_from_connection_string):
-        """create_queue_storages関数のテスト"""
+    def test_create_queue_storages_when_queue_not_exists(
+        self, mock_from_connection_string
+    ):
+        """まだQueueが存在しない場合のcreate_queue_storages関数のテスト"""
         mock_queue_client = MagicMock()
         mock_from_connection_string.return_value = mock_queue_client
+
+        create_queue_storages()
+
+        mock_from_connection_string.assert_called_once_with(
+            conn_str=AZURITE_QUEUE_STORAGE_CONNECTION_STRING,
+            queue_name="answers",
+        )
+        mock_queue_client.create_queue.assert_called_once()
+
+    @patch("util.local.QueueClient.from_connection_string")
+    def test_create_queue_storages_when_queue_exists(self, mock_from_connection_string):
+        """Queueが既に存在する場合のcreate_queue_storages関数のテスト"""
+        mock_queue_client = MagicMock()
+        mock_from_connection_string.return_value = mock_queue_client
+        mock_queue_client.create_queue.side_effect = ResourceExistsError
 
         create_queue_storages()
 
