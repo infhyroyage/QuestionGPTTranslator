@@ -33,5 +33,10 @@
     "name": "TRANSLATOR_KEY",
     "slotSetting": false,
     "value": "@Microsoft.KeyVault(SecretUri={translatorKey})"
+  },
+  {
+    "name": "WEBSITE_CONTENTSHARE",
+    "slotSetting": false,
+    "value": "qgtranslator-je-func"
   }
 ]
