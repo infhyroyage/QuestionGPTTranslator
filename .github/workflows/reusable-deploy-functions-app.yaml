@@ -54,3 +54,5 @@ jobs:
         with:
           app-name: ${{ inputs.FUNCTIONS_NAME }}
           package: functions/
+          scm-do-build-during-deployment: true
+          enable-oryx-build: true
