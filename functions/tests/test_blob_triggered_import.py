@@ -1,10 +1,15 @@
 """インポートデータファイルの項目をインポートするBlobトリガーの関数アプリのテスト"""
 
+import json
 from unittest import TestCase
 from unittest.mock import MagicMock, call, patch
 
-from src.blob_triggered_import import upsert_question_items, upsert_test_item
-from type.cosmos import Test
+from src.blob_triggered_import import (
+    blob_triggered_import,
+    upsert_question_items,
+    upsert_test_item,
+)
+from type.cosmos import Question, Test
 from type.importing import ImportItem
 
 
@@ -19,7 +24,7 @@ class TestBlobTriggeredImport(TestCase):
         mock_container = MagicMock()
         mock_get_read_write_container.return_value = mock_container
         mock_container.query_items.return_value = []
-        mock_uuid4.return_value = "new-uuid"
+        mock_uuid4.return_value = "test-id"
 
         course_name = "Math"
         test_name = "Algebra"
@@ -30,7 +35,7 @@ class TestBlobTriggeredImport(TestCase):
         test_id, is_existed_test = upsert_test_item(course_name, test_name, json_data)
 
         self.assertFalse(is_existed_test)
-        self.assertEqual(test_id, "new-uuid")
+        self.assertEqual(test_id, "test-id")
         mock_container.upsert_item.assert_called_once()
 
     @patch("src.blob_triggered_import.get_read_write_container")
@@ -80,10 +85,8 @@ class TestBlobTriggeredImport(TestCase):
 
     @patch("src.blob_triggered_import.time.sleep")
     @patch("src.blob_triggered_import.get_read_write_container")
-    @patch("src.blob_triggered_import.uuid4")
-    def test_upsert_question_items(
+    def test_upsert_question_items_not_found_test(
         self,
-        mock_uuid4,
         mock_get_read_write_container,
         mock_sleep,  # pylint: disable=W0613
     ):
@@ -92,9 +95,8 @@ class TestBlobTriggeredImport(TestCase):
         mock_container = MagicMock()
         mock_get_read_write_container.return_value = mock_container
         mock_container.query_items.return_value = []
-        mock_uuid4.return_value = "new-uuid"
 
-        test_id = "new-uuid"
+        test_id = "test-id"
         is_existed_test = False
         json_data = [
             ImportItem(
@@ -118,9 +120,9 @@ class TestBlobTriggeredImport(TestCase):
             "subjects": ["Q1"],
             "choices": ["A"],
             "communityVotes": ["A (100%)"],
-            "id": "new-uuid_1",
+            "id": "test-id_1",
             "number": 1,
-            "testId": "new-uuid",
+            "testId": "test-id",
             "isMultiplied": False,
         }
         expected_question_item_2nd = {
@@ -130,9 +132,9 @@ class TestBlobTriggeredImport(TestCase):
             "indicateSubjectImgIdxes": [0, 2],
             "indicateChoiceImgs": ["img1", "img2"],
             "escapeTranslatedIdxes": {"subjects": [0, 2], "choices": [1, 3]},
-            "id": "new-uuid_2",
+            "id": "test-id_2",
             "number": 2,
-            "testId": "new-uuid",
+            "testId": "test-id",
             "isMultiplied": True,
         }
         self.assertEqual(mock_container.upsert_item.call_count, 2)
@@ -140,4 +142,104 @@ class TestBlobTriggeredImport(TestCase):
             [call(expected_question_item_1st), call(expected_question_item_2nd)]
         )
 
-    # TODO: ユニットテストの完成
+    @patch("src.blob_triggered_import.time.sleep")
+    @patch("src.blob_triggered_import.get_read_write_container")
+    def test_upsert_question_items_found_test(
+        self,
+        mock_get_read_write_container,
+        mock_sleep,  # pylint: disable=W0613
+    ):
+        """Testコンテナーの項目が取得できる場合でQuestion項目をupsertするテスト"""
+
+        mock_container = MagicMock()
+        mock_get_read_write_container.return_value = mock_container
+        mock_container.query_items.return_value = [
+            Question(
+                id="test-id_2",
+                number=2,
+                subjects=["Q2-1", "Q2-2", "Q2-3"],
+                choices=["B", "C"],
+                isMultiplied=True,
+                communityVotes=["BC (70%)", "BD (30%)"],
+                indicateSubjectImgIdxes=[0, 2],
+                indicateChoiceImgs=["img1", "img2"],
+                escapeTranslatedIdxes={"subjects": [0, 2], "choices": [1, 3]},
+                testId="test-id",
+            ),
+            Question(
+                id="test-id_3",
+                number=3,
+                subjects=["Q3-1", "Q3-2"],
+                choices=["D"],
+                isMultiplied=False,
+                communityVotes=["D (95%)", "B (5%)"],
+                testId="test-id",
+            ),
+        ]
+
+        test_id = "test-id"
+        is_existed_test = True
+        json_data = [
+            ImportItem(
+                subjects=["Q1"],
+                choices=["A"],
+                communityVotes=["A (100%)"],
+            ),
+            ImportItem(
+                subjects=["Q2-1", "Q2-2", "Q2-3"],
+                choices=["B", "C"],
+                communityVotes=["BC (70%)", "BD (30%)"],
+                indicateSubjectImgIdxes=[0, 2],
+                indicateChoiceImgs=["img1", "img2"],
+                escapeTranslatedIdxes={"subjects": [0, 2], "choices": [1, 3]},
+            ),
+        ]
+
+        upsert_question_items(test_id, is_existed_test, json_data)
+
+        expected_question_item = {
+            "subjects": ["Q1"],
+            "choices": ["A"],
+            "communityVotes": ["A (100%)"],
+            "id": "test-id_1",
+            "number": 1,
+            "testId": "test-id",
+            "isMultiplied": False,
+        }
+        self.assertEqual(mock_container.upsert_item.call_count, 1)
+        mock_container.upsert_item.assert_called_once_with(expected_question_item)
+
+    @patch("src.blob_triggered_import.upsert_test_item")
+    @patch("src.blob_triggered_import.upsert_question_items")
+    def test_blob_triggered_import(
+        self, mock_upsert_question_items, mock_upsert_test_item
+    ):
+        """blob_triggered_import関数のテスト"""
+
+        mock_upsert_test_item.return_value = ("test-id", False)
+
+        blob_data = json.dumps(
+            [{"subjects": ["Q1"], "choices": ["A"], "communityVotes": ["A (100%)"]}]
+        ).encode("utf-8")
+
+        mock_blob = MagicMock()
+        mock_blob.name = "import-items/Math/Algebra.json"
+        mock_blob.read.return_value = blob_data
+
+        blob_triggered_import(mock_blob)
+
+        mock_upsert_test_item.assert_called_once_with(
+            course_name="Math",
+            test_name="Algebra",
+            json_data=[
+                {"subjects": ["Q1"], "choices": ["A"], "communityVotes": ["A (100%)"]}
+            ],
+        )
+
+        mock_upsert_question_items.assert_called_once_with(
+            test_id="test-id",
+            is_existed_test=False,
+            json_data=[
+                {"subjects": ["Q1"], "choices": ["A"], "communityVotes": ["A (100%)"]}
+            ],
+        )
