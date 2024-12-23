@@ -1,7 +1,7 @@
 """インポートデータファイルの項目をインポートするBlobトリガーの関数アプリのテスト"""
 
 from unittest import TestCase
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, call, patch
 
 from src.blob_triggered_import import upsert_question_items, upsert_test_item
 from type.cosmos import Test
@@ -97,20 +97,47 @@ class TestBlobTriggeredImport(TestCase):
         test_id = "new-uuid"
         is_existed_test = False
         json_data = [
-            ImportItem(subjects=["Q1"], choices=["A", "B"], communityVotes=["A (100%)"])
+            ImportItem(
+                subjects=["Q1"],
+                choices=["A"],
+                communityVotes=["A (100%)"],
+            ),
+            ImportItem(
+                subjects=["Q2-1", "Q2-2", "Q2-3"],
+                choices=["B", "C"],
+                communityVotes=["BC (70%)", "BD (30%)"],
+                indicateSubjectImgIdxes=[0, 2],
+                indicateChoiceImgs=["img1", "img2"],
+                escapeTranslatedIdxes={"subjects": [0, 2], "choices": [1, 3]},
+            ),
         ]
 
         upsert_question_items(test_id, is_existed_test, json_data)
 
-        expected_question_item = {
+        expected_question_item_1st = {
             "subjects": ["Q1"],
-            "choices": ["A", "B"],
+            "choices": ["A"],
             "communityVotes": ["A (100%)"],
             "id": "new-uuid_1",
             "number": 1,
             "testId": "new-uuid",
             "isMultiplied": False,
         }
-        mock_container.upsert_item.assert_called_once_with(expected_question_item)
+        expected_question_item_2nd = {
+            "subjects": ["Q2-1", "Q2-2", "Q2-3"],
+            "choices": ["B", "C"],
+            "communityVotes": ["BC (70%)", "BD (30%)"],
+            "indicateSubjectImgIdxes": [0, 2],
+            "indicateChoiceImgs": ["img1", "img2"],
+            "escapeTranslatedIdxes": {"subjects": [0, 2], "choices": [1, 3]},
+            "id": "new-uuid_2",
+            "number": 2,
+            "testId": "new-uuid",
+            "isMultiplied": True,
+        }
+        self.assertEqual(mock_container.upsert_item.call_count, 2)
+        mock_container.upsert_item.assert_has_calls(
+            [call(expected_question_item_1st), call(expected_question_item_2nd)]
+        )
 
     # TODO: ユニットテストの完成
