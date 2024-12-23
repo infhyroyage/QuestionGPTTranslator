@@ -109,6 +109,56 @@ Unless there is an instruction such as "Select THREE" in the question, there wil
 ---"""
 
 
+def generate_correct_answers(
+    course_name: str, subjects: list[str], choices: list[str]
+) -> tuple[list[int] | None, list[str] | None]:
+    """
+    正解の選択肢・正解/不正解の理由を生成する
+
+    Args:
+        course_name (str): コース名
+        subjects (list[str]): 問題文のリスト
+        choices (list[str]): 選択肢のリスト
+
+    Returns:
+        tuple[list[int] | None, list[str] | None]: 正解のインデックスと説明のリスト
+    """
+    correct_indexes: list[int] | None = None
+    explanations: list[str] | None = None
+    for retry_number in range(MAX_RETRY_NUMBER):
+        logging.info({"retry_number": retry_number})
+        try:
+            response = AzureOpenAI(
+                api_key=os.environ["OPENAI_API_KEY"],
+                api_version=os.environ["OPENAI_API_VERSION"],
+                azure_deployment=os.environ["OPENAI_DEPLOYMENT"],
+                azure_endpoint=os.environ["OPENAI_ENDPOINT"],
+            ).beta.chat.completions.parse(
+                model=os.environ["OPENAI_MODEL"],
+                messages=[
+                    {
+                        "role": "system",
+                        "content": create_system_prompt(course_name),
+                    },
+                    {
+                        "role": "user",
+                        "content": create_user_prompt(subjects, choices),
+                    },
+                ],
+                response_format=AnswerFormat,
+            )
+            logging.info({"message": response.choices[0].message})
+
+            # parseできるかのチェック
+            if response.choices[0].message.parsed is not None:
+                correct_indexes = response.choices[0].message.parsed.correct_indexes
+                explanations = response.choices[0].message.parsed.explanations
+                break
+        except Exception as e:
+            logging.warning(e)
+    return correct_indexes, explanations
+
+
 def queue_message_answer(message_answer: MessageAnswer) -> None:
     """
     キューストレージにAnswerコンテナーの項目用のメッセージを格納する
@@ -177,40 +227,9 @@ def post_answer(req: func.HttpRequest) -> func.HttpResponse:
             raise ValueError("Invalid choices")
 
         # 正解の選択肢・正解/不正解の理由をAzure OpenAIのStructured Outputsでparseして生成
-        # 正常にparseされるまで最大MAX_RETRY_NUMBER回リトライ
-        correct_indexes: list[int] | None = None
-        explanations: list[str] | None = None
-        for retry_number in range(MAX_RETRY_NUMBER):
-            logging.info({"retry_number": retry_number})
-            try:
-                response = AzureOpenAI(
-                    api_key=os.environ["OPENAI_API_KEY"],
-                    api_version=os.environ["OPENAI_API_VERSION"],
-                    azure_deployment=os.environ["OPENAI_DEPLOYMENT"],
-                    azure_endpoint=os.environ["OPENAI_ENDPOINT"],
-                ).beta.chat.completions.parse(
-                    model=os.environ["OPENAI_MODEL"],
-                    messages=[
-                        {
-                            "role": "system",
-                            "content": create_system_prompt(course_name),
-                        },
-                        {
-                            "role": "user",
-                            "content": create_user_prompt(subjects, choices),
-                        },
-                    ],
-                    response_format=AnswerFormat,
-                )
-                logging.info({"message": response.choices[0].message})
-
-                # parseできるかのチェック
-                if response.choices[0].message.parsed is not None:
-                    correct_indexes = response.choices[0].message.parsed.correct_indexes
-                    explanations = response.choices[0].message.parsed.explanations
-                    break
-            except Exception as e:
-                logging.warning(e)
+        correct_indexes, explanations = generate_correct_answers(
+            course_name, subjects, choices
+        )
 
         # リトライ回数超過チェック
         if not correct_indexes or not explanations:
