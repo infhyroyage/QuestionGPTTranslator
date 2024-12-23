@@ -8,6 +8,7 @@ import azure.functions as func
 from azure.storage.queue import BinaryBase64EncodePolicy, QueueClient
 from openai import AzureOpenAI
 from type.message import MessageAnswer
+from type.openai import CorrectAnswers
 from type.request import PostAnswerReq
 from type.response import PostAnswerRes
 from type.structured import AnswerFormat
@@ -111,9 +112,9 @@ Unless there is an instruction such as "Select THREE" in the question, there wil
 
 def generate_correct_answers(
     course_name: str, subjects: list[str], choices: list[str]
-) -> tuple[list[int] | None, list[str] | None]:
+) -> CorrectAnswers:
     """
-    正解の選択肢・正解/不正解の理由を生成する
+    Azure OpenAIにコールして、正解の選択肢のインデックス・正解/不正解の理由を生成する
 
     Args:
         course_name (str): コース名
@@ -121,13 +122,17 @@ def generate_correct_answers(
         choices (list[str]): 選択肢のリスト
 
     Returns:
-        tuple[list[int] | None, list[str] | None]: 正解のインデックスと説明のリスト
+        CorrectAnswers: 正解の選択肢のインデックス・正解/不正解の理由
+
+    Raises:
+        RuntimeError: Azure OpenAIのコール回数の上限に達した場合
     """
-    correct_indexes: list[int] | None = None
-    explanations: list[str] | None = None
+
+    correct_answers: CorrectAnswers | None = None
     for retry_number in range(MAX_RETRY_NUMBER):
         logging.info({"retry_number": retry_number})
         try:
+            # Azure OpenAIのレスポンスを取得
             response = AzureOpenAI(
                 api_key=os.environ["OPENAI_API_KEY"],
                 api_version=os.environ["OPENAI_API_VERSION"],
@@ -149,14 +154,22 @@ def generate_correct_answers(
             )
             logging.info({"message": response.choices[0].message})
 
-            # parseできるかのチェック
+            # 正解の選択肢のインデックス・正解/不正解の理由をparse
+            # parseできない場合は最大MAX_RETRY_NUMBER回までリトライ
             if response.choices[0].message.parsed is not None:
-                correct_indexes = response.choices[0].message.parsed.correct_indexes
-                explanations = response.choices[0].message.parsed.explanations
+                correct_answers = CorrectAnswers(
+                    correct_indexes=response.choices[0].message.parsed.correct_indexes,
+                    explanations=response.choices[0].message.parsed.explanations,
+                )
                 break
         except Exception as e:
             logging.warning(e)
-    return correct_indexes, explanations
+
+    # リトライ回数超過チェック
+    if not correct_answers:
+        raise RuntimeError("Too Many Retries")
+
+    return correct_answers
 
 
 def queue_message_answer(message_answer: MessageAnswer) -> None:
@@ -226,14 +239,8 @@ def post_answer(req: func.HttpRequest) -> func.HttpResponse:
         if not choices or not isinstance(choices, list) or len(choices) == 0:
             raise ValueError("Invalid choices")
 
-        # 正解の選択肢・正解/不正解の理由をAzure OpenAIのStructured Outputsでparseして生成
-        correct_indexes, explanations = generate_correct_answers(
-            course_name, subjects, choices
-        )
-
-        # リトライ回数超過チェック
-        if not correct_indexes or not explanations:
-            raise RuntimeError("Too Many Retries")
+        # 正解の選択肢・正解/不正解の理由を生成
+        correct_answers = generate_correct_answers(course_name, subjects, choices)
 
         # キューストレージにメッセージを格納
         queue_message_answer(
@@ -242,14 +249,14 @@ def post_answer(req: func.HttpRequest) -> func.HttpResponse:
                 "questionNumber": question_number,
                 "subjects": subjects,
                 "choices": choices,
-                "correctIndexes": correct_indexes,
-                "explanations": explanations,
+                "correctIndexes": correct_answers["correct_indexes"],
+                "explanations": correct_answers["explanations"],
             }
         )
 
         body: PostAnswerRes = {
-            "correctIdxes": correct_indexes,
-            "explanations": explanations,
+            "correctIdxes": correct_answers["correct_indexes"],
+            "explanations": correct_answers["explanations"],
         }
         return func.HttpResponse(
             body=json.dumps(body),
