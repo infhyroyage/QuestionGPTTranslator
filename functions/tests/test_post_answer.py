@@ -8,9 +8,11 @@ from unittest.mock import MagicMock, patch
 from src.post_answer import (
     create_system_prompt,
     create_user_prompt,
+    generate_correct_answers,
     queue_message_answer,
 )
 from type.message import MessageAnswer
+from type.structured import AnswerFormat
 
 
 class TestPostAnswer(unittest.TestCase):
@@ -90,6 +92,99 @@ class TestPostAnswer(unittest.TestCase):
 
         self.assertEqual(create_user_prompt(subjects, choices), expected_prompt)
 
+    @patch("src.post_answer.AzureOpenAI")
+    @patch("src.post_answer.create_system_prompt")
+    @patch("src.post_answer.create_user_prompt")
+    @patch.dict(
+        os.environ,
+        {
+            "OPENAI_API_KEY": "test_api_key",
+            "OPENAI_API_VERSION": "test_api_version",
+            "OPENAI_DEPLOYMENT": "test_deployment",
+            "OPENAI_ENDPOINT": "test_endpoint",
+            "OPENAI_MODEL": "test_model",
+        },
+    )
+    def test_generate_correct_answers_no_retry(
+        self, mock_create_user_prompt, mock_create_system_prompt, mock_azure_openai
+    ):
+        """リトライせずに、正解の選択肢のインデックス・正解/不正解の理由を生成するテスト"""
+
+        mock_create_system_prompt.return_value = "system_prompt"
+        mock_create_user_prompt.return_value = "user_prompt"
+
+        mock_response = MagicMock()
+        mock_response.choices[0].message.parsed.correct_indexes = [2]
+        mock_response.choices[0].message.parsed.explanations = [
+            "Option 2 is correct because 2 + 2 equals 4."
+        ]
+        mock_azure_openai.return_value.beta.chat.completions.parse.return_value = (
+            mock_response
+        )
+
+        course_name = "Math"
+        subjects = ["What is 2 + 2?"]
+        choices = ["3", "4", "5"]
+
+        correct_answers = generate_correct_answers(course_name, subjects, choices)
+
+        self.assertEqual(correct_answers["correct_indexes"], [2])
+        self.assertEqual(
+            correct_answers["explanations"],
+            ["Option 2 is correct because 2 + 2 equals 4."],
+        )
+
+        mock_create_system_prompt.assert_called_once_with(course_name)
+        mock_create_user_prompt.assert_called_once_with(subjects, choices)
+        mock_azure_openai.assert_called_once_with(
+            api_key="test_api_key",
+            api_version="test_api_version",
+            azure_deployment="test_deployment",
+            azure_endpoint="test_endpoint",
+        )
+        mock_azure_openai.return_value.beta.chat.completions.parse.assert_called_once_with(
+            model="test_model",
+            messages=[
+                {"role": "system", "content": "system_prompt"},
+                {"role": "user", "content": "user_prompt"},
+            ],
+            response_format=AnswerFormat,
+        )
+
+    @patch("src.post_answer.AzureOpenAI")
+    @patch("src.post_answer.create_system_prompt")
+    @patch("src.post_answer.create_user_prompt")
+    @patch.dict(
+        os.environ,
+        {
+            "OPENAI_API_KEY": "test_api_key",
+            "OPENAI_API_VERSION": "test_api_version",
+            "OPENAI_DEPLOYMENT": "test_deployment",
+            "OPENAI_ENDPOINT": "test_endpoint",
+            "OPENAI_MODEL": "test_model",
+        },
+    )
+    def test_generate_correct_answers_max_retry(
+        self, mock_create_user_prompt, mock_create_system_prompt, mock_azure_openai
+    ):
+        """MAX_RETRY_NUMBER回リトライ後に、RuntimeErrorを返すテスト"""
+
+        mock_create_system_prompt.return_value = "system_prompt"
+        mock_create_user_prompt.return_value = "user_prompt"
+
+        mock_azure_openai.return_value.beta.chat.completions.parse.side_effect = [
+            RuntimeError("parse error"),
+        ]
+
+        course_name = "Math"
+        subjects = ["What is 2 + 2?"]
+        choices = ["3", "4", "5"]
+
+        with self.assertRaises(RuntimeError) as context:
+            generate_correct_answers(course_name, subjects, choices)
+
+        self.assertEqual(str(context.exception), "Too Many Retries")
+
     @patch("src.post_answer.QueueClient.from_connection_string")
     @patch.dict(os.environ, {"AzureWebJobsStorage": "on-azure"})
     def test_queue_message_answer_azure(self, mock_queue_client):
@@ -135,7 +230,3 @@ class TestPostAnswer(unittest.TestCase):
         mock_queue.send_message.assert_called_once_with(
             json.dumps(message_answer).encode("utf-8")
         )
-
-
-if __name__ == "__main__":
-    unittest.main()
