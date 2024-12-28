@@ -5,10 +5,12 @@ import os
 import unittest
 from unittest.mock import MagicMock, patch
 
+import azure.functions as func
 from src.post_answer import (
     create_system_prompt,
     create_user_prompt,
     generate_correct_answers,
+    post_answer,
     queue_message_answer,
 )
 from type.message import MessageAnswer
@@ -230,3 +232,268 @@ class TestPostAnswer(unittest.TestCase):
         mock_queue.send_message.assert_called_once_with(
             json.dumps(message_answer).encode("utf-8")
         )
+
+    @patch("src.post_answer.generate_correct_answers")
+    @patch("src.post_answer.queue_message_answer")
+    @patch.dict(
+        os.environ,
+        {
+            "OPENAI_API_KEY": "test_key",
+            "OPENAI_API_VERSION": "v1",
+            "OPENAI_DEPLOYMENT": "test_deployment",
+            "OPENAI_ENDPOINT": "https://test.endpoint",
+            "OPENAI_MODEL": "test_model",
+            "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+        },
+    )
+    def test_post_answer(
+        self, mock_queue_message_answer, mock_generate_correct_answers
+    ):
+        """レスポンスが正常であることのテスト"""
+
+        mock_generate_correct_answers.return_value = {
+            "correct_indexes": [1],
+            "explanations": ["Option 2 is correct because 2 + 2 equals 4."],
+        }
+
+        req = MagicMock(spec=func.HttpRequest)
+        req.route_params = {"testId": "1", "questionNumber": "1"}
+        req.get_body.return_value = json.dumps(
+            {
+                "courseName": "Math",
+                "subjects": ["What is 2 + 2?"],
+                "choices": ["3", "4", "5"],
+            }
+        ).encode("utf-8")
+
+        response = post_answer(req)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            json.loads(response.get_body()),
+            {
+                "correctIdxes": [1],
+                "explanations": ["Option 2 is correct because 2 + 2 equals 4."],
+            },
+        )
+
+        mock_generate_correct_answers.assert_called_once_with(
+            "Math", ["What is 2 + 2?"], ["3", "4", "5"]
+        )
+
+        mock_queue_message_answer.assert_called_once_with(
+            {
+                "testId": "1",
+                "questionNumber": "1",
+                "subjects": ["What is 2 + 2?"],
+                "choices": ["3", "4", "5"],
+                "correctIndexes": [1],
+                "explanations": ["Option 2 is correct because 2 + 2 equals 4."],
+            }
+        )
+
+    @patch.dict(
+        os.environ,
+        {
+            "OPENAI_API_KEY": "test_key",
+            "OPENAI_API_VERSION": "v1",
+            "OPENAI_DEPLOYMENT": "test_deployment",
+            "OPENAI_ENDPOINT": "https://test.endpoint",
+            "OPENAI_MODEL": "test_model",
+            "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+        },
+    )
+    def test_post_answer_invalid_test_id(self):
+        """testIdが空であるレスポンスのテスト"""
+
+        req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
+        req.route_params = {"questionNumber": "1"}
+        req.get_body.return_value = json.dumps(
+            {
+                "courseName": "Math",
+                "subjects": ["What is 2 + 2?"],
+                "choices": ["3", "4", "5"],
+            }
+        ).encode("utf-8")
+
+        response = post_answer(req)
+
+        self.assertEqual(response.status_code, 500)
+        self.assertEqual(response.get_body().decode("utf-8"), "Internal Server Error")
+
+    def test_post_answer_invalid_question_number_empty(self):
+        """questionNumberが空であるレスポンスのテスト"""
+
+        req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
+        req.route_params = {"testId": "1"}
+        req.get_body.return_value = json.dumps(
+            {
+                "courseName": "Math",
+                "subjects": ["What is 2 + 2?"],
+                "choices": ["3", "4", "5"],
+            }
+        ).encode("utf-8")
+
+        response = post_answer(req)
+
+        self.assertEqual(response.status_code, 500)
+        self.assertEqual(response.get_body().decode("utf-8"), "Internal Server Error")
+
+    def test_post_answer_invalid_question_number_not_digit(self):
+        """questionNumberが数値でないレスポンスのテスト"""
+
+        req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
+        req.route_params = {"testId": "1", "questionNumber": "a"}
+        req.get_body.return_value = json.dumps(
+            {
+                "courseName": "Math",
+                "subjects": ["What is 2 + 2?"],
+                "choices": ["3", "4", "5"],
+            }
+        ).encode("utf-8")
+
+        response = post_answer(req)
+
+        self.assertEqual(response.status_code, 500)
+        self.assertEqual(response.get_body().decode("utf-8"), "Internal Server Error")
+
+    def test_post_answer_invalid_course_name_empty(self):
+        """courseNameが空であるレスポンスのテスト"""
+
+        req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
+        req.route_params = {"testId": "1", "questionNumber": "1"}
+        req.get_body.return_value = json.dumps(
+            {
+                "subjects": ["What is 2 + 2?"],
+                "choices": ["3", "4", "5"],
+            }
+        ).encode("utf-8")
+
+        response = post_answer(req)
+
+        self.assertEqual(response.status_code, 500)
+        self.assertEqual(response.get_body().decode("utf-8"), "Internal Server Error")
+
+    def test_post_answer_invalid_course_name_empty_string(self):
+        """courseNameが空文字であるレスポンスのテスト"""
+
+        req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
+        req.route_params = {"testId": "1", "questionNumber": "1"}
+        req.get_body.return_value = json.dumps(
+            {
+                "courseName": "",
+                "subjects": ["What is 2 + 2?"],
+                "choices": ["3", "4", "5"],
+            }
+        ).encode("utf-8")
+
+        response = post_answer(req)
+
+        self.assertEqual(response.status_code, 500)
+        self.assertEqual(response.get_body().decode("utf-8"), "Internal Server Error")
+
+    def test_post_answer_invalid_subjects_empty(self):
+        """subjectsが空であるレスポンスのテスト"""
+
+        req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
+        req.route_params = {"testId": "1", "questionNumber": "1"}
+        req.get_body.return_value = json.dumps(
+            {
+                "courseName": "Math",
+                "choices": ["3", "4", "5"],
+            }
+        ).encode("utf-8")
+
+        response = post_answer(req)
+
+        self.assertEqual(response.status_code, 500)
+        self.assertEqual(response.get_body().decode("utf-8"), "Internal Server Error")
+
+    def test_post_answer_invalid_subjects_not_list(self):
+        """subjectsがlistでないレスポンスのテスト"""
+
+        req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
+        req.route_params = {"testId": "1", "questionNumber": "1"}
+        req.get_body.return_value = json.dumps(
+            {
+                "courseName": "Math",
+                "subjects": "What is 2 + 2?",
+                "choices": ["3", "4", "5"],
+            }
+        ).encode("utf-8")
+
+        response = post_answer(req)
+
+        self.assertEqual(response.status_code, 500)
+        self.assertEqual(response.get_body().decode("utf-8"), "Internal Server Error")
+
+    def test_post_answer_invalid_subjects_empty_list(self):
+        """subjectsが空のlistであるレスポンスのテスト"""
+
+        req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
+        req.route_params = {"testId": "1", "questionNumber": "1"}
+        req.get_body.return_value = json.dumps(
+            {
+                "courseName": "Math",
+                "subjects": [],
+                "choices": ["3", "4", "5"],
+            }
+        ).encode("utf-8")
+
+        response = post_answer(req)
+
+        self.assertEqual(response.status_code, 500)
+        self.assertEqual(response.get_body().decode("utf-8"), "Internal Server Error")
+
+    def test_post_answer_invalid_choices_empty(self):
+        """choicesが空であるレスポンスのテスト"""
+
+        req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
+        req.route_params = {"testId": "1", "questionNumber": "1"}
+        req.get_body.return_value = json.dumps(
+            {
+                "courseName": "Math",
+                "subjects": ["What is 2 + 2?"],
+            }
+        ).encode("utf-8")
+
+        response = post_answer(req)
+
+        self.assertEqual(response.status_code, 500)
+        self.assertEqual(response.get_body().decode("utf-8"), "Internal Server Error")
+
+    def test_post_answer_invalid_choices_not_list(self):
+        """choicesがlistでないレスポンスのテスト"""
+
+        req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
+        req.route_params = {"testId": "1", "questionNumber": "1"}
+        req.get_body.return_value = json.dumps(
+            {
+                "courseName": "Math",
+                "subjects": ["What is 2 + 2?"],
+                "choices": "3",
+            }
+        ).encode("utf-8")
+
+        response = post_answer(req)
+
+        self.assertEqual(response.status_code, 500)
+        self.assertEqual(response.get_body().decode("utf-8"), "Internal Server Error")
+
+    def test_post_answer_invalid_choices_empty_list(self):
+        """choicesが空のlistであるレスポンスのテスト"""
+
+        req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
+        req.route_params = {"testId": "1", "questionNumber": "1"}
+        req.get_body.return_value = json.dumps(
+            {
+                "courseName": "Math",
+                "subjects": ["What is 2 + 2?"],
+                "choices": [],
+            }
+        ).encode("utf-8")
+
+        response = post_answer(req)
+
+        self.assertEqual(response.status_code, 500)
+        self.assertEqual(response.get_body().decode("utf-8"), "Internal Server Error")
