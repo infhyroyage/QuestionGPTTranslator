@@ -2,7 +2,7 @@
 
 import os
 import unittest
-from unittest.mock import MagicMock, mock_open, patch
+from unittest.mock import MagicMock, call, mock_open, patch
 
 from azure.core.exceptions import ResourceExistsError
 from azure.cosmos import PartitionKey
@@ -185,8 +185,9 @@ class TestLocalUtils(unittest.TestCase):
         self.assertIn("id", test_items[1])
 
     @patch("util.local.get_read_write_container")
+    @patch("builtins.print")
     def test_generate_test_items_when_retrieved_failed(
-        self, mock_get_read_write_container
+        self, mock_print, mock_get_read_write_container
     ):
         """テスト項目の取得に失敗した場合のgenerate_test_items関数のテスト"""
         mock_container = MagicMock()
@@ -203,6 +204,7 @@ class TestLocalUtils(unittest.TestCase):
         }
         test_items = generate_test_items(import_data)
 
+        mock_print.assert_called_once_with("generateTestItems: Not Found Items")
         self.assertEqual(len(test_items), 2)
         self.assertEqual(test_items[0]["courseName"], "Math")
         self.assertEqual(test_items[0]["testName"], "Algebra")
@@ -283,7 +285,8 @@ class TestLocalUtils(unittest.TestCase):
         )
 
     @patch("util.local.get_read_write_container")
-    def test_import_question_items(self, mock_get_read_write_container):
+    @patch("builtins.print")
+    def test_import_question_items(self, mock_print, mock_get_read_write_container):
         """import_question_items関数のテスト"""
         mock_container = MagicMock()
         mock_container.upsert_item.return_value = {"statusCode": 200}
@@ -297,8 +300,21 @@ class TestLocalUtils(unittest.TestCase):
                 "number": 1,
                 "testId": "1",
                 "isMultiplied": True,
-            }
+            },
+            {
+                "question": "Q2",
+                "communityVotes": ["C (100%)"],
+                "id": "1_2",
+                "number": 2,
+                "testId": "1",
+                "isMultiplied": True,
+            },
         ]
         import_question_items(question_items)
 
-        mock_container.upsert_item.assert_called_once_with(question_items[0])
+        self.assertEqual(mock_print.call_count, 2)
+        mock_print.assert_has_calls([call("1th Response OK"), call("2th Response OK")])
+        self.assertEqual(mock_container.upsert_item.call_count, 2)
+        mock_container.upsert_item.assert_has_calls(
+            [call(question_items[0]), call(question_items[1])]
+        )
