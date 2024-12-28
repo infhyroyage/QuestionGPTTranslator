@@ -224,14 +224,10 @@ def post_answer(req: func.HttpRequest) -> func.HttpResponse:
         )
 
         # パスパラメーター・リクエストボディのバリデーションチェック
-        if test_id is None or question_number is None:
-            raise ValueError(
-                f"Invalid testId or questionNumber: {test_id}, {question_number}"
-            )
-        if not question_number.isdigit():
-            return func.HttpResponse(
-                body=f"Invalid questionNumber: {question_number}", status_code=400
-            )
+        if test_id is None:
+            raise ValueError(f"Invalid testId: {test_id}")
+        if question_number is None or not question_number.isdigit():
+            raise ValueError(f"Invalid questionNumber: {question_number}")
         if not course_name or course_name == "":
             raise ValueError("Invalid courseName")
         if not subjects or not isinstance(subjects, list) or len(subjects) == 0:
