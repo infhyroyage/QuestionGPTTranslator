@@ -3,7 +3,7 @@
 import json
 import os
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, call, patch
 
 import azure.functions as func
 from requests.exceptions import RequestException
@@ -173,7 +173,8 @@ class TestPutEn2Ja(unittest.TestCase):
             translate_by_deep_l(["Hello"])
 
     @patch("src.put_en2ja.translate_by_azure_translator")
-    def test_put_en2ja_success(self, mock_translate_by_azure_translator):
+    @patch("src.put_en2ja.logging")
+    def test_put_en2ja_success(self, mock_logging, mock_translate_by_azure_translator):
         """レスポンスが正常であることのテスト"""
 
         mock_translate_by_azure_translator.return_value = [
@@ -190,11 +191,20 @@ class TestPutEn2Ja(unittest.TestCase):
             resp.get_body(),
             json.dumps(["Azure Translatorからこんにちは"]).encode("utf-8"),
         )
+        mock_logging.info.assert_has_calls(
+            [
+                call({"texts": ["Hello from Azure Translator"]}),
+                call({"body": ["Azure Translatorからこんにちは"]}),
+            ]
+        )
+        mock_logging.warning.assert_not_called()
+        mock_logging.error.assert_not_called()
 
     @patch("src.put_en2ja.translate_by_deep_l")
     @patch("src.put_en2ja.translate_by_azure_translator")
+    @patch("src.put_en2ja.logging")
     def test_put_en2ja_azure_free_tier_used_up(
-        self, mock_translate_by_azure_translator, mock_translate_by_deep_l
+        self, mock_logging, mock_translate_by_azure_translator, mock_translate_by_deep_l
     ):
         """Azure Translator無料枠を使い切った場合のレスポンスのテスト"""
 
@@ -211,13 +221,24 @@ class TestPutEn2Ja(unittest.TestCase):
             resp.get_body(),
             json.dumps(["DeepLからこんにちは"]).encode("utf-8"),
         )
+        mock_logging.info.assert_has_calls(
+            [
+                call({"texts": ["Hello from DeepL"]}),
+                call({"body": ["DeepLからこんにちは"]}),
+            ]
+        )
+        mock_logging.warning.assert_called_with(
+            "Azure Translator Free Tier is used up."
+        )
+        mock_logging.error.assert_not_called()
 
     @patch("src.put_en2ja.translate_by_deep_l")
     @patch("src.put_en2ja.translate_by_azure_translator")
+    @patch("src.put_en2ja.logging")
     def test_put_en2ja_both_free_tier_used_up(
-        self, mock_translate_by_azure_translator, mock_translate_by_deep_l
+        self, mock_logging, mock_translate_by_azure_translator, mock_translate_by_deep_l
     ):
-        """put_en2ja関数の両方の無料枠を使い切った場合のレスポンスのテスト"""
+        """put_en2ja関数のAzure TranslatorとDeepLの両方の無料枠を使い切った場合のレスポンスのテスト"""
 
         mock_translate_by_azure_translator.return_value = None
         mock_translate_by_deep_l.return_value = None
@@ -229,9 +250,22 @@ class TestPutEn2Ja(unittest.TestCase):
         resp = put_en2ja(req)
         self.assertEqual(resp.status_code, 500)
         self.assertEqual(resp.get_body(), b"Internal Server Error")
+        mock_logging.info.assert_has_calls(
+            [
+                call({"texts": ["Hello"]}),
+                call({"body": None}),
+            ]
+        )
+        mock_logging.warning.assert_called_with(
+            "Azure Translator Free Tier is used up."
+        )
+        mock_logging.error.assert_called()
 
     @patch("src.put_en2ja.translate_by_azure_translator")
-    def test_put_en2ja_exception(self, mock_translate_by_azure_translator):
+    @patch("src.put_en2ja.logging")
+    def test_put_en2ja_exception(
+        self, mock_logging, mock_translate_by_azure_translator
+    ):
         """例外が発生した場合のレスポンスのテスト"""
 
         mock_translate_by_azure_translator.side_effect = Exception()
@@ -243,3 +277,6 @@ class TestPutEn2Ja(unittest.TestCase):
         resp = put_en2ja(req)
         self.assertEqual(resp.status_code, 500)
         self.assertEqual(resp.get_body(), b"Internal Server Error")
+        mock_logging.info.assert_called_with({"texts": ["Hello"]})
+        mock_logging.warning.assert_not_called()
+        mock_logging.error.assert_called()

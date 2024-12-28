@@ -2,7 +2,7 @@
 
 import json
 from unittest import TestCase
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, call, patch
 
 import azure.functions as func
 from src.get_tests import get_tests
@@ -14,7 +14,8 @@ class TestGetTests(TestCase):
     """[GET] /tests のテストケース"""
 
     @patch("src.get_tests.get_read_only_container")
-    def test_get_tests_success(self, mock_get_read_only_container):
+    @patch("src.get_tests.logging")
+    def test_get_tests_success(self, mock_logging, mock_get_read_only_container):
         """レスポンスが正常であることのテスト"""
 
         mock_container = MagicMock()
@@ -29,7 +30,6 @@ class TestGetTests(TestCase):
         req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
         response: func.HttpResponse = get_tests(req)
 
-        # ステータスコードとレスポンスボディの確認
         self.assertEqual(response.status_code, 200)
         expected_body: GetTestsRes = {
             "Math": [
@@ -41,9 +41,14 @@ class TestGetTests(TestCase):
             ],
         }
         self.assertEqual(response.get_body().decode(), json.dumps(expected_body))
+        mock_logging.info.assert_has_calls(
+            [call({"items": mock_items}), call({"body": expected_body})]
+        )
+        mock_logging.error.assert_not_called()
 
     @patch("src.get_tests.get_read_only_container")
-    def test_get_tests_exception(self, mock_get_read_only_container):
+    @patch("src.get_tests.logging")
+    def test_get_tests_exception(self, mock_logging, mock_get_read_only_container):
         """レスポンスが異常であることのテスト"""
 
         mock_get_read_only_container.side_effect = Exception(
@@ -53,6 +58,7 @@ class TestGetTests(TestCase):
         req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
         response: func.HttpResponse = get_tests(req)
 
-        # ステータスコードとレスポンスボディの確認
         self.assertEqual(response.status_code, 500)
         self.assertEqual(response.get_body().decode(), "Internal Server Error")
+        mock_logging.info.assert_not_called()
+        mock_logging.error.assert_called()

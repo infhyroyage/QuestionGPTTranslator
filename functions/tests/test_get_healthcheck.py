@@ -16,6 +16,5 @@ class TestGetHealthcheck(TestCase):
         req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
         response: func.HttpResponse = get_healthcheck(req)
 
-        # ステータスコード・レスポンスボディの確認
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get_body().decode(), "OK")

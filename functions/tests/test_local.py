@@ -73,23 +73,26 @@ class TestLocalUtils(unittest.TestCase):
         mock_client_instance.create_database_if_not_exists.assert_called_once_with(
             id="Users"
         )
-        mock_database.create_container_if_not_exists.assert_any_call(
-            id="Test",
-            partition_key=PartitionKey(path="/id"),
-            # Azure Cosmos DBでは複合インデックスのインデックスポリシーをサポートするが
-            # 2024/11/24現在、Azure Cosmos DB Linux-based Emulator (preview)では未サポートのため
-            # そのインデックスポリシーを定義しない
-            # indexing_policy={
-            #     "compositeIndexes": [
-            #         [
-            #             {"path": "/courseName", "order": "ascending"},
-            #             {"path": "/testName", "order": "ascending"},
-            #         ]
-            #     ]
-            # },
-        )
-        mock_database.create_container_if_not_exists.assert_any_call(
-            id="Question", partition_key=PartitionKey(path="/id")
+        mock_database.create_container_if_not_exists.assert_has_calls(
+            [
+                call(
+                    id="Test",
+                    partition_key=PartitionKey(path="/id"),
+                    # Azure Cosmos DBでは複合インデックスのインデックスポリシーをサポートするが
+                    # 2024/11/24現在、Azure Cosmos DB Linux-based Emulator (preview)では未サポートのため
+                    # そのインデックスポリシーを定義しない
+                    # indexing_policy={
+                    #     "compositeIndexes": [
+                    #         [
+                    #             {"path": "/courseName", "order": "ascending"},
+                    #             {"path": "/testName", "order": "ascending"},
+                    #         ]
+                    #     ]
+                    # },
+                ),
+                call(id="Question", partition_key=PartitionKey(path="/id")),
+            ],
+            any_order=True,
         )
 
     @patch("util.local.os.path.exists")

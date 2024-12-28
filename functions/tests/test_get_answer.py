@@ -12,7 +12,8 @@ class TestGetAnswer(TestCase):
     """[GET] /tests/{testId}/answers/{questionNumber} のテストケース"""
 
     @patch("src.get_answer.get_read_only_container")
-    def test_get_answer_success(self, mock_get_read_only_container):
+    @patch("src.get_answer.logging")
+    def test_get_answer_success(self, mock_logging, mock_get_read_only_container):
         """レスポンスが正常であることのテスト"""
 
         mock_container = MagicMock()
@@ -36,8 +37,11 @@ class TestGetAnswer(TestCase):
             "explanations": ["Option 1 is correct because..."],
         }
         self.assertEqual(json.loads(response.get_body().decode()), expected_body)
+        mock_logging.info.assert_called_with({"items": [expected_body]})
+        mock_logging.error.assert_not_called()
 
-    def test_get_answer_test_id_empty(self):
+    @patch("src.get_answer.logging")
+    def test_get_answer_test_id_empty(self, mock_logging):
         """testIdが空であるレスポンスのテスト"""
 
         req = MagicMock(spec=func.HttpRequest)
@@ -47,8 +51,11 @@ class TestGetAnswer(TestCase):
 
         self.assertEqual(response.status_code, 500)
         self.assertEqual(response.get_body().decode(), "Internal Server Error")
+        mock_logging.info.assert_not_called()
+        mock_logging.error.assert_called()
 
-    def test_get_answer_question_number_empty(self):
+    @patch("src.get_answer.logging")
+    def test_get_answer_question_number_empty(self, mock_logging):
         """questionNumberが空であるレスポンスのテスト"""
 
         req = MagicMock(spec=func.HttpRequest)
@@ -58,9 +65,12 @@ class TestGetAnswer(TestCase):
 
         self.assertEqual(response.status_code, 500)
         self.assertEqual(response.get_body().decode(), "Internal Server Error")
+        mock_logging.info.assert_not_called()
+        mock_logging.error.assert_called()
 
     @patch("src.get_answer.get_read_only_container")
-    def test_get_answer_not_found(self, mock_get_read_only_container):
+    @patch("src.get_answer.logging")
+    def test_get_answer_not_found(self, mock_logging, mock_get_read_only_container):
         """回答が見つからない場合のレスポンスのテスト"""
 
         mock_container = MagicMock()
@@ -74,9 +84,12 @@ class TestGetAnswer(TestCase):
 
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.get_body().decode(), "Not Found Answer")
+        mock_logging.info.assert_called_with({"items": []})
+        mock_logging.error.assert_not_called()
 
     @patch("src.get_answer.get_read_only_container")
-    def test_get_answer_not_unique(self, mock_get_read_only_container):
+    @patch("src.get_answer.logging")
+    def test_get_answer_not_unique(self, mock_logging, mock_get_read_only_container):
         """回答が一意でない場合のレスポンスのテスト"""
 
         mock_container = MagicMock()
@@ -93,9 +106,25 @@ class TestGetAnswer(TestCase):
 
         self.assertEqual(response.status_code, 500)
         self.assertEqual(response.get_body().decode(), "Internal Server Error")
+        mock_logging.info.assert_called_with(
+            {
+                "items": [
+                    {
+                        "correctIdxes": [1],
+                        "explanations": ["Option 1 is correct because..."],
+                    },
+                    {
+                        "correctIdxes": [2],
+                        "explanations": ["Option 2 is correct because..."],
+                    },
+                ]
+            }
+        )
+        mock_logging.error.assert_called()
 
     @patch("src.get_answer.get_read_only_container")
-    def test_get_answer_exception(self, mock_get_read_only_container):
+    @patch("src.get_answer.logging")
+    def test_get_answer_exception(self, mock_logging, mock_get_read_only_container):
         """例外が発生した場合のレスポンスのテスト"""
 
         mock_get_read_only_container.side_effect = Exception(
@@ -109,3 +138,5 @@ class TestGetAnswer(TestCase):
 
         self.assertEqual(response.status_code, 500)
         self.assertEqual(response.get_body().decode(), "Internal Server Error")
+        mock_logging.info.assert_not_called()
+        mock_logging.error.assert_called()
