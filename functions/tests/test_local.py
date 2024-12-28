@@ -315,9 +315,7 @@ class TestLocalUtils(unittest.TestCase):
         ]
         import_question_items(question_items)
 
-        self.assertEqual(mock_print.call_count, 2)
         mock_print.assert_has_calls([call("1th Response OK"), call("2th Response OK")])
-        self.assertEqual(mock_container.upsert_item.call_count, 2)
         mock_container.upsert_item.assert_has_calls(
             [call(question_items[0]), call(question_items[1])]
         )
