@@ -88,10 +88,10 @@ class TestGetTest(TestCase):
         req.route_params = {}
         response: func.HttpResponse = get_test(req)
 
-        self.assertEqual(response.status_code, 500)
-        self.assertEqual(response.get_body().decode(), "Internal Server Error")
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_body().decode(), "testId is Empty")
         mock_logging.info.assert_not_called()
-        mock_logging.error.assert_called_once()
+        mock_logging.error.assert_not_called()
 
     @patch("src.get_test.get_read_only_container")
     @patch("src.get_test.logging")

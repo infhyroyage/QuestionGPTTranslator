@@ -202,12 +202,39 @@ def post_answer(req: func.HttpRequest) -> func.HttpResponse:
     """
 
     try:
-        test_id = req.route_params.get("testId")
-        question_number = req.route_params.get("questionNumber")
         req_body: PostAnswerReq = json.loads(req.get_body().decode("utf-8"))
-        course_name: str = req_body["courseName"]
-        subjects: list[str] = req_body["subjects"]
-        choices: list[str] = req_body["choices"]
+
+        # バリデーションチェック
+        if not req_body:
+            return func.HttpResponse(body="Request Body is Empty", status_code=400)
+        test_id = req.route_params.get("testId")
+        if test_id is None:
+            return func.HttpResponse(body="testId is Empty", status_code=400)
+        question_number = req.route_params.get("questionNumber")
+        if question_number is None:
+            return func.HttpResponse(body="questionNumber is Empty", status_code=400)
+        if not question_number.isdigit():
+            return func.HttpResponse(
+                body=f"Invalid questionNumber: {question_number}", status_code=400
+            )
+        course_name = req_body.get("courseName")
+        if not course_name or course_name == "":
+            return func.HttpResponse(body="courseName is Empty", status_code=400)
+        subjects = req_body.get("subjects")
+        if not subjects:
+            return func.HttpResponse(body="subjects is Empty", status_code=400)
+        if not isinstance(subjects, list) or len(subjects) == 0:
+            return func.HttpResponse(
+                body=f"Invalid subjects: {subjects}", status_code=400
+            )
+        choices = req_body.get("choices")
+        if not choices:
+            return func.HttpResponse(body="choices is Empty", status_code=400)
+        if not isinstance(choices, list) or len(choices) == 0:
+            return func.HttpResponse(
+                body=f"Invalid choices: {choices}", status_code=400
+            )
+
         logging.info(
             {
                 "course_name": course_name,
@@ -217,18 +244,6 @@ def post_answer(req: func.HttpRequest) -> func.HttpResponse:
                 "choices": choices,
             }
         )
-
-        # パスパラメーター・リクエストボディのバリデーションチェック
-        if test_id is None:
-            raise ValueError(f"Invalid testId: {test_id}")
-        if question_number is None or not question_number.isdigit():
-            raise ValueError(f"Invalid questionNumber: {question_number}")
-        if not course_name or course_name == "":
-            raise ValueError("Invalid courseName")
-        if not subjects or not isinstance(subjects, list) or len(subjects) == 0:
-            raise ValueError("Invalid subjects")
-        if not choices or not isinstance(choices, list) or len(choices) == 0:
-            raise ValueError("Invalid choices")
 
         # 正解の選択肢・正解/不正解の理由を生成
         correct_answers = generate_correct_answers(course_name, subjects, choices)

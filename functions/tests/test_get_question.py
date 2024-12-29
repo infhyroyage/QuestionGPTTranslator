@@ -79,7 +79,7 @@ class TestGetQuestion(TestCase):
         response = get_question(req)
 
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.get_body().decode(), "testId is empty")
+        self.assertEqual(response.get_body().decode(), "testId is Empty")
         mock_logging.info.assert_not_called()
         mock_logging.error.assert_not_called()
 
@@ -93,7 +93,7 @@ class TestGetQuestion(TestCase):
         response = get_question(req)
 
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.get_body().decode(), "questionNumber is empty")
+        self.assertEqual(response.get_body().decode(), "questionNumber is Empty")
         mock_logging.info.assert_not_called()
         mock_logging.error.assert_not_called()
 

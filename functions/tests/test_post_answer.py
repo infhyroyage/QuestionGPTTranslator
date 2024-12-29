@@ -306,17 +306,6 @@ class TestPostAnswer(unittest.TestCase):
     @patch("src.post_answer.generate_correct_answers")
     @patch("src.post_answer.queue_message_answer")
     @patch("src.post_answer.logging")
-    @patch.dict(
-        os.environ,
-        {
-            "OPENAI_API_KEY": "test_key",
-            "OPENAI_API_VERSION": "v1",
-            "OPENAI_DEPLOYMENT": "test_deployment",
-            "OPENAI_ENDPOINT": "https://test.endpoint",
-            "OPENAI_MODEL": "test_model",
-            "AzureWebJobsStorage": "UseDevelopmentStorage=true",
-        },
-    )
     def test_post_answer(
         self,
         mock_logging,
@@ -375,17 +364,6 @@ class TestPostAnswer(unittest.TestCase):
         mock_logging.error.assert_not_called()
 
     @patch("src.post_answer.logging")
-    @patch.dict(
-        os.environ,
-        {
-            "OPENAI_API_KEY": "test_key",
-            "OPENAI_API_VERSION": "v1",
-            "OPENAI_DEPLOYMENT": "test_deployment",
-            "OPENAI_ENDPOINT": "https://test.endpoint",
-            "OPENAI_MODEL": "test_model",
-            "AzureWebJobsStorage": "UseDevelopmentStorage=true",
-        },
-    )
     def test_post_answer_invalid_test_id(self, mock_logging):
         """testIdが空であるレスポンスのテスト"""
 
@@ -401,18 +379,10 @@ class TestPostAnswer(unittest.TestCase):
 
         response = post_answer(req)
 
-        self.assertEqual(response.status_code, 500)
-        self.assertEqual(response.get_body().decode("utf-8"), "Internal Server Error")
-        mock_logging.info.assert_called_once_with(
-            {
-                "course_name": "Math",
-                "question_number": "1",
-                "test_id": None,
-                "subjects": ["What is 2 + 2?"],
-                "choices": ["3", "4", "5"],
-            }
-        )
-        mock_logging.error.assert_called_once()
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_body().decode("utf-8"), "testId is Empty")
+        mock_logging.info.assert_not_called()
+        mock_logging.error.assert_not_called()
 
     @patch("src.post_answer.logging")
     def test_post_answer_invalid_question_number_empty(self, mock_logging):
@@ -430,18 +400,10 @@ class TestPostAnswer(unittest.TestCase):
 
         response = post_answer(req)
 
-        self.assertEqual(response.status_code, 500)
-        self.assertEqual(response.get_body().decode("utf-8"), "Internal Server Error")
-        mock_logging.info.assert_called_once_with(
-            {
-                "course_name": "Math",
-                "question_number": None,
-                "test_id": "1",
-                "subjects": ["What is 2 + 2?"],
-                "choices": ["3", "4", "5"],
-            }
-        )
-        mock_logging.error.assert_called_once()
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_body().decode("utf-8"), "questionNumber is Empty")
+        mock_logging.info.assert_not_called()
+        mock_logging.error.assert_not_called()
 
     @patch("src.post_answer.logging")
     def test_post_answer_invalid_question_number_not_digit(self, mock_logging):
@@ -459,18 +421,12 @@ class TestPostAnswer(unittest.TestCase):
 
         response = post_answer(req)
 
-        self.assertEqual(response.status_code, 500)
-        self.assertEqual(response.get_body().decode("utf-8"), "Internal Server Error")
-        mock_logging.info.assert_called_once_with(
-            {
-                "course_name": "Math",
-                "question_number": "a",
-                "test_id": "1",
-                "subjects": ["What is 2 + 2?"],
-                "choices": ["3", "4", "5"],
-            }
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.get_body().decode("utf-8"), "Invalid questionNumber: a"
         )
-        mock_logging.error.assert_called_once()
+        mock_logging.info.assert_not_called()
+        mock_logging.error.assert_not_called()
 
     @patch("src.post_answer.logging")
     def test_post_answer_invalid_course_name_empty(self, mock_logging):
@@ -487,10 +443,10 @@ class TestPostAnswer(unittest.TestCase):
 
         response = post_answer(req)
 
-        self.assertEqual(response.status_code, 500)
-        self.assertEqual(response.get_body().decode("utf-8"), "Internal Server Error")
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_body().decode("utf-8"), "courseName is Empty")
         mock_logging.info.assert_not_called()
-        mock_logging.error.assert_called_once()
+        mock_logging.error.assert_not_called()
 
     @patch("src.post_answer.logging")
     def test_post_answer_invalid_course_name_empty_string(self, mock_logging):
@@ -508,18 +464,10 @@ class TestPostAnswer(unittest.TestCase):
 
         response = post_answer(req)
 
-        self.assertEqual(response.status_code, 500)
-        self.assertEqual(response.get_body().decode("utf-8"), "Internal Server Error")
-        mock_logging.info.assert_called_once_with(
-            {
-                "course_name": "",
-                "question_number": "1",
-                "test_id": "1",
-                "subjects": ["What is 2 + 2?"],
-                "choices": ["3", "4", "5"],
-            }
-        )
-        mock_logging.error.assert_called_once()
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_body().decode("utf-8"), "courseName is Empty")
+        mock_logging.info.assert_not_called()
+        mock_logging.error.assert_not_called()
 
     @patch("src.post_answer.logging")
     def test_post_answer_invalid_subjects_empty(self, mock_logging):
@@ -536,10 +484,10 @@ class TestPostAnswer(unittest.TestCase):
 
         response = post_answer(req)
 
-        self.assertEqual(response.status_code, 500)
-        self.assertEqual(response.get_body().decode("utf-8"), "Internal Server Error")
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_body().decode("utf-8"), "subjects is Empty")
         mock_logging.info.assert_not_called()
-        mock_logging.error.assert_called_once()
+        mock_logging.error.assert_not_called()
 
     @patch("src.post_answer.logging")
     def test_post_answer_invalid_subjects_not_list(self, mock_logging):
@@ -557,18 +505,12 @@ class TestPostAnswer(unittest.TestCase):
 
         response = post_answer(req)
 
-        self.assertEqual(response.status_code, 500)
-        self.assertEqual(response.get_body().decode("utf-8"), "Internal Server Error")
-        mock_logging.info.assert_called_once_with(
-            {
-                "course_name": "Math",
-                "question_number": "1",
-                "test_id": "1",
-                "subjects": "What is 2 + 2?",
-                "choices": ["3", "4", "5"],
-            }
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.get_body().decode("utf-8"), "Invalid subjects: What is 2 + 2?"
         )
-        mock_logging.error.assert_called_once()
+        mock_logging.info.assert_not_called()
+        mock_logging.error.assert_not_called()
 
     @patch("src.post_answer.logging")
     def test_post_answer_invalid_subjects_empty_list(self, mock_logging):
@@ -586,18 +528,10 @@ class TestPostAnswer(unittest.TestCase):
 
         response = post_answer(req)
 
-        self.assertEqual(response.status_code, 500)
-        self.assertEqual(response.get_body().decode("utf-8"), "Internal Server Error")
-        mock_logging.info.assert_called_once_with(
-            {
-                "course_name": "Math",
-                "question_number": "1",
-                "test_id": "1",
-                "subjects": [],
-                "choices": ["3", "4", "5"],
-            }
-        )
-        mock_logging.error.assert_called_once()
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_body().decode("utf-8"), "subjects is Empty")
+        mock_logging.info.assert_not_called()
+        mock_logging.error.assert_not_called()
 
     @patch("src.post_answer.logging")
     def test_post_answer_invalid_choices_empty(self, mock_logging):
@@ -614,10 +548,10 @@ class TestPostAnswer(unittest.TestCase):
 
         response = post_answer(req)
 
-        self.assertEqual(response.status_code, 500)
-        self.assertEqual(response.get_body().decode("utf-8"), "Internal Server Error")
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_body().decode("utf-8"), "choices is Empty")
         mock_logging.info.assert_not_called()
-        mock_logging.error.assert_called_once()
+        mock_logging.error.assert_not_called()
 
     @patch("src.post_answer.logging")
     def test_post_answer_invalid_choices_not_list(self, mock_logging):
@@ -635,18 +569,10 @@ class TestPostAnswer(unittest.TestCase):
 
         response = post_answer(req)
 
-        self.assertEqual(response.status_code, 500)
-        self.assertEqual(response.get_body().decode("utf-8"), "Internal Server Error")
-        mock_logging.info.assert_called_once_with(
-            {
-                "course_name": "Math",
-                "question_number": "1",
-                "test_id": "1",
-                "subjects": ["What is 2 + 2?"],
-                "choices": "3",
-            }
-        )
-        mock_logging.error.assert_called_once()
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_body().decode("utf-8"), "Invalid choices: 3")
+        mock_logging.info.assert_not_called()
+        mock_logging.error.assert_not_called()
 
     @patch("src.post_answer.logging")
     def test_post_answer_invalid_choices_empty_list(self, mock_logging):
@@ -664,15 +590,7 @@ class TestPostAnswer(unittest.TestCase):
 
         response = post_answer(req)
 
-        self.assertEqual(response.status_code, 500)
-        self.assertEqual(response.get_body().decode("utf-8"), "Internal Server Error")
-        mock_logging.info.assert_called_once_with(
-            {
-                "course_name": "Math",
-                "question_number": "1",
-                "test_id": "1",
-                "subjects": ["What is 2 + 2?"],
-                "choices": [],
-            }
-        )
-        mock_logging.error.assert_called_once()
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_body().decode("utf-8"), "choices is Empty")
+        mock_logging.info.assert_not_called()
+        mock_logging.error.assert_not_called()

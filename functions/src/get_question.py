@@ -25,13 +25,13 @@ def get_question(req: func.HttpRequest) -> func.HttpResponse:
     """
 
     try:
-        # パスパラメーターのバリデーションチェック
+        # バリデーションチェック
         test_id = req.route_params.get("testId")
-        question_number = req.route_params.get("questionNumber")
         if test_id is None:
-            return func.HttpResponse(body="testId is empty", status_code=400)
+            return func.HttpResponse(body="testId is Empty", status_code=400)
+        question_number = req.route_params.get("questionNumber")
         if question_number is None:
-            return func.HttpResponse(body="questionNumber is empty", status_code=400)
+            return func.HttpResponse(body="questionNumber is Empty", status_code=400)
         if not question_number.isdigit():
             return func.HttpResponse(
                 body=f"Invalid questionNumber: {question_number}", status_code=400

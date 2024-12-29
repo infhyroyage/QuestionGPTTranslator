@@ -49,10 +49,10 @@ class TestGetAnswer(TestCase):
 
         response = get_answer(req)
 
-        self.assertEqual(response.status_code, 500)
-        self.assertEqual(response.get_body().decode(), "Internal Server Error")
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_body().decode(), "testId is Empty")
         mock_logging.info.assert_not_called()
-        mock_logging.error.assert_called_once()
+        mock_logging.error.assert_not_called()
 
     @patch("src.get_answer.logging")
     def test_get_answer_question_number_empty(self, mock_logging):
@@ -63,10 +63,10 @@ class TestGetAnswer(TestCase):
 
         response = get_answer(req)
 
-        self.assertEqual(response.status_code, 500)
-        self.assertEqual(response.get_body().decode(), "Internal Server Error")
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_body().decode(), "questionNumber is Empty")
         mock_logging.info.assert_not_called()
-        mock_logging.error.assert_called_once()
+        mock_logging.error.assert_not_called()
 
     @patch("src.get_answer.get_read_only_container")
     @patch("src.get_answer.logging")

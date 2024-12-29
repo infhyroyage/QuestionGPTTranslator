@@ -23,13 +23,13 @@ def get_answer(req: func.HttpRequest) -> func.HttpResponse:
     """
 
     try:
-        # パスパラメーターのバリデーションチェック
+        # バリデーションチェック
         test_id = req.route_params.get("testId")
+        if test_id is None:
+            return func.HttpResponse(body="testId is Empty", status_code=400)
         question_number = req.route_params.get("questionNumber")
-        if test_id is None or question_number is None:
-            raise ValueError(
-                f"Invalid testId or questionNumber: {test_id}, {question_number}"
-            )
+        if question_number is None:
+            return func.HttpResponse(body="questionNumber is Empty", status_code=400)
 
         # Answerコンテナーの読み取り専用インスタンスを取得
         container: ContainerProxy = get_read_only_container(
