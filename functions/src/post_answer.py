@@ -112,7 +112,7 @@ Unless there is an instruction such as "Select THREE" in the question, there wil
 
 def generate_correct_answers(
     course_name: str, subjects: list[str], choices: list[str]
-) -> CorrectAnswers:
+) -> CorrectAnswers | None:
     """
     Azure OpenAIにコールして、正解の選択肢のインデックス・正解/不正解の理由を生成する
 
@@ -122,16 +122,13 @@ def generate_correct_answers(
         choices (list[str]): 選択肢のリスト
 
     Returns:
-        CorrectAnswers: 正解の選択肢のインデックス・正解/不正解の理由
-
-    Raises:
-        RuntimeError: Azure OpenAIのコール回数の上限に達した場合
+        CorrectAnswers | None: 正解の選択肢のインデックス・正解/不正解の理由(生成できない場合はNone)
     """
 
-    correct_answers: CorrectAnswers | None = None
-    for retry_number in range(MAX_RETRY_NUMBER):
-        logging.info({"retry_number": retry_number})
-        try:
+    try:
+        for retry_number in range(MAX_RETRY_NUMBER):
+            logging.info({"retry_number": retry_number})
+
             # Azure OpenAIのレスポンスを取得
             response = AzureOpenAI(
                 api_key=os.environ["OPENAI_API_KEY"],
@@ -154,22 +151,17 @@ def generate_correct_answers(
             )
             logging.info({"message": response.choices[0].message})
 
-            # 正解の選択肢のインデックス・正解/不正解の理由をparse
-            # parseできない場合は最大MAX_RETRY_NUMBER回までリトライ
+            # 正解の選択肢のインデックス・正解/不正解の理由をparseして返す
+            # parseできない場合は最大MAX_RETRY_NUMBER回までリトライ可能
             if response.choices[0].message.parsed is not None:
-                correct_answers = CorrectAnswers(
+                return CorrectAnswers(
                     correct_indexes=response.choices[0].message.parsed.correct_indexes,
                     explanations=response.choices[0].message.parsed.explanations,
                 )
-                break
-        except Exception as e:
-            logging.warning(e)
+    except Exception as e:
+        logging.warning(e)
 
-    # リトライ回数超過チェック
-    if not correct_answers:
-        raise RuntimeError("Too Many Retries")
-
-    return correct_answers
+    return None
 
 
 def queue_message_answer(message_answer: MessageAnswer) -> None:
