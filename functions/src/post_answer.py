@@ -125,6 +125,9 @@ def generate_correct_answers(
         CorrectAnswers | None: 正解の選択肢のインデックス・正解/不正解の理由(生成できない場合はNone)
     """
 
+    system_prompt: str = create_system_prompt(course_name)
+    user_prompt: str = create_user_prompt(subjects, choices)
+
     try:
         for retry_number in range(MAX_RETRY_NUMBER):
             logging.info({"retry_number": retry_number})
@@ -140,16 +143,16 @@ def generate_correct_answers(
                 messages=[
                     {
                         "role": "system",
-                        "content": create_system_prompt(course_name),
+                        "content": system_prompt,
                     },
                     {
                         "role": "user",
-                        "content": create_user_prompt(subjects, choices),
+                        "content": user_prompt,
                     },
                 ],
                 response_format=AnswerFormat,
             )
-            logging.info({"message": response.choices[0].message})
+            logging.info({"parsed": response.choices[0].message.parsed})
 
             # 正解の選択肢のインデックス・正解/不正解の理由をparseして返す
             # parseできない場合は最大MAX_RETRY_NUMBER回までリトライ可能
