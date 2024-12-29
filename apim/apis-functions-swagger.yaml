@@ -76,6 +76,12 @@ paths:
                     type: string
                   length:
                     type: integer
+        "400":
+          description: リクエストパラメーターが不正です
+          content:
+            application/json:
+              schema:
+                type: string
         "401":
           description: アクセスが拒否されました
           content:
@@ -152,7 +158,7 @@ paths:
                   isMultiplied:
                     type: boolean
         "400":
-          description: 問題番号が不正です
+          description: リクエストパラメーターが不正です
           content:
             application/json:
               schema:
@@ -164,7 +170,7 @@ paths:
               schema:
                 type: string
         "404":
-          description: 指定したテスト/問題番号が存在しません
+          description: 指定した問題・選択肢が存在しません
           content:
             application/json:
               schema:
@@ -236,7 +242,7 @@ paths:
                       type: string
                       nullable: true
         "400":
-          description: 問題番号が不正です
+          description: リクエストパラメーターが不正です
           content:
             application/json:
               schema:
@@ -292,6 +298,12 @@ paths:
                     type: array
                     items:
                       type: string
+        "400":
+          description: リクエストパラメーターが不正です
+          content:
+            application/json:
+              schema:
+                type: string
         "401":
           description: アクセスが拒否されました
           content:
@@ -299,7 +311,7 @@ paths:
               schema:
                 type: string
         "404":
-          description: 指定したテスト/問題番号が存在しません
+          description: 指定した回答が存在しません
           content:
             application/json:
               schema:
@@ -340,6 +352,12 @@ paths:
                 type: array
                 items:
                   type: string
+        "400":
+          description: リクエストパラメーターが不正です
+          content:
+            application/json:
+              schema:
+                type: string
         "401":
           description: アクセスが拒否されました
           content:
