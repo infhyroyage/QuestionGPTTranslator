@@ -129,7 +129,7 @@ class TestGetQuestion(TestCase):
 
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.get_body().decode(), "Not Found Question")
-        mock_logging.info.assert_called_with({"items": []})
+        mock_logging.info.assert_called_once_with({"items": []})
         mock_logging.error.assert_not_called()
 
     @patch("src.get_question.get_read_only_container")
@@ -151,5 +151,5 @@ class TestGetQuestion(TestCase):
 
         self.assertEqual(response.status_code, 500)
         self.assertEqual(response.get_body().decode(), "Internal Server Error")
-        mock_logging.info.assert_called_with({"items": [{}, {}]})
-        mock_logging.error.assert_called()
+        mock_logging.info.assert_called_once_with({"items": [{}, {}]})
+        mock_logging.error.assert_called_once()

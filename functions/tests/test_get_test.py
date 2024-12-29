@@ -37,7 +37,7 @@ class TestGetTest(TestCase):
             "length": 10,
         }
         self.assertEqual(response.get_body().decode(), json.dumps(expected_body))
-        mock_logging.info.assert_called_with({"items": mock_items})
+        mock_logging.info.assert_called_once_with({"items": mock_items})
         mock_logging.error.assert_not_called()
 
     @patch("src.get_test.get_read_only_container")
@@ -55,7 +55,7 @@ class TestGetTest(TestCase):
 
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.get_body().decode(), "Not Found Test")
-        mock_logging.info.assert_called_with({"items": []})
+        mock_logging.info.assert_called_once_with({"items": []})
         mock_logging.error.assert_not_called()
 
     @patch("src.get_test.get_read_only_container")
@@ -77,8 +77,8 @@ class TestGetTest(TestCase):
 
         self.assertEqual(response.status_code, 500)
         self.assertEqual(response.get_body().decode(), "Internal Server Error")
-        mock_logging.info.assert_called_with({"items": mock_items})
-        mock_logging.error.assert_called()
+        mock_logging.info.assert_called_once_with({"items": mock_items})
+        mock_logging.error.assert_called_once()
 
     @patch("src.get_test.logging")
     def test_get_test_invalid_test_id(self, mock_logging):
@@ -91,7 +91,7 @@ class TestGetTest(TestCase):
         self.assertEqual(response.status_code, 500)
         self.assertEqual(response.get_body().decode(), "Internal Server Error")
         mock_logging.info.assert_not_called()
-        mock_logging.error.assert_called()
+        mock_logging.error.assert_called_once()
 
     @patch("src.get_test.get_read_only_container")
     @patch("src.get_test.logging")
@@ -109,4 +109,4 @@ class TestGetTest(TestCase):
         self.assertEqual(response.status_code, 500)
         self.assertEqual(response.get_body().decode(), "Internal Server Error")
         mock_logging.info.assert_not_called()
-        mock_logging.error.assert_called()
+        mock_logging.error.assert_called_once()

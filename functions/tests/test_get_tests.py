@@ -61,4 +61,4 @@ class TestGetTests(TestCase):
         self.assertEqual(response.status_code, 500)
         self.assertEqual(response.get_body().decode(), "Internal Server Error")
         mock_logging.info.assert_not_called()
-        mock_logging.error.assert_called()
+        mock_logging.error.assert_called_once()

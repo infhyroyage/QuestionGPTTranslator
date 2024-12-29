@@ -37,7 +37,7 @@ class TestGetAnswer(TestCase):
             "explanations": ["Option 1 is correct because..."],
         }
         self.assertEqual(json.loads(response.get_body().decode()), expected_body)
-        mock_logging.info.assert_called_with({"items": [expected_body]})
+        mock_logging.info.assert_called_once_with({"items": [expected_body]})
         mock_logging.error.assert_not_called()
 
     @patch("src.get_answer.logging")
@@ -52,7 +52,7 @@ class TestGetAnswer(TestCase):
         self.assertEqual(response.status_code, 500)
         self.assertEqual(response.get_body().decode(), "Internal Server Error")
         mock_logging.info.assert_not_called()
-        mock_logging.error.assert_called()
+        mock_logging.error.assert_called_once()
 
     @patch("src.get_answer.logging")
     def test_get_answer_question_number_empty(self, mock_logging):
@@ -66,7 +66,7 @@ class TestGetAnswer(TestCase):
         self.assertEqual(response.status_code, 500)
         self.assertEqual(response.get_body().decode(), "Internal Server Error")
         mock_logging.info.assert_not_called()
-        mock_logging.error.assert_called()
+        mock_logging.error.assert_called_once()
 
     @patch("src.get_answer.get_read_only_container")
     @patch("src.get_answer.logging")
@@ -84,7 +84,7 @@ class TestGetAnswer(TestCase):
 
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.get_body().decode(), "Not Found Answer")
-        mock_logging.info.assert_called_with({"items": []})
+        mock_logging.info.assert_called_once_with({"items": []})
         mock_logging.error.assert_not_called()
 
     @patch("src.get_answer.get_read_only_container")
@@ -106,7 +106,7 @@ class TestGetAnswer(TestCase):
 
         self.assertEqual(response.status_code, 500)
         self.assertEqual(response.get_body().decode(), "Internal Server Error")
-        mock_logging.info.assert_called_with(
+        mock_logging.info.assert_called_once_with(
             {
                 "items": [
                     {
@@ -120,7 +120,7 @@ class TestGetAnswer(TestCase):
                 ]
             }
         )
-        mock_logging.error.assert_called()
+        mock_logging.error.assert_called_once()
 
     @patch("src.get_answer.get_read_only_container")
     @patch("src.get_answer.logging")
@@ -139,4 +139,4 @@ class TestGetAnswer(TestCase):
         self.assertEqual(response.status_code, 500)
         self.assertEqual(response.get_body().decode(), "Internal Server Error")
         mock_logging.info.assert_not_called()
-        mock_logging.error.assert_called()
+        mock_logging.error.assert_called_once()

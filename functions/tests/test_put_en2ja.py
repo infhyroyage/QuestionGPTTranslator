@@ -227,7 +227,7 @@ class TestPutEn2Ja(unittest.TestCase):
                 call({"body": ["DeepLからこんにちは"]}),
             ]
         )
-        mock_logging.warning.assert_called_with(
+        mock_logging.warning.assert_called_once_with(
             "Azure Translator Free Tier is used up."
         )
         mock_logging.error.assert_not_called()
@@ -256,10 +256,10 @@ class TestPutEn2Ja(unittest.TestCase):
                 call({"body": None}),
             ]
         )
-        mock_logging.warning.assert_called_with(
+        mock_logging.warning.assert_called_once_with(
             "Azure Translator Free Tier is used up."
         )
-        mock_logging.error.assert_called()
+        mock_logging.error.assert_called_once()
 
     @patch("src.put_en2ja.translate_by_azure_translator")
     @patch("src.put_en2ja.logging")
@@ -277,6 +277,6 @@ class TestPutEn2Ja(unittest.TestCase):
         resp = put_en2ja(req)
         self.assertEqual(resp.status_code, 500)
         self.assertEqual(resp.get_body(), b"Internal Server Error")
-        mock_logging.info.assert_called_with({"texts": ["Hello"]})
+        mock_logging.info.assert_called_once_with({"texts": ["Hello"]})
         mock_logging.warning.assert_not_called()
-        mock_logging.error.assert_called()
+        mock_logging.error.assert_called_once()

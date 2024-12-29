@@ -3,10 +3,11 @@
 import json
 import os
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, call, patch
 
 import azure.functions as func
 from src.post_answer import (
+    MAX_RETRY_NUMBER,
     create_system_prompt,
     create_user_prompt,
     generate_correct_answers,
@@ -97,6 +98,7 @@ class TestPostAnswer(unittest.TestCase):
     @patch("src.post_answer.AzureOpenAI")
     @patch("src.post_answer.create_system_prompt")
     @patch("src.post_answer.create_user_prompt")
+    @patch("src.post_answer.logging")
     @patch.dict(
         os.environ,
         {
@@ -108,13 +110,16 @@ class TestPostAnswer(unittest.TestCase):
         },
     )
     def test_generate_correct_answers_no_retry(
-        self, mock_create_user_prompt, mock_create_system_prompt, mock_azure_openai
+        self,
+        mock_logging,
+        mock_create_user_prompt,
+        mock_create_system_prompt,
+        mock_azure_openai,
     ):
         """リトライせずに、正解の選択肢のインデックス・正解/不正解の理由を生成するテスト"""
 
         mock_create_system_prompt.return_value = "system_prompt"
         mock_create_user_prompt.return_value = "user_prompt"
-
         mock_response = MagicMock()
         mock_response.choices[0].message.parsed.correct_indexes = [2]
         mock_response.choices[0].message.parsed.explanations = [
@@ -135,7 +140,6 @@ class TestPostAnswer(unittest.TestCase):
             correct_answers["explanations"],
             ["Option 2 is correct because 2 + 2 equals 4."],
         )
-
         mock_create_system_prompt.assert_called_once_with(course_name)
         mock_create_user_prompt.assert_called_once_with(subjects, choices)
         mock_azure_openai.assert_called_once_with(
@@ -152,10 +156,18 @@ class TestPostAnswer(unittest.TestCase):
             ],
             response_format=AnswerFormat,
         )
+        mock_logging.info.assert_has_calls(
+            [
+                call({"retry_number": 0}),
+                call({"parsed": mock_response.choices[0].message.parsed}),
+            ]
+        )
+        mock_logging.warning.assert_not_called()
 
     @patch("src.post_answer.AzureOpenAI")
     @patch("src.post_answer.create_system_prompt")
     @patch("src.post_answer.create_user_prompt")
+    @patch("src.post_answer.logging")
     @patch.dict(
         os.environ,
         {
@@ -167,29 +179,84 @@ class TestPostAnswer(unittest.TestCase):
         },
     )
     def test_generate_correct_answers_max_retry(
-        self, mock_create_user_prompt, mock_create_system_prompt, mock_azure_openai
+        self,
+        mock_logging,
+        mock_create_user_prompt,
+        mock_create_system_prompt,
+        mock_azure_openai,
     ):
-        """MAX_RETRY_NUMBER回リトライ後に、RuntimeErrorを返すテスト"""
+        """MAX_RETRY_NUMBER回リトライしても、正解の選択肢のインデックス・正解/不正解の理由が生成できない場合のテスト"""
 
         mock_create_system_prompt.return_value = "system_prompt"
         mock_create_user_prompt.return_value = "user_prompt"
+        mock_response = MagicMock()
+        mock_response.choices[0].message.parsed = None
+        mock_azure_openai.return_value.beta.chat.completions.parse.return_value = (
+            mock_response
+        )
 
+        course_name = "Math"
+        subjects = ["What is 2 + 2?"]
+        choices = ["3", "4", "5"]
+
+        correct_answers = generate_correct_answers(course_name, subjects, choices)
+
+        self.assertIsNone(correct_answers)
+        mock_create_system_prompt.assert_called_once_with(course_name)
+        mock_create_user_prompt.assert_called_once_with(subjects, choices)
+        mock_logging.info.assert_has_calls(
+            [
+                call({"retry_number": i / 2}) if i % 2 == 0 else call({"parsed": None})
+                for i in range(MAX_RETRY_NUMBER * 2)
+            ]
+        )
+        mock_logging.warning.assert_not_called()
+
+    @patch("src.post_answer.AzureOpenAI")
+    @patch("src.post_answer.create_system_prompt")
+    @patch("src.post_answer.create_user_prompt")
+    @patch("src.post_answer.logging")
+    @patch.dict(
+        os.environ,
+        {
+            "OPENAI_API_KEY": "test_api_key",
+            "OPENAI_API_VERSION": "test_api_version",
+            "OPENAI_DEPLOYMENT": "test_deployment",
+            "OPENAI_ENDPOINT": "test_endpoint",
+            "OPENAI_MODEL": "test_model",
+        },
+    )
+    def test_generate_correct_answers_raise_error(
+        self,
+        mock_logging,
+        mock_create_user_prompt,
+        mock_create_system_prompt,
+        mock_azure_openai,
+    ):
+        """正解の選択肢のインデックス・正解/不正解の理由の生成でエラーが発生した場合のテスト"""
+
+        mock_create_system_prompt.return_value = "system_prompt"
+        mock_create_user_prompt.return_value = "user_prompt"
         mock_azure_openai.return_value.beta.chat.completions.parse.side_effect = [
-            RuntimeError("parse error"),
+            Exception("Azure OpenAI Error"),
         ]
 
         course_name = "Math"
         subjects = ["What is 2 + 2?"]
         choices = ["3", "4", "5"]
 
-        with self.assertRaises(RuntimeError) as context:
-            generate_correct_answers(course_name, subjects, choices)
+        correct_answers = generate_correct_answers(course_name, subjects, choices)
 
-        self.assertEqual(str(context.exception), "Too Many Retries")
+        self.assertIsNone(correct_answers)
+        mock_create_system_prompt.assert_called_once_with(course_name)
+        mock_create_user_prompt.assert_called_once_with(subjects, choices)
+        mock_logging.info.assert_called_once_with({"retry_number": 0})
+        mock_logging.warning.assert_called_once()
 
     @patch("src.post_answer.QueueClient.from_connection_string")
+    @patch("src.post_answer.logging")
     @patch.dict(os.environ, {"AzureWebJobsStorage": "on-azure"})
-    def test_queue_message_answer_azure(self, mock_queue_client):
+    def test_queue_message_answer_azure(self, mock_logging, mock_queue_client):
         """Azureにて、キューストレージにAnswerコンテナーの項目用のメッセージを格納するテスト"""
 
         mock_queue = MagicMock()
@@ -209,10 +276,12 @@ class TestPostAnswer(unittest.TestCase):
         mock_queue.send_message.assert_called_once_with(
             json.dumps(message_answer).encode("utf-8")
         )
+        mock_logging.info.assert_called_once_with({"message_answer": message_answer})
 
     @patch("src.post_answer.QueueClient.from_connection_string")
+    @patch("src.post_answer.logging")
     @patch.dict(os.environ, {"AzureWebJobsStorage": "UseDevelopmentStorage=true"})
-    def test_queue_message_answer_local(self, mock_queue_client):
+    def test_queue_message_answer_local(self, mock_logging, mock_queue_client):
         """ローカル環境にて、キューストレージにAnswerコンテナーの項目用のメッセージを格納するテスト"""
 
         mock_queue = MagicMock()
@@ -232,9 +301,11 @@ class TestPostAnswer(unittest.TestCase):
         mock_queue.send_message.assert_called_once_with(
             json.dumps(message_answer).encode("utf-8")
         )
+        mock_logging.info.assert_called_once_with({"message_answer": message_answer})
 
     @patch("src.post_answer.generate_correct_answers")
     @patch("src.post_answer.queue_message_answer")
+    @patch("src.post_answer.logging")
     @patch.dict(
         os.environ,
         {
@@ -247,7 +318,10 @@ class TestPostAnswer(unittest.TestCase):
         },
     )
     def test_post_answer(
-        self, mock_queue_message_answer, mock_generate_correct_answers
+        self,
+        mock_logging,
+        mock_queue_message_answer,
+        mock_generate_correct_answers,
     ):
         """レスポンスが正常であることのテスト"""
 
@@ -276,11 +350,9 @@ class TestPostAnswer(unittest.TestCase):
                 "explanations": ["Option 2 is correct because 2 + 2 equals 4."],
             },
         )
-
         mock_generate_correct_answers.assert_called_once_with(
             "Math", ["What is 2 + 2?"], ["3", "4", "5"]
         )
-
         mock_queue_message_answer.assert_called_once_with(
             {
                 "testId": "1",
@@ -291,7 +363,18 @@ class TestPostAnswer(unittest.TestCase):
                 "explanations": ["Option 2 is correct because 2 + 2 equals 4."],
             }
         )
+        mock_logging.info.assert_called_once_with(
+            {
+                "course_name": "Math",
+                "question_number": "1",
+                "test_id": "1",
+                "subjects": ["What is 2 + 2?"],
+                "choices": ["3", "4", "5"],
+            }
+        )
+        mock_logging.error.assert_not_called()
 
+    @patch("src.post_answer.logging")
     @patch.dict(
         os.environ,
         {
@@ -303,7 +386,7 @@ class TestPostAnswer(unittest.TestCase):
             "AzureWebJobsStorage": "UseDevelopmentStorage=true",
         },
     )
-    def test_post_answer_invalid_test_id(self):
+    def test_post_answer_invalid_test_id(self, mock_logging):
         """testIdが空であるレスポンスのテスト"""
 
         req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
@@ -320,8 +403,19 @@ class TestPostAnswer(unittest.TestCase):
 
         self.assertEqual(response.status_code, 500)
         self.assertEqual(response.get_body().decode("utf-8"), "Internal Server Error")
+        mock_logging.info.assert_called_once_with(
+            {
+                "course_name": "Math",
+                "question_number": "1",
+                "test_id": None,
+                "subjects": ["What is 2 + 2?"],
+                "choices": ["3", "4", "5"],
+            }
+        )
+        mock_logging.error.assert_called_once()
 
-    def test_post_answer_invalid_question_number_empty(self):
+    @patch("src.post_answer.logging")
+    def test_post_answer_invalid_question_number_empty(self, mock_logging):
         """questionNumberが空であるレスポンスのテスト"""
 
         req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
@@ -338,8 +432,19 @@ class TestPostAnswer(unittest.TestCase):
 
         self.assertEqual(response.status_code, 500)
         self.assertEqual(response.get_body().decode("utf-8"), "Internal Server Error")
+        mock_logging.info.assert_called_once_with(
+            {
+                "course_name": "Math",
+                "question_number": None,
+                "test_id": "1",
+                "subjects": ["What is 2 + 2?"],
+                "choices": ["3", "4", "5"],
+            }
+        )
+        mock_logging.error.assert_called_once()
 
-    def test_post_answer_invalid_question_number_not_digit(self):
+    @patch("src.post_answer.logging")
+    def test_post_answer_invalid_question_number_not_digit(self, mock_logging):
         """questionNumberが数値でないレスポンスのテスト"""
 
         req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
@@ -356,8 +461,19 @@ class TestPostAnswer(unittest.TestCase):
 
         self.assertEqual(response.status_code, 500)
         self.assertEqual(response.get_body().decode("utf-8"), "Internal Server Error")
+        mock_logging.info.assert_called_once_with(
+            {
+                "course_name": "Math",
+                "question_number": "a",
+                "test_id": "1",
+                "subjects": ["What is 2 + 2?"],
+                "choices": ["3", "4", "5"],
+            }
+        )
+        mock_logging.error.assert_called_once()
 
-    def test_post_answer_invalid_course_name_empty(self):
+    @patch("src.post_answer.logging")
+    def test_post_answer_invalid_course_name_empty(self, mock_logging):
         """courseNameが空であるレスポンスのテスト"""
 
         req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
@@ -373,8 +489,11 @@ class TestPostAnswer(unittest.TestCase):
 
         self.assertEqual(response.status_code, 500)
         self.assertEqual(response.get_body().decode("utf-8"), "Internal Server Error")
+        mock_logging.info.assert_not_called()
+        mock_logging.error.assert_called_once()
 
-    def test_post_answer_invalid_course_name_empty_string(self):
+    @patch("src.post_answer.logging")
+    def test_post_answer_invalid_course_name_empty_string(self, mock_logging):
         """courseNameが空文字であるレスポンスのテスト"""
 
         req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
@@ -391,8 +510,19 @@ class TestPostAnswer(unittest.TestCase):
 
         self.assertEqual(response.status_code, 500)
         self.assertEqual(response.get_body().decode("utf-8"), "Internal Server Error")
+        mock_logging.info.assert_called_once_with(
+            {
+                "course_name": "",
+                "question_number": "1",
+                "test_id": "1",
+                "subjects": ["What is 2 + 2?"],
+                "choices": ["3", "4", "5"],
+            }
+        )
+        mock_logging.error.assert_called_once()
 
-    def test_post_answer_invalid_subjects_empty(self):
+    @patch("src.post_answer.logging")
+    def test_post_answer_invalid_subjects_empty(self, mock_logging):
         """subjectsが空であるレスポンスのテスト"""
 
         req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
@@ -408,8 +538,11 @@ class TestPostAnswer(unittest.TestCase):
 
         self.assertEqual(response.status_code, 500)
         self.assertEqual(response.get_body().decode("utf-8"), "Internal Server Error")
+        mock_logging.info.assert_not_called()
+        mock_logging.error.assert_called_once()
 
-    def test_post_answer_invalid_subjects_not_list(self):
+    @patch("src.post_answer.logging")
+    def test_post_answer_invalid_subjects_not_list(self, mock_logging):
         """subjectsがlistでないレスポンスのテスト"""
 
         req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
@@ -426,8 +559,19 @@ class TestPostAnswer(unittest.TestCase):
 
         self.assertEqual(response.status_code, 500)
         self.assertEqual(response.get_body().decode("utf-8"), "Internal Server Error")
+        mock_logging.info.assert_called_once_with(
+            {
+                "course_name": "Math",
+                "question_number": "1",
+                "test_id": "1",
+                "subjects": "What is 2 + 2?",
+                "choices": ["3", "4", "5"],
+            }
+        )
+        mock_logging.error.assert_called_once()
 
-    def test_post_answer_invalid_subjects_empty_list(self):
+    @patch("src.post_answer.logging")
+    def test_post_answer_invalid_subjects_empty_list(self, mock_logging):
         """subjectsが空のlistであるレスポンスのテスト"""
 
         req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
@@ -444,8 +588,19 @@ class TestPostAnswer(unittest.TestCase):
 
         self.assertEqual(response.status_code, 500)
         self.assertEqual(response.get_body().decode("utf-8"), "Internal Server Error")
+        mock_logging.info.assert_called_once_with(
+            {
+                "course_name": "Math",
+                "question_number": "1",
+                "test_id": "1",
+                "subjects": [],
+                "choices": ["3", "4", "5"],
+            }
+        )
+        mock_logging.error.assert_called_once()
 
-    def test_post_answer_invalid_choices_empty(self):
+    @patch("src.post_answer.logging")
+    def test_post_answer_invalid_choices_empty(self, mock_logging):
         """choicesが空であるレスポンスのテスト"""
 
         req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
@@ -461,8 +616,11 @@ class TestPostAnswer(unittest.TestCase):
 
         self.assertEqual(response.status_code, 500)
         self.assertEqual(response.get_body().decode("utf-8"), "Internal Server Error")
+        mock_logging.info.assert_not_called()
+        mock_logging.error.assert_called_once()
 
-    def test_post_answer_invalid_choices_not_list(self):
+    @patch("src.post_answer.logging")
+    def test_post_answer_invalid_choices_not_list(self, mock_logging):
         """choicesがlistでないレスポンスのテスト"""
 
         req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
@@ -479,8 +637,19 @@ class TestPostAnswer(unittest.TestCase):
 
         self.assertEqual(response.status_code, 500)
         self.assertEqual(response.get_body().decode("utf-8"), "Internal Server Error")
+        mock_logging.info.assert_called_once_with(
+            {
+                "course_name": "Math",
+                "question_number": "1",
+                "test_id": "1",
+                "subjects": ["What is 2 + 2?"],
+                "choices": "3",
+            }
+        )
+        mock_logging.error.assert_called_once()
 
-    def test_post_answer_invalid_choices_empty_list(self):
+    @patch("src.post_answer.logging")
+    def test_post_answer_invalid_choices_empty_list(self, mock_logging):
         """choicesが空のlistであるレスポンスのテスト"""
 
         req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
@@ -497,3 +666,13 @@ class TestPostAnswer(unittest.TestCase):
 
         self.assertEqual(response.status_code, 500)
         self.assertEqual(response.get_body().decode("utf-8"), "Internal Server Error")
+        mock_logging.info.assert_called_once_with(
+            {
+                "course_name": "Math",
+                "question_number": "1",
+                "test_id": "1",
+                "subjects": ["What is 2 + 2?"],
+                "choices": [],
+            }
+        )
+        mock_logging.error.assert_called_once()
