@@ -364,6 +364,21 @@ class TestPostAnswer(unittest.TestCase):
         mock_logging.error.assert_not_called()
 
     @patch("src.post_answer.logging")
+    def test_post_answer_request_body_empty(self, mock_logging):
+        """リクエストボディを指定していないレスポンスのテスト"""
+
+        req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
+        req.route_params = {"testId": "1", "questionNumber": "1"}
+        req.get_body.return_value = None
+
+        response = post_answer(req)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_body().decode("utf-8"), "Request Body is Empty")
+        mock_logging.info.assert_not_called()
+        mock_logging.error.assert_not_called()
+
+    @patch("src.post_answer.logging")
     def test_post_answer_invalid_test_id(self, mock_logging):
         """testIdが空であるレスポンスのテスト"""
 

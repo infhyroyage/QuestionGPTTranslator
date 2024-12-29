@@ -202,11 +202,7 @@ def post_answer(req: func.HttpRequest) -> func.HttpResponse:
     """
 
     try:
-        req_body: PostAnswerReq = json.loads(req.get_body().decode("utf-8"))
-
         # バリデーションチェック
-        if not req_body:
-            return func.HttpResponse(body="Request Body is Empty", status_code=400)
         test_id = req.route_params.get("testId")
         if test_id is None:
             return func.HttpResponse(body="testId is Empty", status_code=400)
@@ -217,6 +213,10 @@ def post_answer(req: func.HttpRequest) -> func.HttpResponse:
             return func.HttpResponse(
                 body=f"Invalid questionNumber: {question_number}", status_code=400
             )
+        req_body_encoded: bytes = req.get_body()
+        if not req_body_encoded:
+            return func.HttpResponse(body="Request Body is Empty", status_code=400)
+        req_body: PostAnswerReq = json.loads(req_body_encoded.decode("utf-8"))
         course_name = req_body.get("courseName")
         if not course_name or course_name == "":
             return func.HttpResponse(body="courseName is Empty", status_code=400)
