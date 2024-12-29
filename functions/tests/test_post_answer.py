@@ -609,3 +609,38 @@ class TestPostAnswer(unittest.TestCase):
         self.assertEqual(response.get_body().decode("utf-8"), "choices is Empty")
         mock_logging.info.assert_not_called()
         mock_logging.error.assert_not_called()
+
+    @patch("src.post_answer.generate_correct_answers")
+    @patch("src.post_answer.logging")
+    def test_post_answer_exception(self, mock_logging, mock_generate_correct_answers):
+        """例外が発生した場合のレスポンスのテスト"""
+
+        mock_generate_correct_answers.return_value = {
+            "correct_indexes": [1],
+            "explanations": ["Option 2 is correct because 2 + 2 equals 4."],
+        }
+
+        req = MagicMock(spec=func.HttpRequest)
+        req.route_params = {"testId": "1", "questionNumber": "1"}
+        req.get_body.return_value = json.dumps(
+            {
+                "courseName": "Math",
+                "subjects": ["What is 2 + 2?"],
+                "choices": ["3", "4", "5"],
+            }
+        ).encode("utf-8")
+
+        response = post_answer(req)
+
+        self.assertEqual(response.status_code, 500)
+        self.assertEqual(response.get_body(), b"Internal Server Error")
+        mock_logging.info.assert_called_once_with(
+            {
+                "course_name": "Math",
+                "question_number": "1",
+                "test_id": "1",
+                "subjects": ["What is 2 + 2?"],
+                "choices": ["3", "4", "5"],
+            }
+        )
+        mock_logging.error.assert_called_once()
