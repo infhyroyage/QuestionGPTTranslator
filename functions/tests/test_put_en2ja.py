@@ -185,10 +185,12 @@ class TestPutEn2Ja(unittest.TestCase):
             url="/api/en2ja",
             body=json.dumps(["Hello from Azure Translator"]).encode("utf-8"),
         )
-        resp = put_en2ja(req)
-        self.assertEqual(resp.status_code, 200)
+
+        response = put_en2ja(req)
+
+        self.assertEqual(response.status_code, 200)
         self.assertEqual(
-            resp.get_body(),
+            response.get_body(),
             json.dumps(["Azure Translatorからこんにちは"]).encode("utf-8"),
         )
         mock_logging.info.assert_has_calls(
@@ -215,10 +217,12 @@ class TestPutEn2Ja(unittest.TestCase):
             url="/api/en2ja",
             body=json.dumps(["Hello from DeepL"]).encode("utf-8"),
         )
-        resp = put_en2ja(req)
-        self.assertEqual(resp.status_code, 200)
+
+        response = put_en2ja(req)
+
+        self.assertEqual(response.status_code, 200)
         self.assertEqual(
-            resp.get_body(),
+            response.get_body(),
             json.dumps(["DeepLからこんにちは"]).encode("utf-8"),
         )
         mock_logging.info.assert_has_calls(
@@ -247,9 +251,11 @@ class TestPutEn2Ja(unittest.TestCase):
             url="/api/en2ja",
             body=json.dumps(["Hello"]).encode("utf-8"),
         )
-        resp = put_en2ja(req)
-        self.assertEqual(resp.status_code, 500)
-        self.assertEqual(resp.get_body(), b"Internal Server Error")
+
+        response = put_en2ja(req)
+
+        self.assertEqual(response.status_code, 500)
+        self.assertEqual(response.get_body(), b"Internal Server Error")
         mock_logging.info.assert_has_calls(
             [
                 call({"texts": ["Hello"]}),
@@ -260,6 +266,60 @@ class TestPutEn2Ja(unittest.TestCase):
             "Azure Translator Free Tier is used up."
         )
         mock_logging.error.assert_called_once()
+
+    @patch("src.put_en2ja.logging")
+    def test_put_en2ja_request_body_empty(self, mock_logging):
+        """リクエストボディが空であるレスポンスのテスト"""
+
+        req = func.HttpRequest(
+            method="PUT",
+            url="/api/en2ja",
+            body=None,
+        )
+
+        response = put_en2ja(req)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_body(), b"Request Body is Empty")
+        mock_logging.info.assert_not_called()
+        mock_logging.warning.assert_not_called()
+        mock_logging.error.assert_not_called()
+
+    @patch("src.put_en2ja.logging")
+    def test_put_en2ja_request_body_not_list(self, mock_logging):
+        """リクエストボディがlistでないレスポンスのテスト"""
+
+        req = func.HttpRequest(
+            method="PUT",
+            url="/api/en2ja",
+            body=json.dumps("Hello").encode("utf-8"),
+        )
+
+        response = put_en2ja(req)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_body(), b"Invalid texts: Hello")
+        mock_logging.info.assert_not_called()
+        mock_logging.warning.assert_not_called()
+        mock_logging.error.assert_not_called()
+
+    @patch("src.put_en2ja.logging")
+    def test_put_en2ja_request_body_empty_list(self, mock_logging):
+        """リクエストボディが空のlistであるレスポンスのテスト"""
+
+        req = func.HttpRequest(
+            method="PUT",
+            url="/api/en2ja",
+            body=json.dumps([]).encode("utf-8"),
+        )
+
+        response = put_en2ja(req)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_body(), b"Request Body is Empty")
+        mock_logging.info.assert_not_called()
+        mock_logging.warning.assert_not_called()
+        mock_logging.error.assert_not_called()
 
     @patch("src.put_en2ja.translate_by_azure_translator")
     @patch("src.put_en2ja.logging")
@@ -274,9 +334,11 @@ class TestPutEn2Ja(unittest.TestCase):
             url="/api/en2ja",
             body=json.dumps(["Hello"]).encode("utf-8"),
         )
-        resp = put_en2ja(req)
-        self.assertEqual(resp.status_code, 500)
-        self.assertEqual(resp.get_body(), b"Internal Server Error")
+
+        response = put_en2ja(req)
+
+        self.assertEqual(response.status_code, 500)
+        self.assertEqual(response.get_body(), b"Internal Server Error")
         mock_logging.info.assert_called_once_with({"texts": ["Hello"]})
         mock_logging.warning.assert_not_called()
         mock_logging.error.assert_called_once()

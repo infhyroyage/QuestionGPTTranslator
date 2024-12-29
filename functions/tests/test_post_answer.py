@@ -365,7 +365,7 @@ class TestPostAnswer(unittest.TestCase):
 
     @patch("src.post_answer.logging")
     def test_post_answer_request_body_empty(self, mock_logging):
-        """リクエストボディを指定していないレスポンスのテスト"""
+        """リクエストボディが空であるレスポンスのテスト"""
 
         req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
         req.route_params = {"testId": "1", "questionNumber": "1"}
