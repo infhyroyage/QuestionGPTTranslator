@@ -34,7 +34,7 @@
 | 名称                      | バージョン |
 | ------------------------- | ---------- |
 | Python                    | 3.11       |
-| OpenAI Python API library | 1.42.0     |
+| OpenAI Python API library | 1.58.1     |
 
 上記以外のパッケージは、dependabot によってバージョン管理している。
 
