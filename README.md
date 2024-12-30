@@ -14,20 +14,20 @@
 
 ![architecture.drawio](architecture.drawio.svg)
 
-| Azure リソース名           | 概要                                                                                                   |
-| -------------------------- | ------------------------------------------------------------------------------------------------------ |
-| `qgtranslator-je-apim`     | ユーザー/App Service からアクセスする API Management                                                   |
-| `qgtranslator-je-func`     | API Management からアクセスする Functions                                                              |
-| `qgtranslator-je-funcplan` | Functions のプラン                                                                                     |
-| `qgtranslatorjesa`         | Functions から参照するストレージアカウント                                                             |
-| `qgtranslator-je-cosmosdb` | Functions からアクセスする Cosmos DB                                                                   |
-| `qgtranslator-je-vault`    | シークレットを管理する Key Vault                                                                       |
-| `qgtranslator-je-insights` | App Service/API Management/Functions を一括で監視する Application Insights                             |
-| `(Your Own OpenAI)`        | Functions からアクセスする事前に作成した Structured outputs をサポートする Azure OpenAI                |
-| `(Your Own Translator)`    | Functions からアクセスする事前に作成した Translator(枠を使い切った場合は代わりに DeepL へアクセスする) |
+| Azure リソース名           | 概要                                                                                               |
+| -------------------------- | -------------------------------------------------------------------------------------------------- |
+| `qgtranslator-je-apim`     | ユーザー/App Service からアクセスする API Management                                               |
+| `qgtranslator-je-func`     | API Management からアクセスする Functions                                                          |
+| `qgtranslator-je-funcplan` | Functions のプラン                                                                                 |
+| `qgtranslatorjesa`         | Functions から参照するストレージアカウント                                                         |
+| `qgtranslator-je-cosmosdb` | Functions からアクセスする Cosmos DB                                                               |
+| `qgtranslator-je-vault`    | シークレットを管理する Key Vault                                                                   |
+| `qgtranslator-je-insights` | App Service/API Management/Functions を一括で監視する Application Insights                         |
+| `(Your Own OpenAI)`        | Functions からアクセスする事前作成の Structured outputs をサポートする Azure OpenAI                |
+| `(Your Own Translator)`    | Functions からアクセスする事前作成の Translator(枠を使い切った場合は代わりに DeepL へアクセスする) |
 
-> [!TIP]  
-> 2024/09/17 時点で、モデル`gpt-4o` の Azure OpenAI は、モデルバージョン`2024-08-06`のみ [Structured outputs](https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/structured-outputs?tabs=rest) をサポートする。
+> [!WARNING]  
+> Azure OpenAI は、[Structured outputs をサポートするモデル・バージョン](https://learn.microsoft.com/ja-jp/azure/ai-services/openai/how-to/structured-outputs?tabs=python-secure#supported-models) を使用する必要がある。
 
 ## 使用する主要なパッケージのバージョン
 
@@ -207,6 +207,9 @@ Azure にリソースを構築せず、localhost 上で以下のサーバーを�
 | Blob ストレージ                                | [Azurite](https://learn.microsoft.com/ja-jp/azure/storage/common/storage-use-azurite)                              | 10000      |
 | Queue ストレージ                               | [Azurite](https://learn.microsoft.com/ja-jp/azure/storage/common/storage-use-azurite)                              | 10001      |
 | Table ストレージ                               | [Azurite](https://learn.microsoft.com/ja-jp/azure/storage/common/storage-use-azurite)                              | 10002      |
+
+> [!NOTE]  
+> 2024/11/24 現在、Azure Cosmos DB Linux-based Emulator (preview)は複合インデックスのインデックスポリシーがサポートされていないため、Azure Cosmos DB と一部のインデックスポリシーが異なる。
 
 > [!TIP]  
 > localhost 環境構築後、ブラウザから [データエクスプローラー](http://localhost:1234) にアクセスすると、Cosmos DB 内のデータを GUI で参照・更新できる。
