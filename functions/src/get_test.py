@@ -24,9 +24,13 @@ def get_test(req: func.HttpRequest) -> func.HttpResponse:
 
     try:
         # バリデーションチェック
+        errors: list[str] = []
         test_id = req.route_params.get("testId")
-        if test_id is None:
-            return func.HttpResponse(body="testId is Empty", status_code=400)
+        if not test_id:
+            errors.append("testId is Empty")
+
+        if len(errors) > 0:
+            return func.HttpResponse(body=errors[0], status_code=400)
 
         # Testコンテナーの読み取り専用インスタンスを取得
         container: ContainerProxy = get_read_only_container(

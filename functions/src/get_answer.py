@@ -24,12 +24,18 @@ def get_answer(req: func.HttpRequest) -> func.HttpResponse:
 
     try:
         # バリデーションチェック
+        errors: list[str] = []
         test_id = req.route_params.get("testId")
-        if test_id is None:
-            return func.HttpResponse(body="testId is Empty", status_code=400)
+        if not test_id:
+            errors.append("testId is Empty")
         question_number = req.route_params.get("questionNumber")
-        if question_number is None:
-            return func.HttpResponse(body="questionNumber is Empty", status_code=400)
+        if not question_number:
+            errors.append("questionNumber is Empty")
+        elif not question_number.isdigit():
+            errors.append(f"Invalid questionNumber: {question_number}")
+
+        if len(errors) > 0:
+            return func.HttpResponse(body=errors[0], status_code=400)
 
         # Answerコンテナーの読み取り専用インスタンスを取得
         container: ContainerProxy = get_read_only_container(

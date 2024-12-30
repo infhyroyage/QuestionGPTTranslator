@@ -117,14 +117,19 @@ def put_en2ja(req: func.HttpRequest) -> func.HttpResponse:
 
     try:
         # バリデーションチェック
+        errors: list[str] = []
         texts_encoded: bytes = req.get_body()
         if not texts_encoded:
-            return func.HttpResponse(body="Request Body is Empty", status_code=400)
-        texts: PutEn2JaReq = json.loads(texts_encoded.decode("utf-8"))
-        if not isinstance(texts, list):
-            return func.HttpResponse(body=f"Invalid texts: {texts}", status_code=400)
-        if len(texts) == 0:
-            return func.HttpResponse(body="Request Body is Empty", status_code=400)
+            errors.append("Request Body is Empty")
+        else:
+            texts: PutEn2JaReq = json.loads(texts_encoded.decode("utf-8"))
+            if not isinstance(texts, list):
+                errors.append(f"Invalid texts: {texts}")
+            if len(texts) == 0:
+                errors.append("Request Body is Empty")
+
+        if len(errors) > 0:
+            return func.HttpResponse(body=errors[0], status_code=400)
 
         logging.info({"texts": texts})
 

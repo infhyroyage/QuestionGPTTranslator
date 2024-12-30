@@ -203,37 +203,40 @@ def post_answer(req: func.HttpRequest) -> func.HttpResponse:
 
     try:
         # バリデーションチェック
+        errors: list[str] = []
         test_id = req.route_params.get("testId")
-        if test_id is None:
-            return func.HttpResponse(body="testId is Empty", status_code=400)
+        if not test_id:
+            errors.append("testId is Empty")
         question_number = req.route_params.get("questionNumber")
-        if question_number is None:
-            return func.HttpResponse(body="questionNumber is Empty", status_code=400)
-        if not question_number.isdigit():
-            return func.HttpResponse(
-                body=f"Invalid questionNumber: {question_number}", status_code=400
-            )
+        if not question_number:
+            errors.append("questionNumber is Empty")
+        elif not question_number.isdigit():
+            errors.append(f"Invalid questionNumber: {question_number}")
         req_body_encoded: bytes = req.get_body()
         if not req_body_encoded:
-            return func.HttpResponse(body="Request Body is Empty", status_code=400)
-        req_body: PostAnswerReq = json.loads(req_body_encoded.decode("utf-8"))
-        course_name = req_body.get("courseName")
-        if not course_name or course_name == "":
-            return func.HttpResponse(body="courseName is Empty", status_code=400)
-        subjects = req_body.get("subjects")
-        if not subjects:
-            return func.HttpResponse(body="subjects is Empty", status_code=400)
-        if not isinstance(subjects, list) or len(subjects) == 0:
-            return func.HttpResponse(
-                body=f"Invalid subjects: {subjects}", status_code=400
-            )
-        choices = req_body.get("choices")
-        if not choices:
-            return func.HttpResponse(body="choices is Empty", status_code=400)
-        if not isinstance(choices, list) or len(choices) == 0:
-            return func.HttpResponse(
-                body=f"Invalid choices: {choices}", status_code=400
-            )
+            errors.append("Request Body is Empty")
+        else:
+            req_body: PostAnswerReq = json.loads(req_body_encoded.decode("utf-8"))
+            course_name = req_body.get("courseName")
+            if not course_name:
+                errors.append("courseName is Empty")
+            subjects = req_body.get("subjects")
+            if not subjects:
+                errors.append("subjects is Empty")
+            elif not isinstance(subjects, list):
+                errors.append(f"Invalid subjects: {subjects}")
+            elif len(subjects) == 0:
+                errors.append("subjects is Empty")
+            choices = req_body.get("choices")
+            if not choices:
+                errors.append("choices is Empty")
+            elif not isinstance(choices, list):
+                errors.append(f"Invalid choices: {choices}")
+            elif len(choices) == 0:
+                errors.append("choices is Empty")
+
+        if len(errors) > 0:
+            return func.HttpResponse(body=errors[0], status_code=400)
 
         logging.info(
             {
