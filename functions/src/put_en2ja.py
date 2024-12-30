@@ -12,6 +12,30 @@ from type.response import PutEn2JaRes
 from type.translation import AzureTranslatorRes, DeepLRes
 
 
+def validate_request(req: func.HttpRequest) -> str | None:
+    """
+    リクエストのバリデーションチェックを行う
+
+    Args:
+        req (func.HttpRequest): リクエスト
+
+    Returns:
+        str | None: バリデーションチェックに成功した場合はNone、失敗した場合はエラーメッセージ
+    """
+
+    texts_encoded: bytes = req.get_body()
+    if not texts_encoded:
+        return "Request Body is Empty"
+
+    texts: PutEn2JaReq = json.loads(texts_encoded.decode("utf-8"))
+    if not isinstance(texts, list):
+        return f"Invalid texts: {texts}"
+    if len(texts) == 0:
+        return "Request Body is Empty"
+
+    return None
+
+
 def translate_by_azure_translator(texts: list[str]) -> Optional[list[str]]:
     """
     指定した英語の文字列群をAzure Translatorでそれぞれ日本語に翻訳する
@@ -117,19 +141,11 @@ def put_en2ja(req: func.HttpRequest) -> func.HttpResponse:
 
     try:
         # バリデーションチェック
-        errors: list[str] = []
-        texts_encoded: bytes = req.get_body()
-        if not texts_encoded:
-            errors.append("Request Body is Empty")
-        else:
-            texts: PutEn2JaReq = json.loads(texts_encoded.decode("utf-8"))
-            if not isinstance(texts, list):
-                errors.append(f"Invalid texts: {texts}")
-            if len(texts) == 0:
-                errors.append("Request Body is Empty")
+        error_message = validate_request(req)
+        if error_message:
+            return func.HttpResponse(body=error_message, status_code=400)
 
-        if len(errors) > 0:
-            return func.HttpResponse(body=errors[0], status_code=400)
+        texts: PutEn2JaReq = json.loads(req.get_body().decode("utf-8"))
 
         logging.info({"texts": texts})
 

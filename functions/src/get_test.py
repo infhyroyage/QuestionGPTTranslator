@@ -12,6 +12,24 @@ from util.cosmos import get_read_only_container
 bp_get_test = func.Blueprint()
 
 
+def validate_request(req: func.HttpRequest) -> str | None:
+    """
+    リクエストのバリデーションチェックを行う
+
+    Args:
+        req (func.HttpRequest): リクエスト
+
+    Returns:
+        str | None: バリデーションチェックに成功した場合はNone、失敗した場合はエラーメッセージ
+    """
+
+    test_id = req.route_params.get("testId")
+    if not test_id:
+        return "testId is Empty"
+
+    return None
+
+
 @bp_get_test.route(
     route="tests/{testId}",
     methods=["GET"],
@@ -24,13 +42,11 @@ def get_test(req: func.HttpRequest) -> func.HttpResponse:
 
     try:
         # バリデーションチェック
-        errors: list[str] = []
-        test_id = req.route_params.get("testId")
-        if not test_id:
-            errors.append("testId is Empty")
+        error_message = validate_request(req)
+        if error_message:
+            return func.HttpResponse(body=error_message, status_code=400)
 
-        if len(errors) > 0:
-            return func.HttpResponse(body=errors[0], status_code=400)
+        test_id = req.route_params.get("testId")
 
         # Testコンテナーの読み取り専用インスタンスを取得
         container: ContainerProxy = get_read_only_container(
