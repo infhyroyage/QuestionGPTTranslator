@@ -23,17 +23,19 @@ def validate_request(req: func.HttpRequest) -> str | None:
         str | None: バリデーションチェックに成功した場合はNone、失敗した場合はエラーメッセージ
     """
 
+    errors = []
+
     texts_encoded: bytes = req.get_body()
     if not texts_encoded:
-        return "Request Body is Empty"
+        errors.append("Request Body is Empty")
+    else:
+        texts: PutEn2JaReq = json.loads(texts_encoded.decode("utf-8"))
+        if not isinstance(texts, list):
+            errors.append(f"Invalid texts: {texts}")
+        if len(texts) == 0:
+            errors.append("Request Body is Empty")
 
-    texts: PutEn2JaReq = json.loads(texts_encoded.decode("utf-8"))
-    if not isinstance(texts, list):
-        return f"Invalid texts: {texts}"
-    if len(texts) == 0:
-        return "Request Body is Empty"
-
-    return None
+    return errors[0] if errors else None
 
 
 def translate_by_azure_translator(texts: list[str]) -> Optional[list[str]]:

@@ -7,11 +7,72 @@ from unittest.mock import MagicMock, call, patch
 
 import azure.functions as func
 from requests.exceptions import RequestException
-from src.put_en2ja import put_en2ja, translate_by_azure_translator, translate_by_deep_l
+from src.put_en2ja import (
+    put_en2ja,
+    translate_by_azure_translator,
+    translate_by_deep_l,
+    validate_request,
+)
 
 
-class TestPutEn2Ja(unittest.TestCase):
-    """[PUT] /en2ja のテストケース"""
+class TestValidateRequest(unittest.TestCase):
+    """validate_request関数のテストケース"""
+
+    def test_validate_request_success(self):
+        """バリデーションチェックに成功する場合のテスト"""
+
+        req = func.HttpRequest(
+            method="PUT",
+            url="/api/en2ja",
+            body=json.dumps(["Hello"]).encode("utf-8"),
+        )
+
+        result = validate_request(req)
+
+        self.assertIsNone(result)
+
+    def test_validate_request_request_body_empty(self):
+        """リクエストボディが空である場合のテスト"""
+
+        req = func.HttpRequest(
+            method="PUT",
+            url="/api/en2ja",
+            body=None,
+        )
+
+        result = validate_request(req)
+
+        self.assertEqual(result, "Request Body is Empty")
+
+    def test_validate_request_request_body_not_list(self):
+        """リクエストボディがlistでない場合のテスト"""
+
+        req = func.HttpRequest(
+            method="PUT",
+            url="/api/en2ja",
+            body=json.dumps("Hello").encode("utf-8"),
+        )
+
+        result = validate_request(req)
+
+        self.assertEqual(result, "Invalid texts: Hello")
+
+    def test_validate_request_request_body_empty_list(self):
+        """リクエストボディが空のlistである場合のテスト"""
+
+        req = func.HttpRequest(
+            method="PUT",
+            url="/api/en2ja",
+            body=json.dumps([]).encode("utf-8"),
+        )
+
+        result = validate_request(req)
+
+        self.assertEqual(result, "Request Body is Empty")
+
+
+class TestTranslateByAzureTranslator(unittest.TestCase):
+    """translate_by_azure_translator関数のテストケース"""
 
     @patch("src.put_en2ja.requests.post")
     @patch.dict(os.environ, {"TRANSLATOR_KEY": "fake-key"})
@@ -97,6 +158,10 @@ class TestPutEn2Ja(unittest.TestCase):
         with self.assertRaises(RequestException):
             translate_by_azure_translator(["Hello"])
 
+
+class TestTranslateByDeepL(unittest.TestCase):
+    """translate_by_deep_l関数のテストケース"""
+
     @patch("src.put_en2ja.requests.get")
     @patch.dict(os.environ, {"DEEPL_AUTH_KEY": "fake-key"})
     def test_translate_by_deep_l_success(self, mock_get):
@@ -172,11 +237,19 @@ class TestPutEn2Ja(unittest.TestCase):
         with self.assertRaises(RequestException):
             translate_by_deep_l(["Hello"])
 
+
+class TestPutEn2Ja(unittest.TestCase):
+    """put_en2ja関数のテストケース"""
+
+    @patch("src.put_en2ja.validate_request")
     @patch("src.put_en2ja.translate_by_azure_translator")
     @patch("src.put_en2ja.logging")
-    def test_put_en2ja_success(self, mock_logging, mock_translate_by_azure_translator):
+    def test_put_en2ja_success(
+        self, mock_logging, mock_translate_by_azure_translator, mock_validate_request
+    ):
         """レスポンスが正常であることのテスト"""
 
+        mock_validate_request.return_value = None
         mock_translate_by_azure_translator.return_value = [
             "Azure Translatorからこんにちは"
         ]
@@ -193,6 +266,10 @@ class TestPutEn2Ja(unittest.TestCase):
             response.get_body(),
             json.dumps(["Azure Translatorからこんにちは"]).encode("utf-8"),
         )
+        mock_validate_request.assert_called_once_with(req)
+        mock_translate_by_azure_translator.assert_called_once_with(
+            ["Hello from Azure Translator"]
+        )
         mock_logging.info.assert_has_calls(
             [
                 call({"texts": ["Hello from Azure Translator"]}),
@@ -202,14 +279,41 @@ class TestPutEn2Ja(unittest.TestCase):
         mock_logging.warning.assert_not_called()
         mock_logging.error.assert_not_called()
 
+    @patch("src.put_en2ja.validate_request")
+    def test_put_en2ja_validation_error(self, mock_validate_request):
+        """バリデーションチェックに失敗した場合のテスト"""
+
+        mock_validate_request.return_value = "Validation Error"
+
+        req = MagicMock(spec=func.HttpRequest)
+        req.get_body.return_value = json.dumps(
+            {
+                "courseName": "Math",
+                "subjects": ["What is 2 + 2?"],
+                "choices": ["3", "4", "5"],
+            }
+        ).encode("utf-8")
+
+        response = put_en2ja(req)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_body().decode(), "Validation Error")
+        mock_validate_request.assert_called_once_with(req)
+
+    @patch("src.put_en2ja.validate_request")
     @patch("src.put_en2ja.translate_by_deep_l")
     @patch("src.put_en2ja.translate_by_azure_translator")
     @patch("src.put_en2ja.logging")
     def test_put_en2ja_azure_free_tier_used_up(
-        self, mock_logging, mock_translate_by_azure_translator, mock_translate_by_deep_l
+        self,
+        mock_logging,
+        mock_translate_by_azure_translator,
+        mock_translate_by_deep_l,
+        mock_validate_request,
     ):
-        """Azure Translator無料枠を使い切った場合のレスポンスのテスト"""
+        """Azure Translator無料枠を使い切った場合のテスト"""
 
+        mock_validate_request.return_value = None
         mock_translate_by_azure_translator.return_value = None
         mock_translate_by_deep_l.return_value = ["DeepLからこんにちは"]
         req = func.HttpRequest(
@@ -225,6 +329,9 @@ class TestPutEn2Ja(unittest.TestCase):
             response.get_body(),
             json.dumps(["DeepLからこんにちは"]).encode("utf-8"),
         )
+        mock_validate_request.assert_called_once_with(req)
+        mock_translate_by_azure_translator.assert_called_once_with(["Hello from DeepL"])
+        mock_translate_by_deep_l.assert_called_once_with(["Hello from DeepL"])
         mock_logging.info.assert_has_calls(
             [
                 call({"texts": ["Hello from DeepL"]}),
@@ -236,14 +343,20 @@ class TestPutEn2Ja(unittest.TestCase):
         )
         mock_logging.error.assert_not_called()
 
+    @patch("src.put_en2ja.validate_request")
     @patch("src.put_en2ja.translate_by_deep_l")
     @patch("src.put_en2ja.translate_by_azure_translator")
     @patch("src.put_en2ja.logging")
     def test_put_en2ja_both_free_tier_used_up(
-        self, mock_logging, mock_translate_by_azure_translator, mock_translate_by_deep_l
+        self,
+        mock_logging,
+        mock_translate_by_azure_translator,
+        mock_translate_by_deep_l,
+        mock_validate_request,
     ):
-        """put_en2ja関数のAzure TranslatorとDeepLの両方の無料枠を使い切った場合のレスポンスのテスト"""
+        """put_en2ja関数のAzure TranslatorとDeepLの両方の無料枠を使い切った場合のテスト"""
 
+        mock_validate_request.return_value = None
         mock_translate_by_azure_translator.return_value = None
         mock_translate_by_deep_l.return_value = None
         req = func.HttpRequest(
@@ -256,6 +369,9 @@ class TestPutEn2Ja(unittest.TestCase):
 
         self.assertEqual(response.status_code, 500)
         self.assertEqual(response.get_body(), b"Internal Server Error")
+        mock_validate_request.assert_called_once_with(req)
+        mock_translate_by_azure_translator.assert_called_once_with(["Hello"])
+        mock_translate_by_deep_l.assert_called_once_with(["Hello"])
         mock_logging.info.assert_has_calls(
             [
                 call({"texts": ["Hello"]}),
@@ -267,67 +383,18 @@ class TestPutEn2Ja(unittest.TestCase):
         )
         mock_logging.error.assert_called_once()
 
-    @patch("src.put_en2ja.logging")
-    def test_put_en2ja_request_body_empty(self, mock_logging):
-        """リクエストボディが空であるレスポンスのテスト"""
-
-        req = func.HttpRequest(
-            method="PUT",
-            url="/api/en2ja",
-            body=None,
-        )
-
-        response = put_en2ja(req)
-
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.get_body(), b"Request Body is Empty")
-        mock_logging.info.assert_not_called()
-        mock_logging.warning.assert_not_called()
-        mock_logging.error.assert_not_called()
-
-    @patch("src.put_en2ja.logging")
-    def test_put_en2ja_request_body_not_list(self, mock_logging):
-        """リクエストボディがlistでないレスポンスのテスト"""
-
-        req = func.HttpRequest(
-            method="PUT",
-            url="/api/en2ja",
-            body=json.dumps("Hello").encode("utf-8"),
-        )
-
-        response = put_en2ja(req)
-
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.get_body(), b"Invalid texts: Hello")
-        mock_logging.info.assert_not_called()
-        mock_logging.warning.assert_not_called()
-        mock_logging.error.assert_not_called()
-
-    @patch("src.put_en2ja.logging")
-    def test_put_en2ja_request_body_empty_list(self, mock_logging):
-        """リクエストボディが空のlistであるレスポンスのテスト"""
-
-        req = func.HttpRequest(
-            method="PUT",
-            url="/api/en2ja",
-            body=json.dumps([]).encode("utf-8"),
-        )
-
-        response = put_en2ja(req)
-
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.get_body(), b"Request Body is Empty")
-        mock_logging.info.assert_not_called()
-        mock_logging.warning.assert_not_called()
-        mock_logging.error.assert_not_called()
-
+    @patch("src.put_en2ja.validate_request")
     @patch("src.put_en2ja.translate_by_azure_translator")
     @patch("src.put_en2ja.logging")
     def test_put_en2ja_exception(
-        self, mock_logging, mock_translate_by_azure_translator
+        self,
+        mock_logging,
+        mock_translate_by_azure_translator,
+        mock_validate_request,
     ):
-        """例外が発生した場合のレスポンスのテスト"""
+        """例外が発生した場合のテスト"""
 
+        mock_validate_request.return_value = None
         mock_translate_by_azure_translator.side_effect = Exception()
         req = func.HttpRequest(
             method="PUT",
@@ -339,6 +406,7 @@ class TestPutEn2Ja(unittest.TestCase):
 
         self.assertEqual(response.status_code, 500)
         self.assertEqual(response.get_body(), b"Internal Server Error")
+        mock_validate_request.assert_called_once_with(req)
         mock_logging.info.assert_called_once_with({"texts": ["Hello"]})
         mock_logging.warning.assert_not_called()
         mock_logging.error.assert_called_once()
