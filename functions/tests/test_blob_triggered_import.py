@@ -13,8 +13,8 @@ from type.cosmos import Question, Test
 from type.importing import ImportItem
 
 
-class TestBlobTriggeredImport(TestCase):
-    """blob_triggered_importモジュールのテストケース"""
+class TestUpsertTestItem(TestCase):
+    """upsert_test_item関数のテストケース"""
 
     @patch("src.blob_triggered_import.get_read_write_container")
     @patch("src.blob_triggered_import.uuid4")
@@ -115,6 +115,10 @@ class TestBlobTriggeredImport(TestCase):
         mock_logging.info.assert_called_once_with(
             {"inserted_test_items": inserted_test_items}
         )
+
+
+class TestUpsertQuestionItems(TestCase):
+    """upsert_question_items関数のテストケース"""
 
     @patch("src.blob_triggered_import.time.sleep")
     @patch("src.blob_triggered_import.get_read_write_container")
@@ -276,6 +280,10 @@ class TestBlobTriggeredImport(TestCase):
                 call({"question_item": expected_question_item}),
             ]
         )
+
+
+class TestBlobTriggeredImport(TestCase):
+    """blob_triggered_import関数のテストケース"""
 
     @patch("src.blob_triggered_import.upsert_test_item")
     @patch("src.blob_triggered_import.upsert_question_items")

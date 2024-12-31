@@ -16,9 +16,9 @@ class TestValidateRequest(TestCase):
 
         req = MagicMock(spec=func.HttpRequest)
         req.route_params = {"testId": "1", "questionNumber": "1"}
-        response = validate_request(req)
+        result = validate_request(req)
 
-        self.assertIsNone(response)
+        self.assertIsNone(result)
 
     def test_validate_request_test_id_empty(self):
         """testIdが空である場合のテスト"""
@@ -26,9 +26,9 @@ class TestValidateRequest(TestCase):
         req = MagicMock(spec=func.HttpRequest)
         req.route_params = {"questionNumber": "1"}
 
-        response = validate_request(req)
+        result = validate_request(req)
 
-        self.assertEqual(response, "testId is Empty")
+        self.assertEqual(result, "testId is Empty")
 
     def test_validate_request_question_number_empty(self):
         """questionNumberが空である場合のテスト"""
@@ -36,9 +36,9 @@ class TestValidateRequest(TestCase):
         req = MagicMock(spec=func.HttpRequest)
         req.route_params = {"testId": "1"}
 
-        response = validate_request(req)
+        result = validate_request(req)
 
-        self.assertEqual(response, "questionNumber is Empty")
+        self.assertEqual(result, "questionNumber is Empty")
 
     def test_validate_request_question_number_not_digit(self):
         """questionNumberが数値でない場合のテスト"""
@@ -46,9 +46,9 @@ class TestValidateRequest(TestCase):
         req = MagicMock(spec=func.HttpRequest)
         req.route_params = {"testId": "1", "questionNumber": "invalid"}
 
-        response = validate_request(req)
+        result = validate_request(req)
 
-        self.assertEqual(response, "Invalid questionNumber: invalid")
+        self.assertEqual(result, "Invalid questionNumber: invalid")
 
 
 class TestGetQuestion(TestCase):

@@ -35,23 +35,23 @@ class TestValidateRequest(unittest.TestCase):
             }
         ).encode("utf-8")
 
-        response = validate_request(req)
+        result = validate_request(req)
 
-        self.assertIsNone(response)
+        self.assertIsNone(result)
 
-    def test_post_answer_request_body_empty(self):
-        """リクエストボディが空であるレスポンスのテスト"""
+    def test_validate_request_request_body_empty(self):
+        """リクエストボディが空である場合のテスト"""
 
         req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
         req.route_params = {"testId": "1", "questionNumber": "1"}
         req.get_body.return_value = None
 
-        response = validate_request(req)
+        result = validate_request(req)
 
-        self.assertEqual(response, "Request Body is Empty")
+        self.assertEqual(result, "Request Body is Empty")
 
-    def test_post_answer_invalid_test_id(self):
-        """testIdが空であるレスポンスのテスト"""
+    def test_validate_request_invalid_test_id(self):
+        """testIdが空である場合のテスト"""
 
         req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
         req.route_params = {"questionNumber": "1"}
@@ -63,12 +63,12 @@ class TestValidateRequest(unittest.TestCase):
             }
         ).encode("utf-8")
 
-        response = validate_request(req)
+        result = validate_request(req)
 
-        self.assertEqual(response, "testId is Empty")
+        self.assertEqual(result, "testId is Empty")
 
-    def test_post_answer_invalid_question_number_empty(self):
-        """questionNumberが空であるレスポンスのテスト"""
+    def test_validate_request_question_number_empty(self):
+        """questionNumberが空である場合のテスト"""
 
         req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
         req.route_params = {"testId": "1"}
@@ -80,12 +80,12 @@ class TestValidateRequest(unittest.TestCase):
             }
         ).encode("utf-8")
 
-        response = validate_request(req)
+        result = validate_request(req)
 
-        self.assertEqual(response, "questionNumber is Empty")
+        self.assertEqual(result, "questionNumber is Empty")
 
-    def test_post_answer_invalid_question_number_not_digit(self):
-        """questionNumberが数値でないレスポンスのテスト"""
+    def test_validate_request_question_number_not_digit(self):
+        """questionNumberが数値でない場合のテスト"""
 
         req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
         req.route_params = {"testId": "1", "questionNumber": "a"}
@@ -97,12 +97,12 @@ class TestValidateRequest(unittest.TestCase):
             }
         ).encode("utf-8")
 
-        response = validate_request(req)
+        result = validate_request(req)
 
-        self.assertEqual(response, "Invalid questionNumber: a")
+        self.assertEqual(result, "Invalid questionNumber: a")
 
-    def test_post_answer_invalid_course_name_empty(self):
-        """courseNameが空であるレスポンスのテスト"""
+    def test_validate_request_course_name_empty(self):
+        """courseNameが空である場合のテスト"""
 
         req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
         req.route_params = {"testId": "1", "questionNumber": "1"}
@@ -113,12 +113,12 @@ class TestValidateRequest(unittest.TestCase):
             }
         ).encode("utf-8")
 
-        response = validate_request(req)
+        result = validate_request(req)
 
-        self.assertEqual(response, "courseName is Empty")
+        self.assertEqual(result, "courseName is Empty")
 
-    def test_post_answer_invalid_course_name_empty_string(self):
-        """courseNameが空文字であるレスポンスのテスト"""
+    def test_validate_request_course_name_empty_string(self):
+        """courseNameが空文字である場合のテスト"""
 
         req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
         req.route_params = {"testId": "1", "questionNumber": "1"}
@@ -130,12 +130,12 @@ class TestValidateRequest(unittest.TestCase):
             }
         ).encode("utf-8")
 
-        response = validate_request(req)
+        result = validate_request(req)
 
-        self.assertEqual(response, "courseName is Empty")
+        self.assertEqual(result, "courseName is Empty")
 
-    def test_post_answer_invalid_subjects_empty(self):
-        """subjectsが空であるレスポンスのテスト"""
+    def test_validate_request_subjects_empty(self):
+        """subjectsが空である場合のテスト"""
 
         req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
         req.route_params = {"testId": "1", "questionNumber": "1"}
@@ -146,12 +146,12 @@ class TestValidateRequest(unittest.TestCase):
             }
         ).encode("utf-8")
 
-        response = validate_request(req)
+        result = validate_request(req)
 
-        self.assertEqual(response, "subjects is Empty")
+        self.assertEqual(result, "subjects is Empty")
 
-    def test_post_answer_invalid_subjects_not_list(self):
-        """subjectsがlistでないレスポンスのテスト"""
+    def test_validate_request_subjects_not_list(self):
+        """subjectsがlistでない場合のテスト"""
 
         req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
         req.route_params = {"testId": "1", "questionNumber": "1"}
@@ -163,12 +163,12 @@ class TestValidateRequest(unittest.TestCase):
             }
         ).encode("utf-8")
 
-        response = validate_request(req)
+        result = validate_request(req)
 
-        self.assertEqual(response, "Invalid subjects: What is 2 + 2?")
+        self.assertEqual(result, "Invalid subjects: What is 2 + 2?")
 
-    def test_post_answer_invalid_subjects_empty_list(self):
-        """subjectsが空のlistであるレスポンスのテスト"""
+    def test_validate_request_subjects_empty_list(self):
+        """subjectsが空のlistである場合のテスト"""
 
         req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
         req.route_params = {"testId": "1", "questionNumber": "1"}
@@ -180,12 +180,12 @@ class TestValidateRequest(unittest.TestCase):
             }
         ).encode("utf-8")
 
-        response = validate_request(req)
+        result = validate_request(req)
 
-        self.assertEqual(response, "subjects is Empty")
+        self.assertEqual(result, "subjects is Empty")
 
-    def test_post_answer_invalid_choices_empty(self):
-        """choicesが空であるレスポンスのテスト"""
+    def test_validate_request_choices_empty(self):
+        """choicesが空である場合のテスト"""
 
         req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
         req.route_params = {"testId": "1", "questionNumber": "1"}
@@ -196,12 +196,12 @@ class TestValidateRequest(unittest.TestCase):
             }
         ).encode("utf-8")
 
-        response = validate_request(req)
+        result = validate_request(req)
 
-        self.assertEqual(response, "choices is Empty")
+        self.assertEqual(result, "choices is Empty")
 
-    def test_post_answer_invalid_choices_not_list(self):
-        """choicesがlistでないレスポンスのテスト"""
+    def test_validate_request_choices_not_list(self):
+        """choicesがlistでない場合のテスト"""
 
         req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
         req.route_params = {"testId": "1", "questionNumber": "1"}
@@ -213,12 +213,12 @@ class TestValidateRequest(unittest.TestCase):
             }
         ).encode("utf-8")
 
-        response = validate_request(req)
+        result = validate_request(req)
 
-        self.assertEqual(response, "Invalid choices: 3")
+        self.assertEqual(result, "Invalid choices: 3")
 
-    def test_post_answer_invalid_choices_empty_list(self):
-        """choicesが空のlistであるレスポンスのテスト"""
+    def test_validate_request_choices_empty_list(self):
+        """choicesが空のlistである場合のテスト"""
 
         req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
         req.route_params = {"testId": "1", "questionNumber": "1"}
@@ -230,9 +230,9 @@ class TestValidateRequest(unittest.TestCase):
             }
         ).encode("utf-8")
 
-        response = validate_request(req)
+        result = validate_request(req)
 
-        self.assertEqual(response, "choices is Empty")
+        self.assertEqual(result, "choices is Empty")
 
 
 class TestCreateSystemPrompt(unittest.TestCase):
@@ -638,7 +638,7 @@ class TestPostAnswer(unittest.TestCase):
         mock_generate_correct_answers,
         mock_validate_request,
     ):
-        """例外が発生した場合のレスポンスのテスト"""
+        """例外が発生した場合のテスト"""
 
         mock_validate_request.return_value = None
         mock_generate_correct_answers.return_value = None

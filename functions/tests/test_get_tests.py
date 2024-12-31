@@ -11,7 +11,7 @@ from type.response import GetTestsRes
 
 
 class TestGetTests(TestCase):
-    """[GET] /tests のテストケース"""
+    """get_tests関数のテストケース"""
 
     @patch("src.get_tests.get_read_only_container")
     @patch("src.get_tests.logging")

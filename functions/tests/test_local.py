@@ -20,8 +20,8 @@ from util.local import (
 from util.queue import AZURITE_QUEUE_STORAGE_CONNECTION_STRING
 
 
-class TestLocalUtils(unittest.TestCase):
-    """ローカル環境でのインポート処理のユーティリティ関数のテストケース"""
+class TestCreateQueueStorages(unittest.TestCase):
+    """create_queue_storages関数のテストケース"""
 
     @patch("util.local.QueueClient.from_connection_string")
     def test_create_queue_storages_when_queue_not_exists(
@@ -53,6 +53,10 @@ class TestLocalUtils(unittest.TestCase):
             queue_name="answers",
         )
         mock_queue_client.create_queue.assert_called_once()
+
+
+class TestCreateDatabasesAndContainers(unittest.TestCase):
+    """create_databases_and_containers関数のテストケース"""
 
     @patch("util.local.CosmosClient")
     @patch(
@@ -94,6 +98,10 @@ class TestLocalUtils(unittest.TestCase):
             ],
             any_order=True,
         )
+
+
+class TestCreateImportData(unittest.TestCase):
+    """create_import_data関数のテストケース"""
 
     @patch("util.local.os.path.exists")
     def test_create_import_data_when_data_not_exists(self, mock_exists):
@@ -158,6 +166,10 @@ class TestLocalUtils(unittest.TestCase):
         }
         self.assertEqual(import_data, expected_data)
 
+
+class TestGenerateTestItems(unittest.TestCase):
+    """generate_test_items関数のテストケース"""
+
     @patch("util.local.get_read_write_container")
     def test_generate_test_items_when_retrieved_successfully(
         self, mock_get_read_write_container
@@ -218,6 +230,10 @@ class TestLocalUtils(unittest.TestCase):
         self.assertEqual(test_items[1]["length"], 1)
         self.assertIn("id", test_items[1])
 
+
+class TestImportTestItems(unittest.TestCase):
+    """import_test_items関数のテストケース"""
+
     @patch("util.local.get_read_write_container")
     def test_import_test_items(self, mock_get_read_write_container):
         """import_test_items関数のテスト"""
@@ -230,6 +246,10 @@ class TestLocalUtils(unittest.TestCase):
         import_test_items(test_items)
 
         mock_container.upsert_item.assert_called_once_with(test_items[0])
+
+
+class TestGenerateQuestionItems(unittest.TestCase):
+    """generate_question_items関数のテストケース"""
 
     @patch("util.local.get_read_write_container")
     def test_generate_question_items_without_value_error(
@@ -286,6 +306,10 @@ class TestLocalUtils(unittest.TestCase):
         self.assertEqual(
             str(context.exception), "Course Name Math and Test Name Algebra Not Found."
         )
+
+
+class TestImportQuestionItems(unittest.TestCase):
+    """import_question_items関数のテストケース"""
 
     @patch("util.local.get_read_write_container")
     @patch("builtins.print")

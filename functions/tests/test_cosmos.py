@@ -8,8 +8,8 @@ from azure.cosmos import ContainerProxy
 from util.cosmos import get_read_only_container, get_read_write_container
 
 
-class TestCosmosUtils(TestCase):
-    """Cosmos DBのユーティリティ関数のテストケース"""
+class TestGetReadOnlyContainer(TestCase):
+    """get_read_only_container関数のテストケース"""
 
     @patch("util.cosmos.CosmosClient")
     @patch.dict(
@@ -39,6 +39,10 @@ class TestCosmosUtils(TestCase):
             "TestContainer"
         )
         self.assertEqual(container, mock_container)
+
+
+class TestGetReadWriteContainer(TestCase):
+    """get_read_write_container関数のテストケース"""
 
     @patch("util.cosmos.CosmosClient")
     @patch.dict(

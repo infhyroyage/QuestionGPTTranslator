@@ -8,7 +8,7 @@ from src.get_healthcheck import get_healthcheck
 
 
 class TestGetHealthcheck(TestCase):
-    """[GET] /healthcheck のテストケース"""
+    """get_healthcheck関数のテストケース"""
 
     def test_response(self):
         """レスポンスが正常であることのテスト"""

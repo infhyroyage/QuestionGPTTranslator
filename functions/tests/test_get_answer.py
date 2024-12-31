@@ -17,39 +17,39 @@ class TestValidateRequest(TestCase):
         req = MagicMock(spec=func.HttpRequest)
         req.route_params = {"testId": "1", "questionNumber": "1"}
 
-        response = validate_request(req)
+        result = validate_request(req)
 
-        self.assertIsNone(response)
+        self.assertIsNone(result)
 
-    def test_get_answer_test_id_empty(self):
+    def test_validate_request_test_id_empty(self):
         """testIdが空である場合のテスト"""
 
         req = MagicMock(spec=func.HttpRequest)
         req.route_params = {"questionNumber": "1"}
 
-        response = validate_request(req)
+        result = validate_request(req)
 
-        self.assertEqual(response, "testId is Empty")
+        self.assertEqual(result, "testId is Empty")
 
-    def test_get_answer_question_number_empty(self):
+    def test_validate_request_question_number_empty(self):
         """questionNumberが空である場合のテスト"""
 
         req = MagicMock(spec=func.HttpRequest)
         req.route_params = {"testId": "1"}
 
-        response = validate_request(req)
+        result = validate_request(req)
 
-        self.assertEqual(response, "questionNumber is Empty")
+        self.assertEqual(result, "questionNumber is Empty")
 
-    def test_get_answer_question_number_not_digit(self):
+    def test_validate_request_question_number_not_digit(self):
         """questionNumberが数値でない場合のテスト"""
 
         req = MagicMock(spec=func.HttpRequest)
         req.route_params = {"testId": "1", "questionNumber": "a"}
 
-        response = validate_request(req)
+        result = validate_request(req)
 
-        self.assertEqual(response, "Invalid questionNumber: a")
+        self.assertEqual(result, "Invalid questionNumber: a")
 
 
 class TestGetAnswer(TestCase):
@@ -141,7 +141,7 @@ class TestGetAnswer(TestCase):
     def test_get_answer_not_unique(
         self, mock_logging, mock_get_read_only_container, mock_validate_request
     ):
-        """回答が一意でない場合のレスポンスのテスト"""
+        """回答が一意でない場合のテスト"""
 
         mock_validate_request.return_value = None
         mock_container = MagicMock()
@@ -185,7 +185,7 @@ class TestGetAnswer(TestCase):
     def test_get_answer_exception(
         self, mock_logging, mock_get_read_only_container, mock_validate_request
     ):
-        """例外が発生した場合のレスポンスのテスト"""
+        """例外が発生した場合のテスト"""
 
         mock_validate_request.return_value = None
         mock_get_read_only_container.side_effect = Exception(

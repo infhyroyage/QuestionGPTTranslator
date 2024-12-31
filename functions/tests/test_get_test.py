@@ -16,24 +16,20 @@ class TestValidateRequest(TestCase):
     def test_validate_request_success(self):
         """バリデーションチェックに成功した場合のテスト"""
 
-        req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
+        req = MagicMock(spec=func.HttpRequest)
         req.route_params = {"testId": "1"}
-        response = validate_request(req)
+        result = validate_request(req)
 
-        self.assertIsNone(response)
+        self.assertIsNone(result)
 
-    @patch("src.get_test.logging")
-    def test_get_test_invalid_test_id(self, mock_logging):
+    def test_validate_request_test_id_empty(self):
         """testIdが空である場合のテスト"""
 
-        req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
+        req = MagicMock(spec=func.HttpRequest)
         req.route_params = {}
-        response: func.HttpResponse = get_test(req)
+        result = validate_request(req)
 
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.get_body().decode(), "testId is Empty")
-        mock_logging.info.assert_not_called()
-        mock_logging.error.assert_not_called()
+        self.assertEqual(result, "testId is Empty")
 
 
 class TestGetTest(TestCase):
@@ -55,9 +51,9 @@ class TestGetTest(TestCase):
         mock_container.query_items.return_value = mock_items
         mock_get_read_only_container.return_value = mock_container
 
-        req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
+        req = MagicMock(spec=func.HttpRequest)
         req.route_params = {"testId": "1"}
-        response: func.HttpResponse = get_test(req)
+        response = get_test(req)
 
         self.assertEqual(response.status_code, 200)
         expected_body: GetTestRes = {
@@ -106,9 +102,9 @@ class TestGetTest(TestCase):
         mock_validate_request.return_value = None
         mock_get_read_only_container.return_value = mock_container
 
-        req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
+        req = MagicMock(spec=func.HttpRequest)
         req.route_params = {"testId": "1"}
-        response: func.HttpResponse = get_test(req)
+        response = get_test(req)
 
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.get_body().decode(), "Not Found Test")
@@ -140,9 +136,9 @@ class TestGetTest(TestCase):
         mock_container.query_items.return_value = mock_items
         mock_get_read_only_container.return_value = mock_container
         mock_validate_request.return_value = None
-        req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
+        req = MagicMock(spec=func.HttpRequest)
         req.route_params = {"testId": "1"}
-        response: func.HttpResponse = get_test(req)
+        response = get_test(req)
 
         self.assertEqual(response.status_code, 500)
         self.assertEqual(response.get_body().decode(), "Internal Server Error")
@@ -170,9 +166,9 @@ class TestGetTest(TestCase):
         mock_get_read_only_container.side_effect = Exception(
             "Error in src.get_test.get_read_only_container"
         )
-        req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
+        req = MagicMock(spec=func.HttpRequest)
         req.route_params = {"testId": "1"}
-        response: func.HttpResponse = get_test(req)
+        response = get_test(req)
 
         self.assertEqual(response.status_code, 500)
         self.assertEqual(response.get_body(), b"Internal Server Error")

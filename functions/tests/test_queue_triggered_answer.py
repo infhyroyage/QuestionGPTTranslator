@@ -9,7 +9,7 @@ from src.queue_triggered_answer import queue_triggered_answer
 
 
 class TestQueueTriggeredAnswer(TestCase):
-    """Answerコンテナーの項目をupsertするQueueトリガーの関数アプリのテストケース"""
+    """queue_triggered_answer関数のテストケース"""
 
     @patch("src.queue_triggered_answer.get_read_only_container")
     @patch("src.queue_triggered_answer.get_read_write_container")
