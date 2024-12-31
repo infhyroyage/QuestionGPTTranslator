@@ -13,13 +13,230 @@ from src.post_answer import (
     generate_correct_answers,
     post_answer,
     queue_message_answer,
+    validate_request,
 )
 from type.message import MessageAnswer
 from type.structured import AnswerFormat
 
 
-class TestPostAnswer(unittest.TestCase):
-    """[POST] /answer のテストケース"""
+class TestValidateRequest(unittest.TestCase):
+    """validate_request関数のテストケース"""
+
+    def test_validate_request_success(self):
+        """バリデーションチェックに成功した場合のテスト"""
+
+        req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
+        req.route_params = {"testId": "1", "questionNumber": "1"}
+        req.get_body.return_value = json.dumps(
+            {
+                "courseName": "Math",
+                "subjects": ["What is 2 + 2?"],
+                "choices": ["3", "4", "5"],
+            }
+        ).encode("utf-8")
+
+        response = validate_request(req)
+
+        self.assertIsNone(response)
+
+    def test_post_answer_request_body_empty(self):
+        """リクエストボディが空であるレスポンスのテスト"""
+
+        req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
+        req.route_params = {"testId": "1", "questionNumber": "1"}
+        req.get_body.return_value = None
+
+        response = validate_request(req)
+
+        self.assertEqual(response, "Request Body is Empty")
+
+    def test_post_answer_invalid_test_id(self):
+        """testIdが空であるレスポンスのテスト"""
+
+        req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
+        req.route_params = {"questionNumber": "1"}
+        req.get_body.return_value = json.dumps(
+            {
+                "courseName": "Math",
+                "subjects": ["What is 2 + 2?"],
+                "choices": ["3", "4", "5"],
+            }
+        ).encode("utf-8")
+
+        response = validate_request(req)
+
+        self.assertEqual(response, "testId is Empty")
+
+    def test_post_answer_invalid_question_number_empty(self):
+        """questionNumberが空であるレスポンスのテスト"""
+
+        req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
+        req.route_params = {"testId": "1"}
+        req.get_body.return_value = json.dumps(
+            {
+                "courseName": "Math",
+                "subjects": ["What is 2 + 2?"],
+                "choices": ["3", "4", "5"],
+            }
+        ).encode("utf-8")
+
+        response = validate_request(req)
+
+        self.assertEqual(response, "questionNumber is Empty")
+
+    def test_post_answer_invalid_question_number_not_digit(self):
+        """questionNumberが数値でないレスポンスのテスト"""
+
+        req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
+        req.route_params = {"testId": "1", "questionNumber": "a"}
+        req.get_body.return_value = json.dumps(
+            {
+                "courseName": "Math",
+                "subjects": ["What is 2 + 2?"],
+                "choices": ["3", "4", "5"],
+            }
+        ).encode("utf-8")
+
+        response = validate_request(req)
+
+        self.assertEqual(response, "Invalid questionNumber: a")
+
+    def test_post_answer_invalid_course_name_empty(self):
+        """courseNameが空であるレスポンスのテスト"""
+
+        req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
+        req.route_params = {"testId": "1", "questionNumber": "1"}
+        req.get_body.return_value = json.dumps(
+            {
+                "subjects": ["What is 2 + 2?"],
+                "choices": ["3", "4", "5"],
+            }
+        ).encode("utf-8")
+
+        response = validate_request(req)
+
+        self.assertEqual(response, "courseName is Empty")
+
+    def test_post_answer_invalid_course_name_empty_string(self):
+        """courseNameが空文字であるレスポンスのテスト"""
+
+        req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
+        req.route_params = {"testId": "1", "questionNumber": "1"}
+        req.get_body.return_value = json.dumps(
+            {
+                "courseName": "",
+                "subjects": ["What is 2 + 2?"],
+                "choices": ["3", "4", "5"],
+            }
+        ).encode("utf-8")
+
+        response = validate_request(req)
+
+        self.assertEqual(response, "courseName is Empty")
+
+    def test_post_answer_invalid_subjects_empty(self):
+        """subjectsが空であるレスポンスのテスト"""
+
+        req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
+        req.route_params = {"testId": "1", "questionNumber": "1"}
+        req.get_body.return_value = json.dumps(
+            {
+                "courseName": "Math",
+                "choices": ["3", "4", "5"],
+            }
+        ).encode("utf-8")
+
+        response = validate_request(req)
+
+        self.assertEqual(response, "subjects is Empty")
+
+    def test_post_answer_invalid_subjects_not_list(self):
+        """subjectsがlistでないレスポンスのテスト"""
+
+        req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
+        req.route_params = {"testId": "1", "questionNumber": "1"}
+        req.get_body.return_value = json.dumps(
+            {
+                "courseName": "Math",
+                "subjects": "What is 2 + 2?",
+                "choices": ["3", "4", "5"],
+            }
+        ).encode("utf-8")
+
+        response = validate_request(req)
+
+        self.assertEqual(response, "Invalid subjects: What is 2 + 2?")
+
+    def test_post_answer_invalid_subjects_empty_list(self):
+        """subjectsが空のlistであるレスポンスのテスト"""
+
+        req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
+        req.route_params = {"testId": "1", "questionNumber": "1"}
+        req.get_body.return_value = json.dumps(
+            {
+                "courseName": "Math",
+                "subjects": [],
+                "choices": ["3", "4", "5"],
+            }
+        ).encode("utf-8")
+
+        response = validate_request(req)
+
+        self.assertEqual(response, "subjects is Empty")
+
+    def test_post_answer_invalid_choices_empty(self):
+        """choicesが空であるレスポンスのテスト"""
+
+        req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
+        req.route_params = {"testId": "1", "questionNumber": "1"}
+        req.get_body.return_value = json.dumps(
+            {
+                "courseName": "Math",
+                "subjects": ["What is 2 + 2?"],
+            }
+        ).encode("utf-8")
+
+        response = validate_request(req)
+
+        self.assertEqual(response, "choices is Empty")
+
+    def test_post_answer_invalid_choices_not_list(self):
+        """choicesがlistでないレスポンスのテスト"""
+
+        req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
+        req.route_params = {"testId": "1", "questionNumber": "1"}
+        req.get_body.return_value = json.dumps(
+            {
+                "courseName": "Math",
+                "subjects": ["What is 2 + 2?"],
+                "choices": "3",
+            }
+        ).encode("utf-8")
+
+        response = validate_request(req)
+
+        self.assertEqual(response, "Invalid choices: 3")
+
+    def test_post_answer_invalid_choices_empty_list(self):
+        """choicesが空のlistであるレスポンスのテスト"""
+
+        req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
+        req.route_params = {"testId": "1", "questionNumber": "1"}
+        req.get_body.return_value = json.dumps(
+            {
+                "courseName": "Math",
+                "subjects": ["What is 2 + 2?"],
+                "choices": [],
+            }
+        ).encode("utf-8")
+
+        response = validate_request(req)
+
+        self.assertEqual(response, "choices is Empty")
+
+
+class TestCreateSystemPrompt(unittest.TestCase):
+    """create_system_prompt関数のテストケース"""
 
     def test_create_system_prompt(self):
         """Azure OpenAIのシステムプロンプトのテスト"""
@@ -29,6 +246,10 @@ class TestPostAnswer(unittest.TestCase):
         expected_prompt = 'You are a professional who provides correct explanations for candidates of the exam named "Math".'
 
         self.assertEqual(create_system_prompt(course_name), expected_prompt)
+
+
+class TestCreateUserPrompt(unittest.TestCase):
+    """create_user_prompt関数のテストケース"""
 
     def test_create_user_prompt(self):
         """Azure OpenAIのユーザープロンプトのテスト"""
@@ -94,6 +315,10 @@ class TestPostAnswer(unittest.TestCase):
         )
 
         self.assertEqual(create_user_prompt(subjects, choices), expected_prompt)
+
+
+class TestGenerateCorrectAnswers(unittest.TestCase):
+    """generate_correct_answers関数のテストケース"""
 
     @patch("src.post_answer.AzureOpenAI")
     @patch("src.post_answer.create_system_prompt")
@@ -253,6 +478,10 @@ class TestPostAnswer(unittest.TestCase):
         mock_logging.info.assert_called_once_with({"retry_number": 0})
         mock_logging.warning.assert_called_once()
 
+
+class TestQueueMessageAnswer(unittest.TestCase):
+    """queue_message_answer関数のテストケース"""
+
     @patch("src.post_answer.QueueClient.from_connection_string")
     @patch("src.post_answer.logging")
     @patch.dict(os.environ, {"AzureWebJobsStorage": "on-azure"})
@@ -303,6 +532,11 @@ class TestPostAnswer(unittest.TestCase):
         )
         mock_logging.info.assert_called_once_with({"message_answer": message_answer})
 
+
+class TestPostAnswer(unittest.TestCase):
+    """post_answer関数のテストケース"""
+
+    @patch("src.post_answer.validate_request")
     @patch("src.post_answer.generate_correct_answers")
     @patch("src.post_answer.queue_message_answer")
     @patch("src.post_answer.logging")
@@ -311,9 +545,11 @@ class TestPostAnswer(unittest.TestCase):
         mock_logging,
         mock_queue_message_answer,
         mock_generate_correct_answers,
+        mock_validate_request,
     ):
         """レスポンスが正常であることのテスト"""
 
+        mock_validate_request.return_value = None
         mock_generate_correct_answers.return_value = {
             "correct_indexes": [1],
             "explanations": ["Option 2 is correct because 2 + 2 equals 4."],
@@ -339,6 +575,7 @@ class TestPostAnswer(unittest.TestCase):
                 "explanations": ["Option 2 is correct because 2 + 2 equals 4."],
             },
         )
+        mock_validate_request.assert_called_once_with(req)
         mock_generate_correct_answers.assert_called_once_with(
             "Math", ["What is 2 + 2?"], ["3", "4", "5"]
         )
@@ -363,27 +600,19 @@ class TestPostAnswer(unittest.TestCase):
         )
         mock_logging.error.assert_not_called()
 
+    @patch("src.post_answer.validate_request")
     @patch("src.post_answer.logging")
-    def test_post_answer_request_body_empty(self, mock_logging):
-        """リクエストボディが空であるレスポンスのテスト"""
+    def test_post_answer_validation_error(
+        self,
+        mock_logging,
+        mock_validate_request,
+    ):
+        """バリデーションチェックに失敗した場合のテスト"""
 
-        req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
+        mock_validate_request.return_value = "Validation Error"
+
+        req = MagicMock(spec=func.HttpRequest)
         req.route_params = {"testId": "1", "questionNumber": "1"}
-        req.get_body.return_value = None
-
-        response = post_answer(req)
-
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.get_body().decode("utf-8"), "Request Body is Empty")
-        mock_logging.info.assert_not_called()
-        mock_logging.error.assert_not_called()
-
-    @patch("src.post_answer.logging")
-    def test_post_answer_invalid_test_id(self, mock_logging):
-        """testIdが空であるレスポンスのテスト"""
-
-        req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
-        req.route_params = {"questionNumber": "1"}
         req.get_body.return_value = json.dumps(
             {
                 "courseName": "Math",
@@ -395,230 +624,24 @@ class TestPostAnswer(unittest.TestCase):
         response = post_answer(req)
 
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.get_body().decode("utf-8"), "testId is Empty")
+        self.assertEqual(response.get_body().decode(), "Validation Error")
+        mock_validate_request.assert_called_once_with(req)
         mock_logging.info.assert_not_called()
         mock_logging.error.assert_not_called()
 
-    @patch("src.post_answer.logging")
-    def test_post_answer_invalid_question_number_empty(self, mock_logging):
-        """questionNumberが空であるレスポンスのテスト"""
-
-        req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
-        req.route_params = {"testId": "1"}
-        req.get_body.return_value = json.dumps(
-            {
-                "courseName": "Math",
-                "subjects": ["What is 2 + 2?"],
-                "choices": ["3", "4", "5"],
-            }
-        ).encode("utf-8")
-
-        response = post_answer(req)
-
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.get_body().decode("utf-8"), "questionNumber is Empty")
-        mock_logging.info.assert_not_called()
-        mock_logging.error.assert_not_called()
-
-    @patch("src.post_answer.logging")
-    def test_post_answer_invalid_question_number_not_digit(self, mock_logging):
-        """questionNumberが数値でないレスポンスのテスト"""
-
-        req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
-        req.route_params = {"testId": "1", "questionNumber": "a"}
-        req.get_body.return_value = json.dumps(
-            {
-                "courseName": "Math",
-                "subjects": ["What is 2 + 2?"],
-                "choices": ["3", "4", "5"],
-            }
-        ).encode("utf-8")
-
-        response = post_answer(req)
-
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(
-            response.get_body().decode("utf-8"), "Invalid questionNumber: a"
-        )
-        mock_logging.info.assert_not_called()
-        mock_logging.error.assert_not_called()
-
-    @patch("src.post_answer.logging")
-    def test_post_answer_invalid_course_name_empty(self, mock_logging):
-        """courseNameが空であるレスポンスのテスト"""
-
-        req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
-        req.route_params = {"testId": "1", "questionNumber": "1"}
-        req.get_body.return_value = json.dumps(
-            {
-                "subjects": ["What is 2 + 2?"],
-                "choices": ["3", "4", "5"],
-            }
-        ).encode("utf-8")
-
-        response = post_answer(req)
-
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.get_body().decode("utf-8"), "courseName is Empty")
-        mock_logging.info.assert_not_called()
-        mock_logging.error.assert_not_called()
-
-    @patch("src.post_answer.logging")
-    def test_post_answer_invalid_course_name_empty_string(self, mock_logging):
-        """courseNameが空文字であるレスポンスのテスト"""
-
-        req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
-        req.route_params = {"testId": "1", "questionNumber": "1"}
-        req.get_body.return_value = json.dumps(
-            {
-                "courseName": "",
-                "subjects": ["What is 2 + 2?"],
-                "choices": ["3", "4", "5"],
-            }
-        ).encode("utf-8")
-
-        response = post_answer(req)
-
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.get_body().decode("utf-8"), "courseName is Empty")
-        mock_logging.info.assert_not_called()
-        mock_logging.error.assert_not_called()
-
-    @patch("src.post_answer.logging")
-    def test_post_answer_invalid_subjects_empty(self, mock_logging):
-        """subjectsが空であるレスポンスのテスト"""
-
-        req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
-        req.route_params = {"testId": "1", "questionNumber": "1"}
-        req.get_body.return_value = json.dumps(
-            {
-                "courseName": "Math",
-                "choices": ["3", "4", "5"],
-            }
-        ).encode("utf-8")
-
-        response = post_answer(req)
-
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.get_body().decode("utf-8"), "subjects is Empty")
-        mock_logging.info.assert_not_called()
-        mock_logging.error.assert_not_called()
-
-    @patch("src.post_answer.logging")
-    def test_post_answer_invalid_subjects_not_list(self, mock_logging):
-        """subjectsがlistでないレスポンスのテスト"""
-
-        req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
-        req.route_params = {"testId": "1", "questionNumber": "1"}
-        req.get_body.return_value = json.dumps(
-            {
-                "courseName": "Math",
-                "subjects": "What is 2 + 2?",
-                "choices": ["3", "4", "5"],
-            }
-        ).encode("utf-8")
-
-        response = post_answer(req)
-
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(
-            response.get_body().decode("utf-8"), "Invalid subjects: What is 2 + 2?"
-        )
-        mock_logging.info.assert_not_called()
-        mock_logging.error.assert_not_called()
-
-    @patch("src.post_answer.logging")
-    def test_post_answer_invalid_subjects_empty_list(self, mock_logging):
-        """subjectsが空のlistであるレスポンスのテスト"""
-
-        req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
-        req.route_params = {"testId": "1", "questionNumber": "1"}
-        req.get_body.return_value = json.dumps(
-            {
-                "courseName": "Math",
-                "subjects": [],
-                "choices": ["3", "4", "5"],
-            }
-        ).encode("utf-8")
-
-        response = post_answer(req)
-
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.get_body().decode("utf-8"), "subjects is Empty")
-        mock_logging.info.assert_not_called()
-        mock_logging.error.assert_not_called()
-
-    @patch("src.post_answer.logging")
-    def test_post_answer_invalid_choices_empty(self, mock_logging):
-        """choicesが空であるレスポンスのテスト"""
-
-        req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
-        req.route_params = {"testId": "1", "questionNumber": "1"}
-        req.get_body.return_value = json.dumps(
-            {
-                "courseName": "Math",
-                "subjects": ["What is 2 + 2?"],
-            }
-        ).encode("utf-8")
-
-        response = post_answer(req)
-
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.get_body().decode("utf-8"), "choices is Empty")
-        mock_logging.info.assert_not_called()
-        mock_logging.error.assert_not_called()
-
-    @patch("src.post_answer.logging")
-    def test_post_answer_invalid_choices_not_list(self, mock_logging):
-        """choicesがlistでないレスポンスのテスト"""
-
-        req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
-        req.route_params = {"testId": "1", "questionNumber": "1"}
-        req.get_body.return_value = json.dumps(
-            {
-                "courseName": "Math",
-                "subjects": ["What is 2 + 2?"],
-                "choices": "3",
-            }
-        ).encode("utf-8")
-
-        response = post_answer(req)
-
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.get_body().decode("utf-8"), "Invalid choices: 3")
-        mock_logging.info.assert_not_called()
-        mock_logging.error.assert_not_called()
-
-    @patch("src.post_answer.logging")
-    def test_post_answer_invalid_choices_empty_list(self, mock_logging):
-        """choicesが空のlistであるレスポンスのテスト"""
-
-        req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
-        req.route_params = {"testId": "1", "questionNumber": "1"}
-        req.get_body.return_value = json.dumps(
-            {
-                "courseName": "Math",
-                "subjects": ["What is 2 + 2?"],
-                "choices": [],
-            }
-        ).encode("utf-8")
-
-        response = post_answer(req)
-
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.get_body().decode("utf-8"), "choices is Empty")
-        mock_logging.info.assert_not_called()
-        mock_logging.error.assert_not_called()
-
+    @patch("src.post_answer.validate_request")
     @patch("src.post_answer.generate_correct_answers")
     @patch("src.post_answer.logging")
-    def test_post_answer_exception(self, mock_logging, mock_generate_correct_answers):
+    def test_post_answer_exception(
+        self,
+        mock_logging,
+        mock_generate_correct_answers,
+        mock_validate_request,
+    ):
         """例外が発生した場合のレスポンスのテスト"""
 
-        mock_generate_correct_answers.return_value = {
-            "correct_indexes": [1],
-            "explanations": ["Option 2 is correct because 2 + 2 equals 4."],
-        }
+        mock_validate_request.return_value = None
+        mock_generate_correct_answers.return_value = None
 
         req = MagicMock(spec=func.HttpRequest)
         req.route_params = {"testId": "1", "questionNumber": "1"}
@@ -634,6 +657,10 @@ class TestPostAnswer(unittest.TestCase):
 
         self.assertEqual(response.status_code, 500)
         self.assertEqual(response.get_body(), b"Internal Server Error")
+        mock_validate_request.assert_called_once_with(req)
+        mock_generate_correct_answers.assert_called_once_with(
+            "Math", ["What is 2 + 2?"], ["3", "4", "5"]
+        )
         mock_logging.info.assert_called_once_with(
             {
                 "course_name": "Math",
