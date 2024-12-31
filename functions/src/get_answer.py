@@ -32,7 +32,7 @@ def validate_request(req: func.HttpRequest) -> str | None:
     question_number = req.route_params.get("questionNumber")
     if not question_number:
         errors.append("questionNumber is Empty")
-    if not question_number.isdigit():
+    elif not question_number.isdigit():
         errors.append(f"Invalid questionNumber: {question_number}")
 
     return errors[0] if errors else None

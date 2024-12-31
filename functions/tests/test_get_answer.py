@@ -41,6 +41,16 @@ class TestValidateRequest(TestCase):
 
         self.assertEqual(response, "questionNumber is Empty")
 
+    def test_get_answer_question_number_not_digit(self):
+        """questionNumberが数値でない場合のテスト"""
+
+        req = MagicMock(spec=func.HttpRequest)
+        req.route_params = {"testId": "1", "questionNumber": "a"}
+
+        response = validate_request(req)
+
+        self.assertEqual(response, "Invalid questionNumber: a")
+
 
 class TestGetAnswer(TestCase):
     """get_answer関数のテストケース"""
