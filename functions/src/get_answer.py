@@ -12,6 +12,32 @@ from util.cosmos import get_read_only_container
 bp_get_answer = func.Blueprint()
 
 
+def validate_request(req: func.HttpRequest) -> str | None:
+    """
+    リクエストのバリデーションチェックを行う
+
+    Args:
+        req (func.HttpRequest): リクエスト
+
+    Returns:
+        str | None: バリデーションチェックに成功した場合はNone、失敗した場合はエラーメッセージ
+    """
+
+    errors = []
+
+    test_id = req.route_params.get("testId")
+    if not test_id:
+        errors.append("testId is Empty")
+
+    question_number = req.route_params.get("questionNumber")
+    if not question_number:
+        errors.append("questionNumber is Empty")
+    elif not question_number.isdigit():
+        errors.append(f"Invalid questionNumber: {question_number}")
+
+    return errors[0] if errors else None
+
+
 @bp_get_answer.route(
     route="tests/{testId}/answers/{questionNumber}",
     methods=["GET"],
@@ -24,13 +50,12 @@ def get_answer(req: func.HttpRequest) -> func.HttpResponse:
 
     try:
         # バリデーションチェック
-        test_id = req.route_params.get("testId")
-        if test_id is None:
-            return func.HttpResponse(body="testId is Empty", status_code=400)
-        question_number = req.route_params.get("questionNumber")
-        if question_number is None:
-            return func.HttpResponse(body="questionNumber is Empty", status_code=400)
+        error_message = validate_request(req)
+        if error_message:
+            return func.HttpResponse(body=error_message, status_code=400)
 
+        test_id = req.route_params.get("testId")
+        question_number = req.route_params.get("questionNumber")
         # Answerコンテナーの読み取り専用インスタンスを取得
         container: ContainerProxy = get_read_only_container(
             database_name="Users",
