@@ -5,23 +5,53 @@ from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
 import azure.functions as func
-from src.get_test import get_test
+from src.get_test import get_test, validate_request
 from type.cosmos import Test
 from type.response import GetTestRes
 
 
-class TestGetTest(TestCase):
-    """[GET] /tests/{testId} のテストケース"""
+class TestValidateRequest(TestCase):
+    """validate_request関数のテストケース"""
 
+    def test_validate_request_success(self):
+        """バリデーションチェックに成功した場合のテスト"""
+
+        req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
+        req.route_params = {"testId": "1"}
+        response = validate_request(req)
+
+        self.assertIsNone(response)
+
+    @patch("src.get_test.logging")
+    def test_get_test_invalid_test_id(self, mock_logging):
+        """testIdが空である場合のテスト"""
+
+        req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
+        req.route_params = {}
+        response: func.HttpResponse = get_test(req)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_body().decode(), "testId is Empty")
+        mock_logging.info.assert_not_called()
+        mock_logging.error.assert_not_called()
+
+
+class TestGetTest(TestCase):
+    """get_test関数のテストケース"""
+
+    @patch("src.get_test.validate_request")
     @patch("src.get_test.get_read_only_container")
     @patch("src.get_test.logging")
-    def test_get_test_success(self, mock_logging, mock_get_read_only_container):
+    def test_get_test_success(
+        self, mock_logging, mock_get_read_only_container, mock_validate_request
+    ):
         """レスポンスが正常であることのテスト"""
 
         mock_container = MagicMock()
         mock_items: list[Test] = [
             {"id": "1", "courseName": "Math", "testName": "Algebra", "length": 10}
         ]
+        mock_validate_request.return_value = None
         mock_container.query_items.return_value = mock_items
         mock_get_read_only_container.return_value = mock_container
 
@@ -37,16 +67,43 @@ class TestGetTest(TestCase):
             "length": 10,
         }
         self.assertEqual(response.get_body().decode(), json.dumps(expected_body))
+        mock_validate_request.assert_called_once_with(req)
+        mock_get_read_only_container.assert_called_once_with(
+            database_name="Users",
+            container_name="Test",
+        )
+        mock_container.query_items.assert_called_once_with(
+            query="SELECT c.id, c.courseName, c.testName, c.length FROM c WHERE c.id = @testId",
+            parameters=[{"name": "@testId", "value": "1"}],
+        )
         mock_logging.info.assert_called_once_with({"items": mock_items})
         mock_logging.error.assert_not_called()
 
+    @patch("src.get_test.validate_request")
+    def test_get_test_validation_error(self, mock_validate_request):
+        """バリデーションチェックに失敗した場合のテスト"""
+
+        mock_validate_request.return_value = "Validation Error"
+
+        req = MagicMock(spec=func.HttpRequest)
+        req.route_params = {"testId": "1"}
+
+        response = get_test(req)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_body().decode(), "Validation Error")
+
+    @patch("src.get_test.validate_request")
     @patch("src.get_test.get_read_only_container")
     @patch("src.get_test.logging")
-    def test_get_test_not_found(self, mock_logging, mock_get_read_only_container):
-        """テストが見つからない場合のレスポンスのテスト"""
+    def test_get_test_not_found(
+        self, mock_logging, mock_get_read_only_container, mock_validate_request
+    ):
+        """テストが見つからない場合のテスト"""
 
         mock_container = MagicMock()
         mock_container.query_items.return_value = []
+        mock_validate_request.return_value = None
         mock_get_read_only_container.return_value = mock_container
 
         req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
@@ -55,13 +112,25 @@ class TestGetTest(TestCase):
 
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.get_body().decode(), "Not Found Test")
+        mock_validate_request.assert_called_once_with(req)
+        mock_get_read_only_container.assert_called_once_with(
+            database_name="Users",
+            container_name="Test",
+        )
+        mock_container.query_items.assert_called_once_with(
+            query="SELECT c.id, c.courseName, c.testName, c.length FROM c WHERE c.id = @testId",
+            parameters=[{"name": "@testId", "value": "1"}],
+        )
         mock_logging.info.assert_called_once_with({"items": []})
         mock_logging.error.assert_not_called()
 
+    @patch("src.get_test.validate_request")
     @patch("src.get_test.get_read_only_container")
     @patch("src.get_test.logging")
-    def test_get_test_not_unique(self, mock_logging, mock_get_read_only_container):
-        """テストが一意でない場合のレスポンスのテスト"""
+    def test_get_test_not_unique(
+        self, mock_logging, mock_get_read_only_container, mock_validate_request
+    ):
+        """テストが一意でない場合のテスト"""
 
         mock_container = MagicMock()
         mock_items: list[Test] = [
@@ -70,43 +139,43 @@ class TestGetTest(TestCase):
         ]
         mock_container.query_items.return_value = mock_items
         mock_get_read_only_container.return_value = mock_container
-
+        mock_validate_request.return_value = None
         req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
         req.route_params = {"testId": "1"}
         response: func.HttpResponse = get_test(req)
 
         self.assertEqual(response.status_code, 500)
         self.assertEqual(response.get_body().decode(), "Internal Server Error")
+        mock_validate_request.assert_called_once_with(req)
+        mock_get_read_only_container.assert_called_once_with(
+            database_name="Users",
+            container_name="Test",
+        )
+        mock_container.query_items.assert_called_once_with(
+            query="SELECT c.id, c.courseName, c.testName, c.length FROM c WHERE c.id = @testId",
+            parameters=[{"name": "@testId", "value": "1"}],
+        )
         mock_logging.info.assert_called_once_with({"items": mock_items})
         mock_logging.error.assert_called_once()
 
-    @patch("src.get_test.logging")
-    def test_get_test_invalid_test_id(self, mock_logging):
-        """testIdが空であるレスポンスのテスト"""
-
-        req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
-        req.route_params = {}
-        response: func.HttpResponse = get_test(req)
-
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.get_body().decode(), "testId is Empty")
-        mock_logging.info.assert_not_called()
-        mock_logging.error.assert_not_called()
-
+    @patch("src.get_test.validate_request")
     @patch("src.get_test.get_read_only_container")
     @patch("src.get_test.logging")
-    def test_get_test_exception(self, mock_logging, mock_get_read_only_container):
-        """レスポンスが異常であることのテスト"""
+    def test_get_test_exception(
+        self, mock_logging, mock_get_read_only_container, mock_validate_request
+    ):
+        """例外が発生した場合のテスト"""
 
+        mock_validate_request.return_value = None
         mock_get_read_only_container.side_effect = Exception(
             "Error in src.get_test.get_read_only_container"
         )
-
         req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
         req.route_params = {"testId": "1"}
         response: func.HttpResponse = get_test(req)
 
         self.assertEqual(response.status_code, 500)
-        self.assertEqual(response.get_body().decode(), "Internal Server Error")
+        self.assertEqual(response.get_body(), b"Internal Server Error")
+        mock_validate_request.assert_called_once_with(req)
         mock_logging.info.assert_not_called()
         mock_logging.error.assert_called_once()
