@@ -223,7 +223,6 @@ def generate_question_items(
 def import_question_items(question_items: list[Question]) -> None:
     """
     UsersテータベースのQuestionコンテナーの項目をインポートする
-    https://docs.microsoft.com/ja-jp/azure/cosmos-db/sql/troubleshoot-request-rate-too-large
     """
 
     container = get_read_write_container("Users", "Question")
