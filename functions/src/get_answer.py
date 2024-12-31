@@ -23,16 +23,19 @@ def validate_request(req: func.HttpRequest) -> str | None:
         str | None: バリデーションチェックに成功した場合はNone、失敗した場合はエラーメッセージ
     """
 
+    errors = []
+
     test_id = req.route_params.get("testId")
     if not test_id:
-        return "testId is Empty"
+        errors.append("testId is Empty")
+
     question_number = req.route_params.get("questionNumber")
     if not question_number:
-        return "questionNumber is Empty"
+        errors.append("questionNumber is Empty")
     if not question_number.isdigit():
-        return f"Invalid questionNumber: {question_number}"
+        errors.append(f"Invalid questionNumber: {question_number}")
 
-    return None
+    return errors[0] if errors else None
 
 
 @bp_get_answer.route(
