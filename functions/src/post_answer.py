@@ -28,37 +28,41 @@ def validate_request(req: func.HttpRequest) -> str | None:
         str | None: バリデーションチェックに成功した場合はNone、失敗した場合はエラーメッセージ
     """
 
+    errors = []
+
     test_id = req.route_params.get("testId")
     if not test_id:
-        return "testId is Empty"
+        errors.append("testId is Empty")
+
     question_number = req.route_params.get("questionNumber")
     if not question_number:
-        return "questionNumber is Empty"
-    if not question_number.isdigit():
-        return f"Invalid questionNumber: {question_number}"
+        errors.append("questionNumber is Empty")
+    elif not question_number.isdigit():
+        errors.append(f"Invalid questionNumber: {question_number}")
+
     req_body_encoded: bytes = req.get_body()
     if not req_body_encoded:
-        return "Request Body is Empty"
-    req_body: PostAnswerReq = json.loads(req_body_encoded.decode("utf-8"))
-    course_name = req_body.get("courseName")
-    if not course_name or course_name == "":
-        return "courseName is Empty"
-    subjects = req_body.get("subjects")
-    if not subjects:
-        return "subjects is Empty"
-    if not isinstance(subjects, list):
-        return f"Invalid subjects: {subjects}"
-    if len(subjects) == 0:
-        return "subjects is Empty"
-    choices = req_body.get("choices")
-    if not choices:
-        return "choices is Empty"
-    if not isinstance(choices, list):
-        return f"Invalid choices: {choices}"
-    if len(choices) == 0:
-        return "choices is Empty"
+        errors.append("Request Body is Empty")
+    else:
+        req_body: PostAnswerReq = json.loads(req_body_encoded.decode("utf-8"))
 
-    return None
+        course_name = req_body.get("courseName")
+        if not course_name or course_name == "":
+            errors.append("courseName is Empty")
+
+        subjects = req_body.get("subjects")
+        if not subjects:
+            errors.append("subjects is Empty")
+        elif not isinstance(subjects, list):
+            errors.append(f"Invalid subjects: {subjects}")
+
+        choices = req_body.get("choices")
+        if not choices:
+            errors.append("choices is Empty")
+        elif not isinstance(choices, list):
+            errors.append(f"Invalid choices: {choices}")
+
+    return errors[0] if errors else None
 
 
 def create_system_prompt(course_name: str) -> str:
@@ -270,6 +274,9 @@ def post_answer(req: func.HttpRequest) -> func.HttpResponse:
 
         # 正解の選択肢・正解/不正解の理由を生成
         correct_answers = generate_correct_answers(course_name, subjects, choices)
+        if correct_answers is None:
+            raise ValueError("Failed to generate correct answers")
+
         # キューストレージにメッセージを格納
         queue_message_answer(
             {
