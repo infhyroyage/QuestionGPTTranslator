@@ -1,18 +1,18 @@
-name: Build and Deploy Azure Functions Application
+name: Deploy Azure Functions Application
 
 on:
   push:
     branches:
       - main
     paths:
-      - .github/workflows/build-deploy-functions-app.yaml
-      - .github/workflows/reusable-build-deploy-functions-app.yaml
+      - .github/workflows/deploy-functions-app.yaml
+      - .github/workflows/reusable-deploy-functions-app.yaml
       - functions**
       - requirements.txt
 
 jobs:
-  use-build-deploy-functions-app-workflow:
-    uses: ./.github/workflows/reusable-build-deploy-functions-app.yaml
+  use-deploy-functions-app-workflow:
+    uses: ./.github/workflows/reusable-deploy-functions-app.yaml
     with:
       AZURE_AD_SP_CONTRIBUTOR_CLIENT_ID: ${{ vars.AZURE_AD_SP_CONTRIBUTOR_CLIENT_ID }}
       AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
