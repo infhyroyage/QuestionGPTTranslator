@@ -45,14 +45,30 @@ jobs:
         run: |
           pushd functions
           coverage run -m unittest discover -s tests
-          coverage xml
+          coverage json -o tmp.json
           popd
+
+      - name: Convert into coverage-summary.json
+        run: |
+          jq '{
+            total: {
+              lines: {
+                pct: .totals.percent_covered
+              },
+              statements: {
+                pct: .totals.percent_covered
+              },
+              functions: {
+                pct: .totals.percent_covered
+              },
+              branches: {
+                pct: .totals.percent_covered
+              }
+            }
+          }' functions/tmp.json > coverage/coverage-summary.json
 
       - name: Update Coverage Badge
         uses: we-cli/coverage-badge-action@main
-        with:
-          coverageFile: functions/coverage.xml
-          output: coverage/badge.svg
 
   deploy:
     needs: build
