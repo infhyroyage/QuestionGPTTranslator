@@ -44,6 +44,19 @@ jobs:
           pip install -r requirements.txt --target=".python_packages/lib/site-packages"
           popd
 
+      - name: Run unittests with coverage
+        run: |
+          pushd functions
+          coverage run -m unittest discover -s tests
+          coverage xml
+          popd
+
+      - name: Update Coverage Badge
+        uses: we-cli/coverage-badge-action@main
+        with:
+          coverageFile: functions/coverage.xml
+          output: coverage/badge.svg
+
       - name: Login Azure as Contributor
         uses: azure/login@v2
         with:
