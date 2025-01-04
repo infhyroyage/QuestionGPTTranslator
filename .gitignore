@@ -10,6 +10,7 @@ azurite/__azurite_db_*.json
 functions/data
 functions/**/__pycache__
 functions/.coverage
+functions/coverage-summary.json
 functions/local.settings.json
 
 # Bicep Parameter Files
