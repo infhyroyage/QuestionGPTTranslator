@@ -5,6 +5,7 @@
 [![Deploy Azure Functions Application](https://github.com/infhyroyage/QuestionGPTTranslator/actions/workflows/deploy-functions-app.yaml/badge.svg)](https://github.com/infhyroyage/QuestionGPTTranslator/actions/workflows/deploy-functions-app.yaml)
 [![Deploy to Swagger UI](https://github.com/infhyroyage/QuestionGPTTranslator/actions/workflows/deploy-swagger-ui.yaml/badge.svg)](https://github.com/infhyroyage/QuestionGPTTranslator/actions/workflows/deploy-swagger-ui.yaml)
 [![Regenerate Secrets](https://github.com/infhyroyage/QuestionGPTTranslator/actions/workflows/regenerate-secrets.yaml/badge.svg)](https://github.com/infhyroyage/QuestionGPTTranslator/actions/workflows/regenerate-secrets.yaml)
+![Deploy Azure Functions Application](https://infhyroyage.github.io/QuestionGPTTranslator/badges.svg)
 
 ## 概要
 
