@@ -1,5 +1,3 @@
-version: "3"
-
 services:
   localcosmosdb:
     image: mcr.microsoft.com/cosmosdb/linux/azure-cosmos-emulator:vnext-preview
