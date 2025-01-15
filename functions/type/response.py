@@ -55,6 +55,7 @@ class GetTestRes(TypedDict):
     [GET] /tests/{testId} のレスポンスボディの型
     """
 
+    courseName: str
     testName: str
     length: int
 

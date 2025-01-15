@@ -57,7 +57,6 @@ class TestGetTest(TestCase):
 
         self.assertEqual(response.status_code, 200)
         expected_body: GetTestRes = {
-            "id": "1",
             "courseName": "Math",
             "testName": "Algebra",
             "length": 10,

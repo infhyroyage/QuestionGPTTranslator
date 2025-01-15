@@ -71,7 +71,11 @@ def get_test(req: func.HttpRequest) -> func.HttpResponse:
         if len(items) > 1:
             raise ValueError("Not Unique Test")
 
-        body: GetTestRes = items[0]
+        body: GetTestRes = {
+            "courseName": items[0]["courseName"],
+            "testName": items[0]["testName"],
+            "length": items[0]["length"],
+        }
         return func.HttpResponse(
             body=json.dumps(body),
             status_code=200,

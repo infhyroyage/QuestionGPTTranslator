@@ -72,6 +72,8 @@ paths:
               schema:
                 type: object
                 properties:
+                  courseName:
+                    type: string
                   testName:
                     type: string
                   length:
