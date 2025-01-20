@@ -106,7 +106,11 @@ def get_question(req: func.HttpRequest) -> func.HttpResponse:
             "choices": [
                 {
                     "sentence": choice,
-                    "img": result.get("indicateChoiceImgs", [None])[idx],
+                    "img": (
+                        result.get("indicateChoiceImgs")[idx]
+                        if result.get("indicateChoiceImgs")
+                        else None
+                    ),
                     "isEscapedTranslation": bool(
                         result.get("escapeTranslatedIdxes")
                         and result["escapeTranslatedIdxes"].get("choices")
