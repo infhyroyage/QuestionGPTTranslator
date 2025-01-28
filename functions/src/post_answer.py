@@ -94,7 +94,7 @@ def create_user_prompt(subjects: list[str], choices: list[str]) -> str:
 
     joined_subjects: str = "\n".join(subjects)
     joined_choices: str = "\n".join(
-        [f"{idx + 1}. {choice}" for idx, choice in enumerate(choices)]
+        [f"{idx}. {choice}" for idx, choice in enumerate(choices)]
     )
 
     # pylint: disable=line-too-long
@@ -108,18 +108,18 @@ Assume that the following question and choices are given:
 A company is launching a new web service on an Amazon Elastic Container Service (Amazon ECS) cluster. The cluster consists of 100 Amazon EC2 instances. Company policy requires the security group on the cluster instances to block all inbound traffic except HTTPS (port 443).
 Which solution will meet these requirements?
 
-1. Change the SSH port to 2222 on the cluster instances by using a user data script. Log in to each instance by using SSH over port 2222.
-2. Change the SSH port to 2222 on the cluster instances by using a user data script. Use AWS Trusted Advisor to remotely manage the cluster instances over port 2222.
-3. Launch the cluster instances with no SSH key pairs. Use AWS Systems Manager Run Command to remotely manage the cluster instances.
-4. Launch the cluster instances with no SSH key pairs. Use AWS Trusted Advisor to remotely manage the cluster instances.
+0. Change the SSH port to 2222 on the cluster instances by using a user data script. Log in to each instance by using SSH over port 2222.
+1. Change the SSH port to 2222 on the cluster instances by using a user data script. Use AWS Trusted Advisor to remotely manage the cluster instances over port 2222.
+2. Launch the cluster instances with no SSH key pairs. Use AWS Systems Manager Run Command to remotely manage the cluster instances.
+3. Launch the cluster instances with no SSH key pairs. Use AWS Trusted Advisor to remotely manage the cluster instances.
 ---
 For the question and choices in this first example, generate a sentence that shows the correct option, starting with "Correct Option: ", followed by sentences that explain why each option is correct/incorrect, as follows:
 ---
-Correct Option: 3
+Correct Option: 2
+Option 0 is incorrect because the requirements state that the only inbound port that should be open is 443.
 Option 1 is incorrect because the requirements state that the only inbound port that should be open is 443.
-Option 2 is incorrect because the requirements state that the only inbound port that should be open is 443.
-Option 3 is correct because AWS Systems Manager Run Command requires no inbound ports to be open. Run Command operates entirely over outbound HTTPS, which is open by default for security groups.
-Option 4 is incorrect because AWS Trusted Advisor does not perform this management function.
+Option 2 is correct because AWS Systems Manager Run Command requires no inbound ports to be open. Run Command operates entirely over outbound HTTPS, which is open by default for security groups.
+Option 3 is incorrect because AWS Trusted Advisor does not perform this management function.
 ---
 
 # Second Example
@@ -132,20 +132,20 @@ A company has deployed a multi-tier web application in the AWS Cloud. The applic
 All the EC2 instances are using Intel-based x86 CPUs. A solutions architect needs to modernize the infrastructure to achieve better performance. The solution must minimize the operational overhead of the application.
 Which combination of actions should the solutions architect take to meet these requirements? (Select TWO.)
 
-1. Run the MySQL database on multiple EC2 instances.
-2. Place the web tier instances behind an ALB.
-3. Migrate the MySQL database to Amazon Aurora Serxverless.
-4. Migrate all EC2 instance types to Graviton2.
-5. Replace the ALB for the application tier instances with a company-managed load balancer.
+0. Run the MySQL database on multiple EC2 instances.
+1. Place the web tier instances behind an ALB.
+2. Migrate the MySQL database to Amazon Aurora Serxverless.
+3. Migrate all EC2 instance types to Graviton2.
+4. Replace the ALB for the application tier instances with a company-managed load balancer.
 ---
 For the question and choices in this second example, generate a sentence that shows the correct options, starting with "Correct Options: ", followed by sentences that explain why each option is correct/incorrect, as follows:
 ---
-Correct Options: 2, 3
-Option 1 is incorrect because additional EC2 instances will not minimize operational overhead. A managed service would be a better option.
-Option 2 is correct because you can improve availability and scalability of the web tier by placing the web tier behind an Application Load Balancer (ALB). The ALB serves as the single point of contact for clients and distributes incoming application traffic to the Amazon EC2 instances.
-Option 3 is correct because Amazon Aurora Serverless provides high performance and high availability with reduced operational complexity.
-Option 4 is incorrect because the application includes Windows instances, which are not available for Graviton2.
-Option 5 is incorrect because a company-managed load balancer will not minimize operational overhead.
+Correct Options: 1, 2
+Option 0 is incorrect because additional EC2 instances will not minimize operational overhead. A managed service would be a better option.
+Option 1 is correct because you can improve availability and scalability of the web tier by placing the web tier behind an Application Load Balancer (ALB). The ALB serves as the single point of contact for clients and distributes incoming application traffic to the Amazon EC2 instances.
+Option 2 is correct because Amazon Aurora Serverless provides high performance and high availability with reduced operational complexity.
+Option 3 is incorrect because the application includes Windows instances, which are not available for Graviton2.
+Option 4 is incorrect because a company-managed load balancer will not minimize operational overhead.
 ---
 
 # Main Topic
