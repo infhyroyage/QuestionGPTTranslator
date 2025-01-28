@@ -284,7 +284,7 @@ def post_answer(req: func.HttpRequest) -> func.HttpResponse:
                 "questionNumber": question_number,
                 "subjects": subjects,
                 "choices": choices,
-                "correctIndexes": correct_answers["correct_indexes"],
+                "correctIdxes": correct_answers["correct_indexes"],
                 "explanations": correct_answers["explanations"],
             }
         )

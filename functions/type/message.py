@@ -12,5 +12,5 @@ class MessageAnswer(TypedDict):
     questionNumber: int
     subjects: List[str]
     choices: List[str]
-    correctIndexes: List[int]
+    correctIdxes: List[int]
     explanations: List[str]

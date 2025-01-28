@@ -496,7 +496,7 @@ class TestQueueMessageAnswer(unittest.TestCase):
             questionNumber=1,
             subjects=["What is 2 + 2?"],
             choices=["3", "4", "5"],
-            correctIndexes=[1],
+            correctIdxes=[1],
             explanations=["Option 2 is correct because 2 + 2 equals 4."],
         )
 
@@ -521,7 +521,7 @@ class TestQueueMessageAnswer(unittest.TestCase):
             questionNumber=1,
             subjects=["What is 2 + 2?"],
             choices=["3", "4", "5"],
-            correctIndexes=[1],
+            correctIdxes=[1],
             explanations=["Option 2 is correct because 2 + 2 equals 4."],
         )
 
@@ -585,7 +585,7 @@ class TestPostAnswer(unittest.TestCase):
                 "questionNumber": "1",
                 "subjects": ["What is 2 + 2?"],
                 "choices": ["3", "4", "5"],
-                "correctIndexes": [1],
+                "correctIdxes": [1],
                 "explanations": ["Option 2 is correct because 2 + 2 equals 4."],
             }
         )

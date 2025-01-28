@@ -36,7 +36,7 @@ class TestQueueTriggeredAnswer(TestCase):
             "questionNumber": 1,
             "subjects": ["Subject 1"],
             "choices": ["Choice 1", "Choice 2"],
-            "correctIndexes": [0],
+            "correctIdxes": [0],
             "explanations": ["Explanation 1"],
         }
         msg = func.QueueMessage(
@@ -50,7 +50,7 @@ class TestQueueTriggeredAnswer(TestCase):
         expected_answer_item = {
             "id": "1_1",
             "questionNumber": 1,
-            "correctIndexes": [0],
+            "correctIdxes": [0],
             "explanations": ["Explanation 1"],
             "testId": "1",
         }
@@ -80,7 +80,7 @@ class TestQueueTriggeredAnswer(TestCase):
             "questionNumber": 1,
             "subjects": ["Subject 1"],
             "choices": ["Choice 1", "Choice 2"],
-            "correctIndexes": [0],
+            "correctIdxes": [0],
             "explanations": ["Explanation 1"],
         }
         msg = func.QueueMessage(

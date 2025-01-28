@@ -59,7 +59,7 @@ def queue_triggered_answer(msg: func.QueueMessage):
         answer_item: Answer = {
             "id": f"{message_answer['testId']}_{message_answer['questionNumber']}",
             "questionNumber": message_answer["questionNumber"],
-            "correctIndexes": message_answer["correctIndexes"],
+            "correctIdxes": message_answer["correctIdxes"],
             "explanations": message_answer["explanations"],
             "testId": message_answer["testId"],
         }
