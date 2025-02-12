@@ -50,16 +50,6 @@ class GetQuestionRes(TypedDict):
     isMultiplied: bool
 
 
-class GetTestRes(TypedDict):
-    """
-    [GET] /tests/{testId} のレスポンスボディの型
-    """
-
-    courseName: str
-    testName: str
-    length: int
-
-
 class Test(TypedDict):
     """
     [GET] /tests のレスポンスボディの各要素の型
@@ -67,6 +57,7 @@ class Test(TypedDict):
 
     id: str
     testName: str
+    length: int
 
 
 class GetTestsRes(TypedDict):

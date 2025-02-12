@@ -36,7 +36,7 @@ def get_tests(
         # Azure Cosmos DBでは複合インデックスのインデックスポリシーをサポートするが
         # 2024/11/24現在、Azure Cosmos DB Linux-based Emulator (preview)では未サポートのため
         # Azure上のみORDER BY句を設定
-        query = "SELECT c.id, c.courseName, c.testName FROM c"
+        query = "SELECT c.id, c.courseName, c.testName, c.length FROM c"
         if os.environ.get("COSMOSDB_URI") != "https://localhost:8081":
             query += " ORDER BY c.courseName ASC, c.testName ASC"
 
@@ -46,7 +46,11 @@ def get_tests(
         # 各項目をcourseName単位でまとめるようにレスポンス整形
         body: GetTestsRes = {}
         for item in items:
-            tmp_item = {"id": item["id"], "testName": item["testName"]}
+            tmp_item = {
+                "id": item["id"],
+                "testName": item["testName"],
+                "length": item["length"],
+            }
             if item["courseName"] in body:
                 body[item["courseName"]].append(tmp_item)
             else:

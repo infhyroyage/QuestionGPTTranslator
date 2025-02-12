@@ -122,7 +122,7 @@ Variables タブから「New repository variable」ボタンを押下して、�
 | OPENAI_ENDPOINT                   | 事前に作成した Azure OpenAI のエンドポイント                                              |
 | OPENAI_MODEL                      | 事前に作成した Azure OpenAI のモデル名                                                    |
 
-### 4. インポートデータファイルの作成(TODO)
+### 4. インポートデータファイルの作成
 
 `qgtranslator-je-cosmosdb`に格納するデータは、GitHub 上で管理せず、**インポートデータファイル**と呼ぶ特定のフォーマットで記述した Typescript のソースコードを、ローカル上で管理する運用としている。
 インポートデータファイルは、ローカルで git clone した QuestionGPTTranslator リポジトリ直下に`data/(コース名)/(テスト名).json`のパスでディレクトリ・json ファイルを作成する必要がある。

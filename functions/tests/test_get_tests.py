@@ -33,11 +33,11 @@ class TestGetTests(TestCase):
         self.assertEqual(response.status_code, 200)
         expected_body: GetTestsRes = {
             "Math": [
-                {"id": "1", "testName": "Algebra"},
-                {"id": "2", "testName": "Geometry"},
+                {"id": "1", "testName": "Algebra", "length": 10},
+                {"id": "2", "testName": "Geometry", "length": 20},
             ],
             "Science": [
-                {"id": "3", "testName": "Physics"},
+                {"id": "3", "testName": "Physics", "length": 30},
             ],
         }
         self.assertEqual(response.get_body().decode(), json.dumps(expected_body))
