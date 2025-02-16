@@ -75,6 +75,7 @@ def get_question(req: func.HttpRequest) -> func.HttpResponse:
                     {"name": "@testId", "value": test_id},
                     {"name": "@number", "value": int(question_number)},
                 ],
+                enable_cross_partition_query=True,
             )
         )
         logging.info({"items": items})

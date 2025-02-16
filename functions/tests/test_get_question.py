@@ -124,6 +124,7 @@ class TestGetQuestion(TestCase):
                 {"name": "@testId", "value": "1"},
                 {"name": "@number", "value": 1},
             ],
+            enable_cross_partition_query=True,
         )
         mock_logging.info.assert_has_calls(
             [call({"items": mock_items}), call({"body": expected_body})]
@@ -177,6 +178,7 @@ class TestGetQuestion(TestCase):
                 {"name": "@testId", "value": "1"},
                 {"name": "@number", "value": 1},
             ],
+            enable_cross_partition_query=True,
         )
         mock_logging.info.assert_called_once_with({"items": []})
         mock_logging.error.assert_not_called()
@@ -217,6 +219,7 @@ class TestGetQuestion(TestCase):
                 {"name": "@testId", "value": "1"},
                 {"name": "@number", "value": 1},
             ],
+            enable_cross_partition_query=True,
         )
         mock_logging.info.assert_called_once_with({"items": [{}, {}]})
         mock_logging.error.assert_called_once()
