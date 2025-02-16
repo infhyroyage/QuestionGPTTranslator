@@ -54,5 +54,5 @@ jobs:
         with:
           app-name: ${{ inputs.FUNCTIONS_NAME }}
           package: functions/
-          scm-do-build-during-deployment: true
-          enable-oryx-build: true
+          scm-do-build-during-deployment: true # リモートビルドの有効化
+          enable-oryx-build: true # リモートビルドの有効化
