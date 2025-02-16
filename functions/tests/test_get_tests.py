@@ -45,7 +45,7 @@ class TestGetTests(TestCase):
         self.assertEqual(response.get_body().decode(), json.dumps(expected_body))
         mock_container.query_items.assert_called_once_with(
             query="SELECT c.id, c.courseName, c.testName, c.length FROM c",
-            enable_cross_partition_query=False,
+            enable_cross_partition_query=True,
         )
         mock_logging.info.assert_has_calls(
             [call({"items": mock_items}), call({"body": expected_body})]
