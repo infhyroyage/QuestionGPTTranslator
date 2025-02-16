@@ -36,11 +36,18 @@ def get_tests(
         # Azure Cosmos DBでは複合インデックスのインデックスポリシーをサポートするが
         # 2024/11/24現在、Azure Cosmos DB Linux-based Emulator (preview)では未サポートのため
         # Azure上のみORDER BY句を設定
-        query = "SELECT c.id, c.courseName, c.testName, c.length FROM c"
+        query: str = "SELECT c.id, c.courseName, c.testName, c.length FROM c"
+        enable_cross_partition_query: bool = False
         if os.environ.get("COSMOSDB_URI") != "https://localhost:8081":
             query += " ORDER BY c.courseName ASC, c.testName ASC"
+            enable_cross_partition_query = True
 
-        items: list[Test] = list(container.query_items(query=query))
+        items: list[Test] = list(
+            container.query_items(
+                query=query,
+                enable_cross_partition_query=enable_cross_partition_query,
+            )
+        )
         logging.info({"items": items})
 
         # 各項目をcourseName単位でまとめるようにレスポンス整形
