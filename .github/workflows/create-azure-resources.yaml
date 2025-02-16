@@ -1,4 +1,4 @@
-name: Create Azure Resources
+name: Create Azure Resources(Trigger)
 
 on:
   push:
