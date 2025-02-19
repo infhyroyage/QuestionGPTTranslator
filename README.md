@@ -183,7 +183,7 @@ json の各キーの説明を、以下に示す。
    ```
 4. 3 のターミナルで以下のコマンドを実行し、論理的に削除した`qgtranslator-je-apim`を物理的に削除する。
    ```bash
-   az rest -m DELETE -u https://management.azure.com/subscriptions/(サブスクリプションID)/providers/Microsoft.ApiManagement/locations/japaneast/deletedservices/qgtranslator-je-apim?api-version=2022-08-01
+   az rest -m DELETE -u "https://management.azure.com/subscriptions/(サブスクリプションID)/providers/Microsoft.ApiManagement/locations/japaneast/deletedservices/qgtranslator-je-apim?api-version=2022-08-01"
    ```
 
 ## API 追加開発時の対応
