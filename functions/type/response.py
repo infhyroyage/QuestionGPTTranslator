@@ -70,7 +70,7 @@ class GetTestsRes(TypedDict):
 
 class PostAnswerRes(TypedDict, total=False):
     """
-    [POST] /answer のレスポンスボディの型
+    [POST] /tests/{testId}/answers/{questionNumber} のレスポンスボディの型
     """
 
     correctIdxes: List[int]

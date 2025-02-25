@@ -5,10 +5,9 @@ from typing import List, TypedDict
 
 class PostAnswerReq(TypedDict):
     """
-    [POST] /answer のリクエストボディの型
+    [POST] /tests/{testId}/answers/{questionNumber} のリクエストボディの型
     """
 
-    courseName: str
     subjects: List[str]
     choices: List[str]
 

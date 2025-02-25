@@ -154,14 +154,12 @@ paths:
           schema:
             type: string
       requestBody:
-        description: コース名・英語の問題文・選択肢の文章
+        description: 英語の問題文・選択肢の文章
         content:
           application/json:
             schema:
               type: object
               properties:
-                courseName:
-                  type: string
                 subjects:
                   type: array
                   items:

@@ -8,7 +8,7 @@ from unittest.mock import MagicMock, call, patch
 import azure.functions as func
 from src.post_answer import (
     MAX_RETRY_NUMBER,
-    create_system_prompt,
+    SYSTEM_PROMPT,
     create_user_prompt,
     generate_correct_answers,
     post_answer,
@@ -29,7 +29,6 @@ class TestValidateRequest(unittest.TestCase):
         req.route_params = {"testId": "1", "questionNumber": "1"}
         req.get_body.return_value = json.dumps(
             {
-                "courseName": "Math",
                 "subjects": ["What is 2 + 2?"],
                 "choices": ["3", "4", "5"],
             }
@@ -57,7 +56,6 @@ class TestValidateRequest(unittest.TestCase):
         req.route_params = {"questionNumber": "1"}
         req.get_body.return_value = json.dumps(
             {
-                "courseName": "Math",
                 "subjects": ["What is 2 + 2?"],
                 "choices": ["3", "4", "5"],
             }
@@ -74,7 +72,6 @@ class TestValidateRequest(unittest.TestCase):
         req.route_params = {"testId": "1"}
         req.get_body.return_value = json.dumps(
             {
-                "courseName": "Math",
                 "subjects": ["What is 2 + 2?"],
                 "choices": ["3", "4", "5"],
             }
@@ -91,7 +88,6 @@ class TestValidateRequest(unittest.TestCase):
         req.route_params = {"testId": "1", "questionNumber": "a"}
         req.get_body.return_value = json.dumps(
             {
-                "courseName": "Math",
                 "subjects": ["What is 2 + 2?"],
                 "choices": ["3", "4", "5"],
             }
@@ -101,39 +97,6 @@ class TestValidateRequest(unittest.TestCase):
 
         self.assertEqual(result, "Invalid questionNumber: a")
 
-    def test_validate_request_course_name_empty(self):
-        """courseNameが空である場合のテスト"""
-
-        req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
-        req.route_params = {"testId": "1", "questionNumber": "1"}
-        req.get_body.return_value = json.dumps(
-            {
-                "subjects": ["What is 2 + 2?"],
-                "choices": ["3", "4", "5"],
-            }
-        ).encode("utf-8")
-
-        result = validate_request(req)
-
-        self.assertEqual(result, "courseName is Empty")
-
-    def test_validate_request_course_name_empty_string(self):
-        """courseNameが空文字である場合のテスト"""
-
-        req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
-        req.route_params = {"testId": "1", "questionNumber": "1"}
-        req.get_body.return_value = json.dumps(
-            {
-                "courseName": "",
-                "subjects": ["What is 2 + 2?"],
-                "choices": ["3", "4", "5"],
-            }
-        ).encode("utf-8")
-
-        result = validate_request(req)
-
-        self.assertEqual(result, "courseName is Empty")
-
     def test_validate_request_subjects_empty(self):
         """subjectsが空である場合のテスト"""
 
@@ -141,7 +104,6 @@ class TestValidateRequest(unittest.TestCase):
         req.route_params = {"testId": "1", "questionNumber": "1"}
         req.get_body.return_value = json.dumps(
             {
-                "courseName": "Math",
                 "choices": ["3", "4", "5"],
             }
         ).encode("utf-8")
@@ -157,7 +119,6 @@ class TestValidateRequest(unittest.TestCase):
         req.route_params = {"testId": "1", "questionNumber": "1"}
         req.get_body.return_value = json.dumps(
             {
-                "courseName": "Math",
                 "subjects": "What is 2 + 2?",
                 "choices": ["3", "4", "5"],
             }
@@ -174,7 +135,6 @@ class TestValidateRequest(unittest.TestCase):
         req.route_params = {"testId": "1", "questionNumber": "1"}
         req.get_body.return_value = json.dumps(
             {
-                "courseName": "Math",
                 "subjects": [],
                 "choices": ["3", "4", "5"],
             }
@@ -191,7 +151,6 @@ class TestValidateRequest(unittest.TestCase):
         req.route_params = {"testId": "1", "questionNumber": "1"}
         req.get_body.return_value = json.dumps(
             {
-                "courseName": "Math",
                 "subjects": ["What is 2 + 2?"],
             }
         ).encode("utf-8")
@@ -207,7 +166,6 @@ class TestValidateRequest(unittest.TestCase):
         req.route_params = {"testId": "1", "questionNumber": "1"}
         req.get_body.return_value = json.dumps(
             {
-                "courseName": "Math",
                 "subjects": ["What is 2 + 2?"],
                 "choices": "3",
             }
@@ -224,7 +182,6 @@ class TestValidateRequest(unittest.TestCase):
         req.route_params = {"testId": "1", "questionNumber": "1"}
         req.get_body.return_value = json.dumps(
             {
-                "courseName": "Math",
                 "subjects": ["What is 2 + 2?"],
                 "choices": [],
             }
@@ -233,19 +190,6 @@ class TestValidateRequest(unittest.TestCase):
         result = validate_request(req)
 
         self.assertEqual(result, "choices is Empty")
-
-
-class TestCreateSystemPrompt(unittest.TestCase):
-    """create_system_prompt関数のテストケース"""
-
-    def test_create_system_prompt(self):
-        """Azure OpenAIのシステムプロンプトのテスト"""
-
-        course_name = "Math"
-        # pylint: disable=line-too-long
-        expected_prompt = 'You are a professional who provides correct explanations for candidates of the exam named "Math".'
-
-        self.assertEqual(create_system_prompt(course_name), expected_prompt)
 
 
 class TestCreateUserPrompt(unittest.TestCase):
@@ -274,10 +218,10 @@ class TestCreateUserPrompt(unittest.TestCase):
             'For the question and choices in this first example, generate a sentence that shows the correct option, starting with "Correct Option: ", followed by sentences that explain why each option is correct/incorrect, as follows:\n'
             "---\n"
             "Correct Option: 2\n"
-            "Option 0 is incorrect because the requirements state that the only inbound port that should be open is 443.\n"
-            "Option 1 is incorrect because the requirements state that the only inbound port that should be open is 443.\n"
-            "Option 2 is correct because AWS Systems Manager Run Command requires no inbound ports to be open. Run Command operates entirely over outbound HTTPS, which is open by default for security groups.\n"
-            "Option 3 is incorrect because AWS Trusted Advisor does not perform this management function.\n"
+            'Option "Change the SSH port to 2222 on the cluster instances by using a user data script. Log in to each instance by using SSH over port 2222." is incorrect because the requirements state that the only inbound port that should be open is 443.\n'
+            'Option "Change the SSH port to 2222 on the cluster instances by using a user data script. Use AWS Trusted Advisor to remotely manage the cluster instances over port 2222." is incorrect because the requirements state that the only inbound port that should be open is 443.\n'
+            'Option "Launch the cluster instances with no SSH key pairs. Use AWS Systems Manager Run Command to remotely manage the cluster instances." is correct because AWS Systems Manager Run Command requires no inbound ports to be open. Run Command operates entirely over outbound HTTPS, which is open by default for security groups.\n'
+            'Option "Launch the cluster instances with no SSH key pairs. Use AWS Trusted Advisor to remotely manage the cluster instances." is incorrect because AWS Trusted Advisor does not perform this management function.\n'
             "---\n\n"
             "# Second Example\n"
             "Assume that the following question and choices are given:\n"
@@ -297,11 +241,11 @@ class TestCreateUserPrompt(unittest.TestCase):
             'For the question and choices in this second example, generate a sentence that shows the correct options, starting with "Correct Options: ", followed by sentences that explain why each option is correct/incorrect, as follows:\n'
             "---\n"
             "Correct Options: 1, 2\n"
-            "Option 0 is incorrect because additional EC2 instances will not minimize operational overhead. A managed service would be a better option.\n"
-            "Option 1 is correct because you can improve availability and scalability of the web tier by placing the web tier behind an Application Load Balancer (ALB). The ALB serves as the single point of contact for clients and distributes incoming application traffic to the Amazon EC2 instances.\n"
-            "Option 2 is correct because Amazon Aurora Serverless provides high performance and high availability with reduced operational complexity.\n"
-            "Option 3 is incorrect because the application includes Windows instances, which are not available for Graviton2.\n"
-            "Option 4 is incorrect because a company-managed load balancer will not minimize operational overhead.\n"
+            'Option "Run the MySQL database on multiple EC2 instances." is incorrect because additional EC2 instances will not minimize operational overhead. A managed service would be a better option.\n'
+            'Option "Place the web tier instances behind an ALB." is correct because you can improve availability and scalability of the web tier by placing the web tier behind an Application Load Balancer (ALB). The ALB serves as the single point of contact for clients and distributes incoming application traffic to the Amazon EC2 instances.\n'
+            'Option "Migrate the MySQL database to Amazon Aurora Serxverless." is correct because Amazon Aurora Serverless provides high performance and high availability with reduced operational complexity.\n'
+            'Option "Migrate all EC2 instance types to Graviton2." is incorrect because the application includes Windows instances, which are not available for Graviton2.\n'
+            'Option "Replace the ALB for the application tier instances with a company-managed load balancer." is incorrect because a company-managed load balancer will not minimize operational overhead.\n'
             "---\n\n"
             "# Main Topic\n"
             "For the question and choices below, generate sentences that show the correct option/options and explain why each option is correct/incorrect.\n"
@@ -321,7 +265,6 @@ class TestGenerateCorrectAnswers(unittest.TestCase):
     """generate_correct_answers関数のテストケース"""
 
     @patch("src.post_answer.AzureOpenAI")
-    @patch("src.post_answer.create_system_prompt")
     @patch("src.post_answer.create_user_prompt")
     @patch("src.post_answer.logging")
     @patch.dict(
@@ -338,12 +281,10 @@ class TestGenerateCorrectAnswers(unittest.TestCase):
         self,
         mock_logging,
         mock_create_user_prompt,
-        mock_create_system_prompt,
         mock_azure_openai,
     ):
         """リトライせずに、正解の選択肢のインデックス・正解/不正解の理由を生成するテスト"""
 
-        mock_create_system_prompt.return_value = "system_prompt"
         mock_create_user_prompt.return_value = "user_prompt"
         mock_response = MagicMock()
         mock_response.choices[0].message.parsed.correct_indexes = [2]
@@ -354,18 +295,16 @@ class TestGenerateCorrectAnswers(unittest.TestCase):
             mock_response
         )
 
-        course_name = "Math"
         subjects = ["What is 2 + 2?"]
         choices = ["3", "4", "5"]
 
-        correct_answers = generate_correct_answers(course_name, subjects, choices)
+        correct_answers = generate_correct_answers(subjects, choices)
 
         self.assertEqual(correct_answers["correct_indexes"], [2])
         self.assertEqual(
             correct_answers["explanations"],
             ["Option 2 is correct because 2 + 2 equals 4."],
         )
-        mock_create_system_prompt.assert_called_once_with(course_name)
         mock_create_user_prompt.assert_called_once_with(subjects, choices)
         mock_azure_openai.assert_called_once_with(
             api_key="test_api_key",
@@ -376,7 +315,7 @@ class TestGenerateCorrectAnswers(unittest.TestCase):
         mock_azure_openai.return_value.beta.chat.completions.parse.assert_called_once_with(
             model="test_model",
             messages=[
-                {"role": "system", "content": "system_prompt"},
+                {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": "user_prompt"},
             ],
             response_format=AnswerFormat,
@@ -390,7 +329,6 @@ class TestGenerateCorrectAnswers(unittest.TestCase):
         mock_logging.warning.assert_not_called()
 
     @patch("src.post_answer.AzureOpenAI")
-    @patch("src.post_answer.create_system_prompt")
     @patch("src.post_answer.create_user_prompt")
     @patch("src.post_answer.logging")
     @patch.dict(
@@ -407,12 +345,10 @@ class TestGenerateCorrectAnswers(unittest.TestCase):
         self,
         mock_logging,
         mock_create_user_prompt,
-        mock_create_system_prompt,
         mock_azure_openai,
     ):
         """MAX_RETRY_NUMBER回リトライしても、正解の選択肢のインデックス・正解/不正解の理由が生成できない場合のテスト"""
 
-        mock_create_system_prompt.return_value = "system_prompt"
         mock_create_user_prompt.return_value = "user_prompt"
         mock_response = MagicMock()
         mock_response.choices[0].message.parsed = None
@@ -420,14 +356,12 @@ class TestGenerateCorrectAnswers(unittest.TestCase):
             mock_response
         )
 
-        course_name = "Math"
         subjects = ["What is 2 + 2?"]
         choices = ["3", "4", "5"]
 
-        correct_answers = generate_correct_answers(course_name, subjects, choices)
+        correct_answers = generate_correct_answers(subjects, choices)
 
         self.assertIsNone(correct_answers)
-        mock_create_system_prompt.assert_called_once_with(course_name)
         mock_create_user_prompt.assert_called_once_with(subjects, choices)
         mock_logging.info.assert_has_calls(
             [
@@ -438,7 +372,6 @@ class TestGenerateCorrectAnswers(unittest.TestCase):
         mock_logging.warning.assert_not_called()
 
     @patch("src.post_answer.AzureOpenAI")
-    @patch("src.post_answer.create_system_prompt")
     @patch("src.post_answer.create_user_prompt")
     @patch("src.post_answer.logging")
     @patch.dict(
@@ -455,25 +388,21 @@ class TestGenerateCorrectAnswers(unittest.TestCase):
         self,
         mock_logging,
         mock_create_user_prompt,
-        mock_create_system_prompt,
         mock_azure_openai,
     ):
         """正解の選択肢のインデックス・正解/不正解の理由の生成でエラーが発生した場合のテスト"""
 
-        mock_create_system_prompt.return_value = "system_prompt"
         mock_create_user_prompt.return_value = "user_prompt"
         mock_azure_openai.return_value.beta.chat.completions.parse.side_effect = [
             Exception("Azure OpenAI Error"),
         ]
 
-        course_name = "Math"
         subjects = ["What is 2 + 2?"]
         choices = ["3", "4", "5"]
 
-        correct_answers = generate_correct_answers(course_name, subjects, choices)
+        correct_answers = generate_correct_answers(subjects, choices)
 
         self.assertIsNone(correct_answers)
-        mock_create_system_prompt.assert_called_once_with(course_name)
         mock_create_user_prompt.assert_called_once_with(subjects, choices)
         mock_logging.info.assert_called_once_with({"retry_number": 0})
         mock_logging.warning.assert_called_once()
@@ -559,7 +488,6 @@ class TestPostAnswer(unittest.TestCase):
         req.route_params = {"testId": "1", "questionNumber": "1"}
         req.get_body.return_value = json.dumps(
             {
-                "courseName": "Math",
                 "subjects": ["What is 2 + 2?"],
                 "choices": ["3", "4", "5"],
             }
@@ -577,7 +505,7 @@ class TestPostAnswer(unittest.TestCase):
         )
         mock_validate_request.assert_called_once_with(req)
         mock_generate_correct_answers.assert_called_once_with(
-            "Math", ["What is 2 + 2?"], ["3", "4", "5"]
+            ["What is 2 + 2?"], ["3", "4", "5"]
         )
         mock_queue_message_answer.assert_called_once_with(
             {
@@ -591,7 +519,6 @@ class TestPostAnswer(unittest.TestCase):
         )
         mock_logging.info.assert_called_once_with(
             {
-                "course_name": "Math",
                 "question_number": "1",
                 "test_id": "1",
                 "subjects": ["What is 2 + 2?"],
@@ -615,7 +542,6 @@ class TestPostAnswer(unittest.TestCase):
         req.route_params = {"testId": "1", "questionNumber": "1"}
         req.get_body.return_value = json.dumps(
             {
-                "courseName": "Math",
                 "subjects": ["What is 2 + 2?"],
                 "choices": ["3", "4", "5"],
             }
@@ -647,7 +573,6 @@ class TestPostAnswer(unittest.TestCase):
         req.route_params = {"testId": "1", "questionNumber": "1"}
         req.get_body.return_value = json.dumps(
             {
-                "courseName": "Math",
                 "subjects": ["What is 2 + 2?"],
                 "choices": ["3", "4", "5"],
             }
@@ -659,11 +584,10 @@ class TestPostAnswer(unittest.TestCase):
         self.assertEqual(response.get_body(), b"Internal Server Error")
         mock_validate_request.assert_called_once_with(req)
         mock_generate_correct_answers.assert_called_once_with(
-            "Math", ["What is 2 + 2?"], ["3", "4", "5"]
+            ["What is 2 + 2?"], ["3", "4", "5"]
         )
         mock_logging.info.assert_called_once_with(
             {
-                "course_name": "Math",
                 "question_number": "1",
                 "test_id": "1",
                 "subjects": ["What is 2 + 2?"],

@@ -15,6 +15,9 @@ from type.structured import AnswerFormat
 from util.queue import AZURITE_QUEUE_STORAGE_CONNECTION_STRING
 
 MAX_RETRY_NUMBER: int = 5
+SYSTEM_PROMPT: str = (
+    "You are a professional who provides correct explanations for candidates of the exam."
+)
 
 
 def validate_request(req: func.HttpRequest) -> str | None:
@@ -46,10 +49,6 @@ def validate_request(req: func.HttpRequest) -> str | None:
     else:
         req_body: PostAnswerReq = json.loads(req_body_encoded.decode("utf-8"))
 
-        course_name = req_body.get("courseName")
-        if not course_name or course_name == "":
-            errors.append("courseName is Empty")
-
         subjects = req_body.get("subjects")
         if not subjects:
             errors.append("subjects is Empty")
@@ -63,21 +62,6 @@ def validate_request(req: func.HttpRequest) -> str | None:
             errors.append(f"Invalid choices: {choices}")
 
     return errors[0] if errors else None
-
-
-def create_system_prompt(course_name: str) -> str:
-    """
-    Azure OpenAIのシステムプロンプトを作成する
-
-    Args:
-        course_name (str): コース名
-
-    Returns:
-        str: Azure OpenAIのシステムプロンプト
-    """
-
-    # pylint: disable=line-too-long
-    return f'You are a professional who provides correct explanations for candidates of the exam named "{course_name}".'
 
 
 def create_user_prompt(subjects: list[str], choices: list[str]) -> str:
@@ -116,10 +100,10 @@ Which solution will meet these requirements?
 For the question and choices in this first example, generate a sentence that shows the correct option, starting with "Correct Option: ", followed by sentences that explain why each option is correct/incorrect, as follows:
 ---
 Correct Option: 2
-Option 0 is incorrect because the requirements state that the only inbound port that should be open is 443.
-Option 1 is incorrect because the requirements state that the only inbound port that should be open is 443.
-Option 2 is correct because AWS Systems Manager Run Command requires no inbound ports to be open. Run Command operates entirely over outbound HTTPS, which is open by default for security groups.
-Option 3 is incorrect because AWS Trusted Advisor does not perform this management function.
+Option "Change the SSH port to 2222 on the cluster instances by using a user data script. Log in to each instance by using SSH over port 2222." is incorrect because the requirements state that the only inbound port that should be open is 443.
+Option "Change the SSH port to 2222 on the cluster instances by using a user data script. Use AWS Trusted Advisor to remotely manage the cluster instances over port 2222." is incorrect because the requirements state that the only inbound port that should be open is 443.
+Option "Launch the cluster instances with no SSH key pairs. Use AWS Systems Manager Run Command to remotely manage the cluster instances." is correct because AWS Systems Manager Run Command requires no inbound ports to be open. Run Command operates entirely over outbound HTTPS, which is open by default for security groups.
+Option "Launch the cluster instances with no SSH key pairs. Use AWS Trusted Advisor to remotely manage the cluster instances." is incorrect because AWS Trusted Advisor does not perform this management function.
 ---
 
 # Second Example
@@ -141,11 +125,11 @@ Which combination of actions should the solutions architect take to meet these r
 For the question and choices in this second example, generate a sentence that shows the correct options, starting with "Correct Options: ", followed by sentences that explain why each option is correct/incorrect, as follows:
 ---
 Correct Options: 1, 2
-Option 0 is incorrect because additional EC2 instances will not minimize operational overhead. A managed service would be a better option.
-Option 1 is correct because you can improve availability and scalability of the web tier by placing the web tier behind an Application Load Balancer (ALB). The ALB serves as the single point of contact for clients and distributes incoming application traffic to the Amazon EC2 instances.
-Option 2 is correct because Amazon Aurora Serverless provides high performance and high availability with reduced operational complexity.
-Option 3 is incorrect because the application includes Windows instances, which are not available for Graviton2.
-Option 4 is incorrect because a company-managed load balancer will not minimize operational overhead.
+Option "Run the MySQL database on multiple EC2 instances." is incorrect because additional EC2 instances will not minimize operational overhead. A managed service would be a better option.
+Option "Place the web tier instances behind an ALB." is correct because you can improve availability and scalability of the web tier by placing the web tier behind an Application Load Balancer (ALB). The ALB serves as the single point of contact for clients and distributes incoming application traffic to the Amazon EC2 instances.
+Option "Migrate the MySQL database to Amazon Aurora Serxverless." is correct because Amazon Aurora Serverless provides high performance and high availability with reduced operational complexity.
+Option "Migrate all EC2 instance types to Graviton2." is incorrect because the application includes Windows instances, which are not available for Graviton2.
+Option "Replace the ALB for the application tier instances with a company-managed load balancer." is incorrect because a company-managed load balancer will not minimize operational overhead.
 ---
 
 # Main Topic
@@ -159,13 +143,12 @@ Unless there is an instruction such as "Select THREE" in the question, there wil
 
 
 def generate_correct_answers(
-    course_name: str, subjects: list[str], choices: list[str]
+    subjects: list[str], choices: list[str]
 ) -> CorrectAnswers | None:
     """
     Azure OpenAIにコールして、正解の選択肢のインデックス・正解/不正解の理由を生成する
 
     Args:
-        course_name (str): コース名
         subjects (list[str]): 問題文のリスト
         choices (list[str]): 選択肢のリスト
 
@@ -173,7 +156,6 @@ def generate_correct_answers(
         CorrectAnswers | None: 正解の選択肢のインデックス・正解/不正解の理由(生成できない場合はNone)
     """
 
-    system_prompt: str = create_system_prompt(course_name)
     user_prompt: str = create_user_prompt(subjects, choices)
 
     try:
@@ -191,7 +173,7 @@ def generate_correct_answers(
                 messages=[
                     {
                         "role": "system",
-                        "content": system_prompt,
+                        "content": SYSTEM_PROMPT,
                     },
                     {
                         "role": "user",
@@ -256,7 +238,6 @@ def post_answer(req: func.HttpRequest) -> func.HttpResponse:
             return func.HttpResponse(body=error_message, status_code=400)
 
         req_body: PostAnswerReq = json.loads(req.get_body().decode("utf-8"))
-        course_name = req_body.get("courseName")
         subjects = req_body.get("subjects")
         choices = req_body.get("choices")
         test_id = req.route_params.get("testId")
@@ -264,7 +245,6 @@ def post_answer(req: func.HttpRequest) -> func.HttpResponse:
 
         logging.info(
             {
-                "course_name": course_name,
                 "question_number": question_number,
                 "test_id": test_id,
                 "subjects": subjects,
@@ -273,7 +253,7 @@ def post_answer(req: func.HttpRequest) -> func.HttpResponse:
         )
 
         # 正解の選択肢・正解/不正解の理由を生成
-        correct_answers = generate_correct_answers(course_name, subjects, choices)
+        correct_answers = generate_correct_answers(subjects, choices)
         if correct_answers is None:
             raise ValueError("Failed to generate correct answers")
 
