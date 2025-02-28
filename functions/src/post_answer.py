@@ -192,7 +192,7 @@ Unless there is an instruction such as "Select THREE" in the question, there wil
 
     # 各選択肢をユーザープロンプトに追記
     for idx, choice in enumerate(choices):
-        user_content_text += f"{idx}. {choice}"
+        user_content_text += f"{idx}. {choice}\n"
         if indicate_choice_imgs is not None and indicate_choice_imgs[idx] is not None:
             # 選択肢の後に画像URLを続ける場合は、テキスト(text)と画像URL(image_url)を区別してユーザープロンプトに追記
             user_content.append(
@@ -208,8 +208,6 @@ Unless there is an instruction such as "Select THREE" in the question, there wil
                 }
             )
             user_content_text = ""
-        else:
-            user_content_text += "\n"
 
     # ユーザープロンプトのフッターを追記
     user_content_text += "---"

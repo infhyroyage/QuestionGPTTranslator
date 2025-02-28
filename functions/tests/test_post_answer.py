@@ -106,71 +106,73 @@ class TestGetQuestionItems(unittest.TestCase):
 class TestCreateChatCompletionsMessages(unittest.TestCase):
     """create_chat_completions_messages関数のテストケース"""
 
-    def test_create_chat_completions_messages_without_images(self):
+    # pylint: disable=line-too-long
+    USER_CONTENT_TEXT_HEADER = (
+        "For a given question and the choices, you must generate sentences that show the correct option/options and explain why each option is correct/incorrect.\n"
+        'Unless there is an instruction such as "Select THREE" in the question, there is basically only one correct option.\n'
+        "For reference, here are two examples.\n\n"
+        "# First example\n"
+        "Assume that the following question and choices are given:\n"
+        "---\n"
+        "A company is launching a new web service on an Amazon Elastic Container Service (Amazon ECS) cluster. The cluster consists of 100 Amazon EC2 instances. Company policy requires the security group on the cluster instances to block all inbound traffic except HTTPS (port 443).\n"
+        "Which solution will meet these requirements?\n\n"
+        "0. Change the SSH port to 2222 on the cluster instances by using a user data script. Log in to each instance by using SSH over port 2222.\n"
+        "1. Change the SSH port to 2222 on the cluster instances by using a user data script. Use AWS Trusted Advisor to remotely manage the cluster instances over port 2222.\n"
+        "2. Launch the cluster instances with no SSH key pairs. Use AWS Systems Manager Run Command to remotely manage the cluster instances.\n"
+        "3. Launch the cluster instances with no SSH key pairs. Use AWS Trusted Advisor to remotely manage the cluster instances.\n"
+        "---\n"
+        'For the question and choices in this first example, generate a sentence that shows the correct option, starting with "Correct Option: ", followed by sentences that explain why each option is correct/incorrect, as follows:\n'
+        "---\n"
+        "Correct Option: 2\n"
+        'Option "Change the SSH port to 2222 on the cluster instances by using a user data script. Log in to each instance by using SSH over port 2222." is incorrect because the requirements state that the only inbound port that should be open is 443.\n'
+        'Option "Change the SSH port to 2222 on the cluster instances by using a user data script. Use AWS Trusted Advisor to remotely manage the cluster instances over port 2222." is incorrect because the requirements state that the only inbound port that should be open is 443.\n'
+        'Option "Launch the cluster instances with no SSH key pairs. Use AWS Systems Manager Run Command to remotely manage the cluster instances." is correct because AWS Systems Manager Run Command requires no inbound ports to be open. Run Command operates entirely over outbound HTTPS, which is open by default for security groups.\n'
+        'Option "Launch the cluster instances with no SSH key pairs. Use AWS Trusted Advisor to remotely manage the cluster instances." is incorrect because AWS Trusted Advisor does not perform this management function.\n'
+        "---\n\n"
+        "# Second Example\n"
+        "Assume that the following question and choices are given:\n"
+        "---\n"
+        "A company has deployed a multi-tier web application in the AWS Cloud. The application consists of the following tiers:\n"
+        "* A Windows-based web tier that is hosted on Amazon EC2 instances with Elastic IP addresses\n"
+        "* A Linux-based application tier that is hosted on EC2 instances that run behind an Application Load Balancer (ALB) that uses path-based routing\n"
+        "* A MySQL database that runs on a Linux EC2 instance\n"
+        "All the EC2 instances are using Intel-based x86 CPUs. A solutions architect needs to modernize the infrastructure to achieve better performance. The solution must minimize the operational overhead of the application.\n"
+        "Which combination of actions should the solutions architect take to meet these requirements? (Select TWO.)\n\n"
+        "0. Run the MySQL database on multiple EC2 instances.\n"
+        "1. Place the web tier instances behind an ALB.\n"
+        "2. Migrate the MySQL database to Amazon Aurora Serxverless.\n"
+        "3. Migrate all EC2 instance types to Graviton2.\n"
+        "4. Replace the ALB for the application tier instances with a company-managed load balancer.\n"
+        "---\n"
+        'For the question and choices in this second example, generate a sentence that shows the correct options, starting with "Correct Options: ", followed by sentences that explain why each option is correct/incorrect, as follows:\n'
+        "---\n"
+        "Correct Options: 1, 2\n"
+        'Option "Run the MySQL database on multiple EC2 instances." is incorrect because additional EC2 instances will not minimize operational overhead. A managed service would be a better option.\n'
+        'Option "Place the web tier instances behind an ALB." is correct because you can improve availability and scalability of the web tier by placing the web tier behind an Application Load Balancer (ALB). The ALB serves as the single point of contact for clients and distributes incoming application traffic to the Amazon EC2 instances.\n'
+        'Option "Migrate the MySQL database to Amazon Aurora Serxverless." is correct because Amazon Aurora Serverless provides high performance and high availability with reduced operational complexity.\n'
+        'Option "Migrate all EC2 instance types to Graviton2." is incorrect because the application includes Windows instances, which are not available for Graviton2.\n'
+        'Option "Replace the ALB for the application tier instances with a company-managed load balancer." is incorrect because a company-managed load balancer will not minimize operational overhead.\n'
+        "---\n\n"
+        "# Main Topic\n"
+        "For the question and choices below, generate sentences that show the correct option/options and explain why each option is correct/incorrect.\n"
+        'Unless there is an instruction such as "Select THREE" in the question, there will generally only be one correct option.\n'
+        "---\n"
+    )
+    USER_CONTENT_TEXT_FOOTER = "---"
+
+    def test_create_chat_completions_messages_no_images(self):
         """すべての問題文・選択肢に画像URLが含まれない場合のテスト"""
 
         subjects = ["What is 2 + 2?"]
         choices = ["3", "4", "5"]
-        # pylint: disable=line-too-long
-        user_content_text = (
-            "For a given question and the choices, you must generate sentences that show the correct option/options and explain why each option is correct/incorrect.\n"
-            'Unless there is an instruction such as "Select THREE" in the question, there is basically only one correct option.\n'
-            "For reference, here are two examples.\n\n"
-            "# First example\n"
-            "Assume that the following question and choices are given:\n"
-            "---\n"
-            "A company is launching a new web service on an Amazon Elastic Container Service (Amazon ECS) cluster. The cluster consists of 100 Amazon EC2 instances. Company policy requires the security group on the cluster instances to block all inbound traffic except HTTPS (port 443).\n"
-            "Which solution will meet these requirements?\n\n"
-            "0. Change the SSH port to 2222 on the cluster instances by using a user data script. Log in to each instance by using SSH over port 2222.\n"
-            "1. Change the SSH port to 2222 on the cluster instances by using a user data script. Use AWS Trusted Advisor to remotely manage the cluster instances over port 2222.\n"
-            "2. Launch the cluster instances with no SSH key pairs. Use AWS Systems Manager Run Command to remotely manage the cluster instances.\n"
-            "3. Launch the cluster instances with no SSH key pairs. Use AWS Trusted Advisor to remotely manage the cluster instances.\n"
-            "---\n"
-            'For the question and choices in this first example, generate a sentence that shows the correct option, starting with "Correct Option: ", followed by sentences that explain why each option is correct/incorrect, as follows:\n'
-            "---\n"
-            "Correct Option: 2\n"
-            'Option "Change the SSH port to 2222 on the cluster instances by using a user data script. Log in to each instance by using SSH over port 2222." is incorrect because the requirements state that the only inbound port that should be open is 443.\n'
-            'Option "Change the SSH port to 2222 on the cluster instances by using a user data script. Use AWS Trusted Advisor to remotely manage the cluster instances over port 2222." is incorrect because the requirements state that the only inbound port that should be open is 443.\n'
-            'Option "Launch the cluster instances with no SSH key pairs. Use AWS Systems Manager Run Command to remotely manage the cluster instances." is correct because AWS Systems Manager Run Command requires no inbound ports to be open. Run Command operates entirely over outbound HTTPS, which is open by default for security groups.\n'
-            'Option "Launch the cluster instances with no SSH key pairs. Use AWS Trusted Advisor to remotely manage the cluster instances." is incorrect because AWS Trusted Advisor does not perform this management function.\n'
-            "---\n\n"
-            "# Second Example\n"
-            "Assume that the following question and choices are given:\n"
-            "---\n"
-            "A company has deployed a multi-tier web application in the AWS Cloud. The application consists of the following tiers:\n"
-            "* A Windows-based web tier that is hosted on Amazon EC2 instances with Elastic IP addresses\n"
-            "* A Linux-based application tier that is hosted on EC2 instances that run behind an Application Load Balancer (ALB) that uses path-based routing\n"
-            "* A MySQL database that runs on a Linux EC2 instance\n"
-            "All the EC2 instances are using Intel-based x86 CPUs. A solutions architect needs to modernize the infrastructure to achieve better performance. The solution must minimize the operational overhead of the application.\n"
-            "Which combination of actions should the solutions architect take to meet these requirements? (Select TWO.)\n\n"
-            "0. Run the MySQL database on multiple EC2 instances.\n"
-            "1. Place the web tier instances behind an ALB.\n"
-            "2. Migrate the MySQL database to Amazon Aurora Serxverless.\n"
-            "3. Migrate all EC2 instance types to Graviton2.\n"
-            "4. Replace the ALB for the application tier instances with a company-managed load balancer.\n"
-            "---\n"
-            'For the question and choices in this second example, generate a sentence that shows the correct options, starting with "Correct Options: ", followed by sentences that explain why each option is correct/incorrect, as follows:\n'
-            "---\n"
-            "Correct Options: 1, 2\n"
-            'Option "Run the MySQL database on multiple EC2 instances." is incorrect because additional EC2 instances will not minimize operational overhead. A managed service would be a better option.\n'
-            'Option "Place the web tier instances behind an ALB." is correct because you can improve availability and scalability of the web tier by placing the web tier behind an Application Load Balancer (ALB). The ALB serves as the single point of contact for clients and distributes incoming application traffic to the Amazon EC2 instances.\n'
-            'Option "Migrate the MySQL database to Amazon Aurora Serxverless." is correct because Amazon Aurora Serverless provides high performance and high availability with reduced operational complexity.\n'
-            'Option "Migrate all EC2 instance types to Graviton2." is incorrect because the application includes Windows instances, which are not available for Graviton2.\n'
-            'Option "Replace the ALB for the application tier instances with a company-managed load balancer." is incorrect because a company-managed load balancer will not minimize operational overhead.\n'
-            "---\n\n"
-            "# Main Topic\n"
-            "For the question and choices below, generate sentences that show the correct option/options and explain why each option is correct/incorrect.\n"
-            'Unless there is an instruction such as "Select THREE" in the question, there will generally only be one correct option.\n'
-            "---\n"
-            "What is 2 + 2?\n\n"
-            "0. 3\n"
-            "1. 4\n"
-            "2. 5\n"
-            "---"
+        indicate_subject_img_idxes = None
+        indicate_choice_imgs = None
+        messages = create_chat_completions_messages(
+            subjects, choices, indicate_subject_img_idxes, indicate_choice_imgs
         )
 
         self.assertEqual(
-            create_chat_completions_messages(subjects, choices, None, None),
+            messages,
             [
                 {
                     "role": "system",
@@ -181,8 +183,121 @@ class TestCreateChatCompletionsMessages(unittest.TestCase):
                     "content": [
                         {
                             "type": "text",
-                            "text": user_content_text,
+                            "text": (
+                                self.USER_CONTENT_TEXT_HEADER
+                                + "What is 2 + 2?\n\n"
+                                + "0. 3\n"
+                                + "1. 4\n"
+                                + "2. 5\n"
+                                + self.USER_CONTENT_TEXT_FOOTER
+                            ),
                         }
+                    ],
+                },
+            ],
+        )
+
+    def test_create_chat_completions_messages_subject_images(self):
+        """問題文に画像URLが含まれる場合のテスト"""
+
+        subjects = [
+            "What is 2 + 2?",
+            "https://example.com/image1.jpg",
+        ]
+        choices = ["3", "4", "5"]
+        indicate_subject_img_idxes = [1]
+        indicate_choice_imgs = None
+        messages = create_chat_completions_messages(
+            subjects, choices, indicate_subject_img_idxes, indicate_choice_imgs
+        )
+
+        self.assertEqual(
+            messages,
+            [
+                {
+                    "role": "system",
+                    "content": SYSTEM_PROMPT,
+                },
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": (
+                                self.USER_CONTENT_TEXT_HEADER + "What is 2 + 2?\n"
+                            ),
+                        },
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": "https://example.com/image1.jpg",
+                            },
+                        },
+                        {
+                            "type": "text",
+                            "text": "0. 3\n"
+                            + "1. 4\n"
+                            + "2. 5\n"
+                            + self.USER_CONTENT_TEXT_FOOTER,
+                        },
+                    ],
+                },
+            ],
+        )
+
+    def test_create_chat_completions_messages_choice_images(self):
+        """選択肢に画像URLが含まれる場合のテスト"""
+
+        subjects = ["What is 2 + 2?"]
+        choices = ["3", "4", "5"]
+        indicate_subject_img_idxes = None
+        indicate_choice_imgs = [
+            "https://example.com/image1.jpg",
+            None,
+            "https://example.com/image3.jpg",
+        ]
+        messages = create_chat_completions_messages(
+            subjects, choices, indicate_subject_img_idxes, indicate_choice_imgs
+        )
+
+        self.assertEqual(
+            messages,
+            [
+                {
+                    "role": "system",
+                    "content": SYSTEM_PROMPT,
+                },
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": (
+                                self.USER_CONTENT_TEXT_HEADER
+                                + "What is 2 + 2?\n\n"
+                                + "0. 3\n"
+                            ),
+                        },
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": "https://example.com/image1.jpg",
+                            },
+                        },
+                        {
+                            "type": "text",
+                            "text": "1. 4\n" + "2. 5\n",
+                        },
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": "https://example.com/image3.jpg",
+                            },
+                        },
+                        {
+                            "type": "text",
+                            "text": self.USER_CONTENT_TEXT_FOOTER,
+                        },
                     ],
                 },
             ],
