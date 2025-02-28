@@ -112,7 +112,7 @@ class TestCreateChatCompletionsMessages(unittest.TestCase):
         subjects = ["What is 2 + 2?"]
         choices = ["3", "4", "5"]
         # pylint: disable=line-too-long
-        content = (
+        user_content_text = (
             "For a given question and the choices, you must generate sentences that show the correct option/options and explain why each option is correct/incorrect.\n"
             'Unless there is an instruction such as "Select THREE" in the question, there is basically only one correct option.\n'
             "For reference, here are two examples.\n\n"
@@ -178,7 +178,12 @@ class TestCreateChatCompletionsMessages(unittest.TestCase):
                 },
                 {
                     "role": "user",
-                    "content": content,
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": user_content_text,
+                        }
+                    ],
                 },
             ],
         )
@@ -210,7 +215,15 @@ class TestGenerateCorrectAnswers(unittest.TestCase):
 
         mock_messages = [
             {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": "user_content"},
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": "user_content",
+                    }
+                ],
+            },
         ]
         mock_create_chat_completions_messages.return_value = mock_messages
         mock_response = MagicMock()
@@ -275,7 +288,15 @@ class TestGenerateCorrectAnswers(unittest.TestCase):
 
         mock_messages = [
             {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": "user_content"},
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": "user_content",
+                    }
+                ],
+            },
         ]
         mock_create_chat_completions_messages.return_value = mock_messages
         mock_response = MagicMock()
@@ -322,7 +343,15 @@ class TestGenerateCorrectAnswers(unittest.TestCase):
 
         mock_messages = [
             {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": "user_content"},
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": "user_content",
+                    }
+                ],
+            },
         ]
         mock_create_chat_completions_messages.return_value = mock_messages
         mock_azure_openai.return_value.beta.chat.completions.parse.side_effect = [

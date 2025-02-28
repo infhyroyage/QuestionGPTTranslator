@@ -9,6 +9,9 @@ import azure.functions as func
 from azure.cosmos import ContainerProxy
 from azure.storage.queue import BinaryBase64EncodePolicy, QueueClient
 from openai import AzureOpenAI
+from openai.types.chat.chat_completion_content_part_param import (
+    ChatCompletionContentPartParam,
+)
 from openai.types.chat.chat_completion_message_param import ChatCompletionMessageParam
 from type.cosmos import Question
 from type.message import MessageAnswer
@@ -103,13 +106,10 @@ def create_chat_completions_messages(
         Iterable[ChatCompletionMessageParam]: Azure OpenAIのチャット補完に設定するmessages
     """
 
-    joined_subjects: str = "\n".join(subjects)
-    joined_choices: str = "\n".join(
-        [f"{idx}. {choice}" for idx, choice in enumerate(choices)]
-    )
+    user_content: Iterable[ChatCompletionContentPartParam] = []
 
     # pylint: disable=line-too-long
-    content: str = f"""For a given question and the choices, you must generate sentences that show the correct option/options and explain why each option is correct/incorrect.
+    user_content_text: str = """For a given question and the choices, you must generate sentences that show the correct option/options and explain why each option is correct/incorrect.
 Unless there is an instruction such as "Select THREE" in the question, there is basically only one correct option.
 For reference, here are two examples.
 
@@ -163,22 +163,35 @@ Option "Replace the ALB for the application tier instances with a company-manage
 For the question and choices below, generate sentences that show the correct option/options and explain why each option is correct/incorrect.
 Unless there is an instruction such as "Select THREE" in the question, there will generally only be one correct option.
 ---
-{joined_subjects}
+"""
 
-{joined_choices}
----"""
-    messages: Iterable[ChatCompletionMessageParam] = [
+    for subject in subjects:
+        user_content_text += f"{subject}\n"
+
+    user_content_text += "\n"
+
+    for idx, choice in enumerate(choices):
+        user_content_text += f"{idx}. {choice}\n"
+
+    user_content_text += "---"
+
+    user_content.append(
+        {
+            "type": "text",
+            "text": user_content_text,
+        }
+    )
+
+    return [
         {
             "role": "system",
             "content": SYSTEM_PROMPT,
         },
         {
             "role": "user",
-            "content": content,
+            "content": user_content,
         },
     ]
-
-    return messages
 
 
 def generate_correct_answers(
@@ -200,7 +213,10 @@ def generate_correct_answers(
         CorrectAnswers | None: 正解の選択肢のインデックス・正解/不正解の理由(生成できない場合はNone)
     """
 
-    messages = create_chat_completions_messages(subjects, choices)
+    # Azure OpenAIのチャット補完に設定するmessagesを作成
+    messages: Iterable[ChatCompletionMessageParam] = create_chat_completions_messages(
+        subjects, choices
+    )
 
     try:
         for retry_number in range(MAX_RETRY_NUMBER):
