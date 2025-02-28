@@ -5,13 +5,15 @@ import logging
 import os
 
 import azure.functions as func
+from azure.cosmos import ContainerProxy
 from azure.storage.queue import BinaryBase64EncodePolicy, QueueClient
 from openai import AzureOpenAI
+from type.cosmos import Question
 from type.message import MessageAnswer
 from type.openai import CorrectAnswers
-from type.request import PostAnswerReq
 from type.response import PostAnswerRes
 from type.structured import AnswerFormat
+from util.cosmos import get_read_only_container
 from util.queue import AZURITE_QUEUE_STORAGE_CONNECTION_STRING
 
 MAX_RETRY_NUMBER: int = 5
@@ -43,25 +45,41 @@ def validate_request(req: func.HttpRequest) -> str | None:
     elif not question_number.isdigit():
         errors.append(f"Invalid questionNumber: {question_number}")
 
-    req_body_encoded: bytes = req.get_body()
-    if not req_body_encoded:
-        errors.append("Request Body is Empty")
-    else:
-        req_body: PostAnswerReq = json.loads(req_body_encoded.decode("utf-8"))
-
-        subjects = req_body.get("subjects")
-        if not subjects:
-            errors.append("subjects is Empty")
-        elif not isinstance(subjects, list):
-            errors.append(f"Invalid subjects: {subjects}")
-
-        choices = req_body.get("choices")
-        if not choices:
-            errors.append("choices is Empty")
-        elif not isinstance(choices, list):
-            errors.append(f"Invalid choices: {choices}")
-
     return errors[0] if errors else None
+
+
+def get_question_items(test_id: str, question_number: str) -> list[Question]:
+    """
+    テストIDと問題番号から、Questionコンテナーの項目を取得する
+
+    Args:
+        test_id (str): テストID
+        question_number (str): 問題番号
+
+    Returns:
+        list[Question]: Questionコンテナーの項目のリスト
+    """
+
+    # Questionコンテナーの読み取り専用インスタンスを取得
+    container: ContainerProxy = get_read_only_container(
+        database_name="Users",
+        container_name="Question",
+    )
+
+    # Questionコンテナーから項目取得
+    return list(
+        container.query_items(
+            query=(
+                "SELECT c.subjects, c.choices, c.indicateSubjectImgIdxes, c.indicateChoiceImgs "
+                "FROM c WHERE c.testId = @testId AND c.number = @number"
+            ),
+            parameters=[
+                {"name": "@testId", "value": test_id},
+                {"name": "@number", "value": int(question_number)},
+            ],
+            enable_cross_partition_query=True,
+        )
+    )
 
 
 def create_user_prompt(subjects: list[str], choices: list[str]) -> str:
@@ -143,14 +161,19 @@ Unless there is an instruction such as "Select THREE" in the question, there wil
 
 
 def generate_correct_answers(
-    subjects: list[str], choices: list[str]
+    subjects: list[str],
+    choices: list[str],
+    # indicateSubjectImgIdxes: list[int] | None,
+    # indicateChoiceImgs: list[str | None] | None,
 ) -> CorrectAnswers | None:
     """
     Azure OpenAIにコールして、正解の選択肢のインデックス・正解/不正解の理由を生成する
 
     Args:
-        subjects (list[str]): 問題文のリスト
+        subjects (list[str]): 問題文/画像URLのリスト
         choices (list[str]): 選択肢のリスト
+        indicateSubjectImgIdxes (list[int] | None): subjectsで指定した画像URLのインデックスのリスト
+        indicateChoiceImgs (list[str | None] | None): choicesの後に続ける画像URLのリスト(画像URLを続けない場合はNone)
 
     Returns:
         CorrectAnswers | None: 正解の選択肢のインデックス・正解/不正解の理由(生成できない場合はNone)
@@ -228,7 +251,7 @@ bp_post_answer = func.Blueprint()
 )
 def post_answer(req: func.HttpRequest) -> func.HttpResponse:
     """
-    英語の問題文・選択肢の文章から、英語の正解の選択肢・正解/不正解の理由を生成します
+    英語の正解の選択肢・正解/不正解の理由を生成します
     """
 
     try:
@@ -237,9 +260,6 @@ def post_answer(req: func.HttpRequest) -> func.HttpResponse:
         if error_message:
             return func.HttpResponse(body=error_message, status_code=400)
 
-        req_body: PostAnswerReq = json.loads(req.get_body().decode("utf-8"))
-        subjects = req_body.get("subjects")
-        choices = req_body.get("choices")
         test_id = req.route_params.get("testId")
         question_number = req.route_params.get("questionNumber")
 
@@ -247,13 +267,24 @@ def post_answer(req: func.HttpRequest) -> func.HttpResponse:
             {
                 "question_number": question_number,
                 "test_id": test_id,
-                "subjects": subjects,
-                "choices": choices,
             }
         )
 
+        # Questionコンテナーの項目を取得し、その項目数をチェック
+        items: list[Question] = get_question_items(test_id, question_number)
+        logging.info({"items": items})
+        if len(items) == 0:
+            return func.HttpResponse(body="Not Found Question", status_code=404)
+        if len(items) > 1:
+            raise ValueError("Not Unique Question")
+
         # 正解の選択肢・正解/不正解の理由を生成
-        correct_answers = generate_correct_answers(subjects, choices)
+        correct_answers = generate_correct_answers(
+            items[0]["subjects"],
+            items[0]["choices"],
+            # items[0]["indicateSubjectImgIdxes"],
+            # items[0]["indicateChoiceImgs"],
+        )
         if correct_answers is None:
             raise ValueError("Failed to generate correct answers")
 
@@ -262,8 +293,8 @@ def post_answer(req: func.HttpRequest) -> func.HttpResponse:
             {
                 "testId": test_id,
                 "questionNumber": question_number,
-                "subjects": subjects,
-                "choices": choices,
+                "subjects": items[0]["subjects"],
+                "choices": items[0]["choices"],
                 "correctIdxes": correct_answers["correct_indexes"],
                 "explanations": correct_answers["explanations"],
             }

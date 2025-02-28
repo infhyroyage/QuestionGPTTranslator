@@ -132,7 +132,7 @@ paths:
   /tests/{testId}/answers/{questionNumber}:
     post:
       summary: 回答生成API
-      description: 英語の問題文・選択肢の文章から、英語の正解の選択肢・正解/不正解の理由を生成します
+      description: 英語の正解の選択肢・正解/不正解の理由を生成します
       operationId: post-answer
       parameters:
         - name: testId
@@ -153,22 +153,6 @@ paths:
           required: true
           schema:
             type: string
-      requestBody:
-        description: 英語の問題文・選択肢の文章
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                subjects:
-                  type: array
-                  items:
-                    type: string
-                choices:
-                  type: array
-                  items:
-                    type: string
-        required: true
       responses:
         "200":
           description: サーバー処理が正常終了しました
@@ -195,6 +179,12 @@ paths:
                 type: string
         "401":
           description: アクセスが拒否されました
+          content:
+            application/json:
+              schema:
+                type: string
+        "404":
+          description: 指定した問題・選択肢が存在しません
           content:
             application/json:
               schema:
