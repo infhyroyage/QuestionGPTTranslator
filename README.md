@@ -28,7 +28,10 @@
 | `(Your Own Translator)`    | Functions からアクセスする事前作成の Translator(枠を使い切った場合は代わりに DeepL へアクセスする) |
 
 > [!WARNING]  
-> Azure OpenAI は、[Structured outputs をサポートするモデル・バージョン](https://learn.microsoft.com/ja-jp/azure/ai-services/openai/how-to/structured-outputs?tabs=python-secure#supported-models) を使用する必要がある。
+> Azure OpenAI は、以下をすべてサポートするモデル・バージョンを使用する必要がある。
+>
+> - [Structured outputs](https://learn.microsoft.com/ja-jp/azure/ai-services/openai/how-to/structured-outputs)
+> - [Vision-enabled](https://learn.microsoft.com/ja-jp/azure/ai-services/openai/how-to/gpt-with-vision)
 
 ## 使用する主要なパッケージのバージョン
 

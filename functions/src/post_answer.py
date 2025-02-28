@@ -90,8 +90,8 @@ def get_question_items(test_id: str, question_number: str) -> list[Question]:
 def create_chat_completions_messages(
     subjects: list[str],
     choices: list[str],
-    # indicateSubjectImgIdxes: list[int] | None,
-    # indicateChoiceImgs: list[str | None] | None,
+    indicate_subject_img_idxes: list[int] | None,
+    indicate_choice_imgs: list[str | None] | None,
 ) -> Iterable[ChatCompletionMessageParam]:
     """
     Azure OpenAIのチャット補完に設定するmessagesを作成する
@@ -99,8 +99,8 @@ def create_chat_completions_messages(
     Args:
         subjects (list[str]): 問題文/画像URLのリスト
         choices (list[str]): 選択肢のリスト
-        indicateSubjectImgIdxes (list[int] | None): subjectsで指定した画像URLのインデックスのリスト
-        indicateChoiceImgs (list[str | None] | None): choicesの後に続ける画像URLのリスト(画像URLを続けない場合はNone)
+        indicate_subject_img_idxes (list[int] | None): subjectsで指定した画像URLのインデックスのリスト
+        indicate_choice_imgs (list[str | None] | None): choicesの後に続ける画像URLのリスト(画像URLを続けない場合はNone)
 
     Returns:
         Iterable[ChatCompletionMessageParam]: Azure OpenAIのチャット補完に設定するmessages
@@ -108,6 +108,7 @@ def create_chat_completions_messages(
 
     user_content: Iterable[ChatCompletionContentPartParam] = []
 
+    # ユーザープロンプトのヘッダーを生成
     # pylint: disable=line-too-long
     user_content_text: str = """For a given question and the choices, you must generate sentences that show the correct option/options and explain why each option is correct/incorrect.
 Unless there is an instruction such as "Select THREE" in the question, there is basically only one correct option.
@@ -165,16 +166,53 @@ Unless there is an instruction such as "Select THREE" in the question, there wil
 ---
 """
 
-    for subject in subjects:
-        user_content_text += f"{subject}\n"
+    # 各問題文をユーザープロンプトに追記
+    for idx, subject in enumerate(subjects):
+        if indicate_subject_img_idxes is not None and idx in indicate_subject_img_idxes:
+            # 問題文が画像URLの場合は、テキスト(text)と画像URL(image_url)を区別してユーザープロンプトに追記
+            user_content.append(
+                {
+                    "type": "text",
+                    "text": user_content_text,
+                }
+            )
+            user_content.append(
+                {
+                    "type": "image_url",
+                    "image_url": {"url": subject},
+                }
+            )
+            user_content_text = ""
+        else:
+            user_content_text += f"{subject}\n"
 
-    user_content_text += "\n"
+    if user_content_text != "":
+        # 問題文と選択肢との間に改行を追記
+        user_content_text += "\n"
 
+    # 各選択肢をユーザープロンプトに追記
     for idx, choice in enumerate(choices):
-        user_content_text += f"{idx}. {choice}\n"
+        user_content_text += f"{idx}. {choice}"
+        if indicate_choice_imgs is not None and indicate_choice_imgs[idx] is not None:
+            # 選択肢の後に画像URLを続ける場合は、テキスト(text)と画像URL(image_url)を区別してユーザープロンプトに追記
+            user_content.append(
+                {
+                    "type": "text",
+                    "text": user_content_text,
+                }
+            )
+            user_content.append(
+                {
+                    "type": "image_url",
+                    "image_url": {"url": indicate_choice_imgs[idx]},
+                }
+            )
+            user_content_text = ""
+        else:
+            user_content_text += "\n"
 
+    # ユーザープロンプトのフッターを追記
     user_content_text += "---"
-
     user_content.append(
         {
             "type": "text",
@@ -197,8 +235,8 @@ Unless there is an instruction such as "Select THREE" in the question, there wil
 def generate_correct_answers(
     subjects: list[str],
     choices: list[str],
-    # indicateSubjectImgIdxes: list[int] | None,
-    # indicateChoiceImgs: list[str | None] | None,
+    indicate_subject_img_idxes: list[int] | None,
+    indicate_choice_imgs: list[str | None] | None,
 ) -> CorrectAnswers | None:
     """
     Azure OpenAIにコールして、正解の選択肢のインデックス・正解/不正解の理由を生成する
@@ -206,8 +244,8 @@ def generate_correct_answers(
     Args:
         subjects (list[str]): 問題文/画像URLのリスト
         choices (list[str]): 選択肢のリスト
-        indicateSubjectImgIdxes (list[int] | None): subjectsで指定した画像URLのインデックスのリスト
-        indicateChoiceImgs (list[str | None] | None): choicesの後に続ける画像URLのリスト(画像URLを続けない場合はNone)
+        indicate_subject_img_idxes (list[int] | None): subjectsで指定した画像URLのインデックスのリスト
+        indicate_choice_imgs (list[str | None] | None): choicesの後に続ける画像URLのリスト(画像URLを続けない場合はNone)
 
     Returns:
         CorrectAnswers | None: 正解の選択肢のインデックス・正解/不正解の理由(生成できない場合はNone)
@@ -215,7 +253,7 @@ def generate_correct_answers(
 
     # Azure OpenAIのチャット補完に設定するmessagesを作成
     messages: Iterable[ChatCompletionMessageParam] = create_chat_completions_messages(
-        subjects, choices
+        subjects, choices, indicate_subject_img_idxes, indicate_choice_imgs
     )
 
     try:
@@ -308,10 +346,10 @@ def post_answer(req: func.HttpRequest) -> func.HttpResponse:
 
         # 正解の選択肢・正解/不正解の理由を生成
         correct_answers = generate_correct_answers(
-            items[0]["subjects"],
-            items[0]["choices"],
-            # items[0]["indicateSubjectImgIdxes"],
-            # items[0]["indicateChoiceImgs"],
+            items[0].get("subjects"),
+            items[0].get("choices"),
+            items[0].get("indicateSubjectImgIdxes"),
+            items[0].get("indicateChoiceImgs"),
         )
         if correct_answers is None:
             raise ValueError("Failed to generate correct answers")
@@ -321,8 +359,8 @@ def post_answer(req: func.HttpRequest) -> func.HttpResponse:
             {
                 "testId": test_id,
                 "questionNumber": question_number,
-                "subjects": items[0]["subjects"],
-                "choices": items[0]["choices"],
+                "subjects": items[0].get("subjects"),
+                "choices": items[0].get("choices"),
                 "correctIdxes": correct_answers["correct_indexes"],
                 "explanations": correct_answers["explanations"],
             }

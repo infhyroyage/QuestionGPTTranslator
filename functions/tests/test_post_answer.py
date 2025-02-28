@@ -106,8 +106,8 @@ class TestGetQuestionItems(unittest.TestCase):
 class TestCreateChatCompletionsMessages(unittest.TestCase):
     """create_chat_completions_messages関数のテストケース"""
 
-    def test_create_chat_completions_messages(self):
-        """Azure OpenAIのparse関数に設定するmessagesの値のテスト"""
+    def test_create_chat_completions_messages_without_images(self):
+        """すべての問題文・選択肢に画像URLが含まれない場合のテスト"""
 
         subjects = ["What is 2 + 2?"]
         choices = ["3", "4", "5"]
@@ -170,7 +170,7 @@ class TestCreateChatCompletionsMessages(unittest.TestCase):
         )
 
         self.assertEqual(
-            create_chat_completions_messages(subjects, choices),
+            create_chat_completions_messages(subjects, choices, None, None),
             [
                 {
                     "role": "system",
@@ -238,14 +238,16 @@ class TestGenerateCorrectAnswers(unittest.TestCase):
         subjects = ["What is 2 + 2?"]
         choices = ["3", "4", "5"]
 
-        correct_answers = generate_correct_answers(subjects, choices)
+        correct_answers = generate_correct_answers(subjects, choices, None, None)
 
         self.assertEqual(correct_answers["correct_indexes"], [2])
         self.assertEqual(
             correct_answers["explanations"],
             ["Option 2 is correct because 2 + 2 equals 4."],
         )
-        mock_create_chat_completions_messages.assert_called_once_with(subjects, choices)
+        mock_create_chat_completions_messages.assert_called_once_with(
+            subjects, choices, None, None
+        )
         mock_azure_openai.assert_called_once_with(
             api_key="test_api_key",
             api_version="test_api_version",
@@ -308,10 +310,12 @@ class TestGenerateCorrectAnswers(unittest.TestCase):
         subjects = ["What is 2 + 2?"]
         choices = ["3", "4", "5"]
 
-        correct_answers = generate_correct_answers(subjects, choices)
+        correct_answers = generate_correct_answers(subjects, choices, None, None)
 
         self.assertIsNone(correct_answers)
-        mock_create_chat_completions_messages.assert_called_once_with(subjects, choices)
+        mock_create_chat_completions_messages.assert_called_once_with(
+            subjects, choices, None, None
+        )
         mock_logging.info.assert_has_calls(
             [
                 call({"retry_number": i / 2}) if i % 2 == 0 else call({"parsed": None})
@@ -361,10 +365,12 @@ class TestGenerateCorrectAnswers(unittest.TestCase):
         subjects = ["What is 2 + 2?"]
         choices = ["3", "4", "5"]
 
-        correct_answers = generate_correct_answers(subjects, choices)
+        correct_answers = generate_correct_answers(subjects, choices, None, None)
 
         self.assertIsNone(correct_answers)
-        mock_create_chat_completions_messages.assert_called_once_with(subjects, choices)
+        mock_create_chat_completions_messages.assert_called_once_with(
+            subjects, choices, None, None
+        )
         mock_logging.info.assert_called_once_with({"retry_number": 0})
         mock_logging.warning.assert_called_once()
 
@@ -469,7 +475,7 @@ class TestPostAnswer(unittest.TestCase):
         mock_validate_request.assert_called_once_with(req)
         mock_get_question_items.assert_called_once_with("1", "1")
         mock_generate_correct_answers.assert_called_once_with(
-            ["What is 2 + 2?"], ["3", "4", "5"]
+            ["What is 2 + 2?"], ["3", "4", "5"], None, None
         )
         mock_queue_message_answer.assert_called_once_with(
             {
@@ -633,7 +639,7 @@ class TestPostAnswer(unittest.TestCase):
         mock_validate_request.assert_called_once_with(req)
         mock_get_question_items.assert_called_once_with("1", "1")
         mock_generate_correct_answers.assert_called_once_with(
-            ["What is 2 + 2?"], ["3", "4", "5"]
+            ["What is 2 + 2?"], ["3", "4", "5"], None, None
         )
         mock_logging.info.assert_has_calls(
             [
