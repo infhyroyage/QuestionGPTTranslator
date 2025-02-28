@@ -3,11 +3,13 @@
 import json
 import logging
 import os
+from typing import Iterable
 
 import azure.functions as func
 from azure.cosmos import ContainerProxy
 from azure.storage.queue import BinaryBase64EncodePolicy, QueueClient
 from openai import AzureOpenAI
+from openai.types.chat.chat_completion_message_param import ChatCompletionMessageParam
 from type.cosmos import Question
 from type.message import MessageAnswer
 from type.openai import CorrectAnswers
@@ -82,16 +84,23 @@ def get_question_items(test_id: str, question_number: str) -> list[Question]:
     )
 
 
-def create_user_prompt(subjects: list[str], choices: list[str]) -> str:
+def create_chat_completions_messages(
+    subjects: list[str],
+    choices: list[str],
+    # indicateSubjectImgIdxes: list[int] | None,
+    # indicateChoiceImgs: list[str | None] | None,
+) -> Iterable[ChatCompletionMessageParam]:
     """
-    Azure OpenAIのユーザープロンプトを作成する
+    Azure OpenAIのチャット補完に設定するmessagesを作成する
 
     Args:
-        subjects (list[str]): 問題文
-        choices (list[str]): 選択肢
+        subjects (list[str]): 問題文/画像URLのリスト
+        choices (list[str]): 選択肢のリスト
+        indicateSubjectImgIdxes (list[int] | None): subjectsで指定した画像URLのインデックスのリスト
+        indicateChoiceImgs (list[str | None] | None): choicesの後に続ける画像URLのリスト(画像URLを続けない場合はNone)
 
     Returns:
-        str: Azure OpenAIのユーザープロンプト
+        Iterable[ChatCompletionMessageParam]: Azure OpenAIのチャット補完に設定するmessages
     """
 
     joined_subjects: str = "\n".join(subjects)
@@ -100,7 +109,7 @@ def create_user_prompt(subjects: list[str], choices: list[str]) -> str:
     )
 
     # pylint: disable=line-too-long
-    return f"""For a given question and the choices, you must generate sentences that show the correct option/options and explain why each option is correct/incorrect.
+    content: str = f"""For a given question and the choices, you must generate sentences that show the correct option/options and explain why each option is correct/incorrect.
 Unless there is an instruction such as "Select THREE" in the question, there is basically only one correct option.
 For reference, here are two examples.
 
@@ -158,6 +167,18 @@ Unless there is an instruction such as "Select THREE" in the question, there wil
 
 {joined_choices}
 ---"""
+    messages: Iterable[ChatCompletionMessageParam] = [
+        {
+            "role": "system",
+            "content": SYSTEM_PROMPT,
+        },
+        {
+            "role": "user",
+            "content": content,
+        },
+    ]
+
+    return messages
 
 
 def generate_correct_answers(
@@ -179,7 +200,7 @@ def generate_correct_answers(
         CorrectAnswers | None: 正解の選択肢のインデックス・正解/不正解の理由(生成できない場合はNone)
     """
 
-    user_prompt: str = create_user_prompt(subjects, choices)
+    messages = create_chat_completions_messages(subjects, choices)
 
     try:
         for retry_number in range(MAX_RETRY_NUMBER):
@@ -193,16 +214,7 @@ def generate_correct_answers(
                 azure_endpoint=os.environ["OPENAI_ENDPOINT"],
             ).beta.chat.completions.parse(
                 model=os.environ["OPENAI_MODEL"],
-                messages=[
-                    {
-                        "role": "system",
-                        "content": SYSTEM_PROMPT,
-                    },
-                    {
-                        "role": "user",
-                        "content": user_prompt,
-                    },
-                ],
+                messages=messages,
                 response_format=AnswerFormat,
             )
             logging.info({"parsed": response.choices[0].message.parsed})

@@ -1,4 +1,4 @@
-"""[POST] /answer のテスト"""
+"""[POST] /tests/{testId}/answers/{questionNumber} のテスト"""
 
 import json
 import os
@@ -9,7 +9,7 @@ import azure.functions as func
 from src.post_answer import (
     MAX_RETRY_NUMBER,
     SYSTEM_PROMPT,
-    create_user_prompt,
+    create_chat_completions_messages,
     generate_correct_answers,
     get_question_items,
     post_answer,
@@ -103,16 +103,16 @@ class TestGetQuestionItems(unittest.TestCase):
         )
 
 
-class TestCreateUserPrompt(unittest.TestCase):
-    """create_user_prompt関数のテストケース"""
+class TestCreateChatCompletionsMessages(unittest.TestCase):
+    """create_chat_completions_messages関数のテストケース"""
 
-    def test_create_user_prompt(self):
-        """Azure OpenAIのユーザープロンプトのテスト"""
+    def test_create_chat_completions_messages(self):
+        """Azure OpenAIのparse関数に設定するmessagesの値のテスト"""
 
         subjects = ["What is 2 + 2?"]
         choices = ["3", "4", "5"]
         # pylint: disable=line-too-long
-        expected_prompt = (
+        content = (
             "For a given question and the choices, you must generate sentences that show the correct option/options and explain why each option is correct/incorrect.\n"
             'Unless there is an instruction such as "Select THREE" in the question, there is basically only one correct option.\n'
             "For reference, here are two examples.\n\n"
@@ -169,14 +169,26 @@ class TestCreateUserPrompt(unittest.TestCase):
             "---"
         )
 
-        self.assertEqual(create_user_prompt(subjects, choices), expected_prompt)
+        self.assertEqual(
+            create_chat_completions_messages(subjects, choices),
+            [
+                {
+                    "role": "system",
+                    "content": SYSTEM_PROMPT,
+                },
+                {
+                    "role": "user",
+                    "content": content,
+                },
+            ],
+        )
 
 
 class TestGenerateCorrectAnswers(unittest.TestCase):
     """generate_correct_answers関数のテストケース"""
 
     @patch("src.post_answer.AzureOpenAI")
-    @patch("src.post_answer.create_user_prompt")
+    @patch("src.post_answer.create_chat_completions_messages")
     @patch("src.post_answer.logging")
     @patch.dict(
         os.environ,
@@ -191,12 +203,16 @@ class TestGenerateCorrectAnswers(unittest.TestCase):
     def test_generate_correct_answers_no_retry(
         self,
         mock_logging,
-        mock_create_user_prompt,
+        mock_create_chat_completions_messages,
         mock_azure_openai,
     ):
         """リトライせずに、正解の選択肢のインデックス・正解/不正解の理由を生成するテスト"""
 
-        mock_create_user_prompt.return_value = "user_prompt"
+        mock_messages = [
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": "user_content"},
+        ]
+        mock_create_chat_completions_messages.return_value = mock_messages
         mock_response = MagicMock()
         mock_response.choices[0].message.parsed.correct_indexes = [2]
         mock_response.choices[0].message.parsed.explanations = [
@@ -216,7 +232,7 @@ class TestGenerateCorrectAnswers(unittest.TestCase):
             correct_answers["explanations"],
             ["Option 2 is correct because 2 + 2 equals 4."],
         )
-        mock_create_user_prompt.assert_called_once_with(subjects, choices)
+        mock_create_chat_completions_messages.assert_called_once_with(subjects, choices)
         mock_azure_openai.assert_called_once_with(
             api_key="test_api_key",
             api_version="test_api_version",
@@ -225,10 +241,7 @@ class TestGenerateCorrectAnswers(unittest.TestCase):
         )
         mock_azure_openai.return_value.beta.chat.completions.parse.assert_called_once_with(
             model="test_model",
-            messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": "user_prompt"},
-            ],
+            messages=mock_messages,
             response_format=AnswerFormat,
         )
         mock_logging.info.assert_has_calls(
@@ -240,7 +253,7 @@ class TestGenerateCorrectAnswers(unittest.TestCase):
         mock_logging.warning.assert_not_called()
 
     @patch("src.post_answer.AzureOpenAI")
-    @patch("src.post_answer.create_user_prompt")
+    @patch("src.post_answer.create_chat_completions_messages")
     @patch("src.post_answer.logging")
     @patch.dict(
         os.environ,
@@ -255,12 +268,16 @@ class TestGenerateCorrectAnswers(unittest.TestCase):
     def test_generate_correct_answers_max_retry(
         self,
         mock_logging,
-        mock_create_user_prompt,
+        mock_create_chat_completions_messages,
         mock_azure_openai,
     ):
         """MAX_RETRY_NUMBER回リトライしても、正解の選択肢のインデックス・正解/不正解の理由が生成できない場合のテスト"""
 
-        mock_create_user_prompt.return_value = "user_prompt"
+        mock_messages = [
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": "user_content"},
+        ]
+        mock_create_chat_completions_messages.return_value = mock_messages
         mock_response = MagicMock()
         mock_response.choices[0].message.parsed = None
         mock_azure_openai.return_value.beta.chat.completions.parse.return_value = (
@@ -273,7 +290,7 @@ class TestGenerateCorrectAnswers(unittest.TestCase):
         correct_answers = generate_correct_answers(subjects, choices)
 
         self.assertIsNone(correct_answers)
-        mock_create_user_prompt.assert_called_once_with(subjects, choices)
+        mock_create_chat_completions_messages.assert_called_once_with(subjects, choices)
         mock_logging.info.assert_has_calls(
             [
                 call({"retry_number": i / 2}) if i % 2 == 0 else call({"parsed": None})
@@ -283,7 +300,7 @@ class TestGenerateCorrectAnswers(unittest.TestCase):
         mock_logging.warning.assert_not_called()
 
     @patch("src.post_answer.AzureOpenAI")
-    @patch("src.post_answer.create_user_prompt")
+    @patch("src.post_answer.create_chat_completions_messages")
     @patch("src.post_answer.logging")
     @patch.dict(
         os.environ,
@@ -298,12 +315,16 @@ class TestGenerateCorrectAnswers(unittest.TestCase):
     def test_generate_correct_answers_raise_error(
         self,
         mock_logging,
-        mock_create_user_prompt,
+        mock_create_chat_completions_messages,
         mock_azure_openai,
     ):
         """正解の選択肢のインデックス・正解/不正解の理由の生成でエラーが発生した場合のテスト"""
 
-        mock_create_user_prompt.return_value = "user_prompt"
+        mock_messages = [
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": "user_content"},
+        ]
+        mock_create_chat_completions_messages.return_value = mock_messages
         mock_azure_openai.return_value.beta.chat.completions.parse.side_effect = [
             Exception("Azure OpenAI Error"),
         ]
@@ -314,7 +335,7 @@ class TestGenerateCorrectAnswers(unittest.TestCase):
         correct_answers = generate_correct_answers(subjects, choices)
 
         self.assertIsNone(correct_answers)
-        mock_create_user_prompt.assert_called_once_with(subjects, choices)
+        mock_create_chat_completions_messages.assert_called_once_with(subjects, choices)
         mock_logging.info.assert_called_once_with({"retry_number": 0})
         mock_logging.warning.assert_called_once()
 
