@@ -10,4 +10,4 @@ requests==2.32.3
 # 関数アプリを認識しない障害の暫定対処として、cryptographyのバージョンを43.0.3に固定している
 # ただし、2025/02/16時点でバージョン44.0.0以下で脆弱性が報告されているため、以下URLを参考に後日更新すること
 # https://github.com/Azure/azure-sdk-for-python/issues/38725
-cryptography==43.0.3
+cryptography==44.0.2
