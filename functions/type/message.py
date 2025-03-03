@@ -14,3 +14,4 @@ class MessageAnswer(TypedDict):
     choices: List[str]
     correctIdxes: List[int]
     explanations: List[str]
+    communityVotes: List[str]

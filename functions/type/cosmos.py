@@ -12,6 +12,7 @@ class Answer(TypedDict):
     questionNumber: int
     correctIdxes: List[int]
     explanations: List[str]
+    communityVotes: List[str]
     testId: str
 
 

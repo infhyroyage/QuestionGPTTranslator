@@ -27,6 +27,7 @@ class TestQueueTriggeredAnswer(TestCase):
             {
                 "subjects": ["Subject 1"],
                 "choices": ["Choice 1", "Choice 2"],
+                "communityVotes": ["BC (70%)", "BD (30%)"],
             }
         ]
         mock_container_question.query_items.return_value = query_items_return_value
@@ -38,6 +39,7 @@ class TestQueueTriggeredAnswer(TestCase):
             "choices": ["Choice 1", "Choice 2"],
             "correctIdxes": [0],
             "explanations": ["Explanation 1"],
+            "communityVotes": ["BC (70%)", "BD (30%)"],
         }
         msg = func.QueueMessage(
             body=json.dumps(message_answer).encode("utf-8"),
@@ -52,6 +54,7 @@ class TestQueueTriggeredAnswer(TestCase):
             "questionNumber": 1,
             "correctIdxes": [0],
             "explanations": ["Explanation 1"],
+            "communityVotes": ["BC (70%)", "BD (30%)"],
             "testId": "1",
         }
         mock_container_answer.upsert_item.assert_called_once_with(expected_answer_item)
@@ -82,6 +85,7 @@ class TestQueueTriggeredAnswer(TestCase):
             "choices": ["Choice 1", "Choice 2"],
             "correctIdxes": [0],
             "explanations": ["Explanation 1"],
+            "communityVotes": ["BC (70%)", "BD (30%)"],
         }
         msg = func.QueueMessage(
             body=json.dumps(message_answer).encode("utf-8"),

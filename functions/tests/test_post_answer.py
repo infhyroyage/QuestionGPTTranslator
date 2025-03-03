@@ -77,6 +77,7 @@ class TestGetQuestionItems(unittest.TestCase):
             Question(
                 subjects=["What is 2 + 2?"],
                 choices=["3", "4", "5"],
+                communityVotes=["BC (70%)", "BD (30%)"],
             )
         ]
         mock_get_read_only_container.return_value = mock_container
@@ -84,7 +85,14 @@ class TestGetQuestionItems(unittest.TestCase):
         result = get_question_items("1", "1")
 
         self.assertEqual(
-            result, [Question(subjects=["What is 2 + 2?"], choices=["3", "4", "5"])]
+            result,
+            [
+                Question(
+                    subjects=["What is 2 + 2?"],
+                    choices=["3", "4", "5"],
+                    communityVotes=["BC (70%)", "BD (30%)"],
+                )
+            ],
         )
         mock_get_read_only_container.assert_called_once_with(
             database_name="Users",
@@ -92,7 +100,8 @@ class TestGetQuestionItems(unittest.TestCase):
         )
         mock_container.query_items.assert_called_once_with(
             query=(
-                "SELECT c.subjects, c.choices, c.indicateSubjectImgIdxes, c.indicateChoiceImgs "
+                "SELECT c.subjects, c.choices, c.indicateSubjectImgIdxes, "
+                "c.indicateChoiceImgs, c.communityVotes "
                 "FROM c WHERE c.testId = @testId AND c.number = @number"
             ),
             parameters=[
@@ -567,6 +576,7 @@ class TestPostAnswer(unittest.TestCase):
             Question(
                 subjects=["What is 2 + 2?"],
                 choices=["3", "4", "5"],
+                communityVotes=["BC (70%)", "BD (30%)"],
             )
         ]
         mock_generate_correct_answers.return_value = {
@@ -585,6 +595,7 @@ class TestPostAnswer(unittest.TestCase):
             {
                 "correctIdxes": [1],
                 "explanations": ["Option 2 is correct because 2 + 2 equals 4."],
+                "communityVotes": ["BC (70%)", "BD (30%)"],
             },
         )
         mock_validate_request.assert_called_once_with(req)
@@ -600,6 +611,7 @@ class TestPostAnswer(unittest.TestCase):
                 "choices": ["3", "4", "5"],
                 "correctIdxes": [1],
                 "explanations": ["Option 2 is correct because 2 + 2 equals 4."],
+                "communityVotes": ["BC (70%)", "BD (30%)"],
             }
         )
         mock_logging.info.assert_has_calls(
@@ -608,7 +620,11 @@ class TestPostAnswer(unittest.TestCase):
                 call(
                     {
                         "items": [
-                            {"subjects": ["What is 2 + 2?"], "choices": ["3", "4", "5"]}
+                            {
+                                "subjects": ["What is 2 + 2?"],
+                                "choices": ["3", "4", "5"],
+                                "communityVotes": ["BC (70%)", "BD (30%)"],
+                            }
                         ]
                     }
                 ),

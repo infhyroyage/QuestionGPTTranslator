@@ -33,7 +33,10 @@ def queue_triggered_answer(msg: func.QueueMessage):
     )
     items: list[Question] = list(
         container_question.query_items(
-            query="SELECT c.subjects, c.choices FROM c WHERE c.id = @id",
+            query=(
+                "SELECT c.subjects, c.choices, c.communityVotes "
+                "FROM c WHERE c.id = @id"
+            ),
             parameters=[
                 {
                     "name": "@id",
@@ -44,13 +47,14 @@ def queue_triggered_answer(msg: func.QueueMessage):
     )
     logging.info({"items": items})
 
-    # 1項目のみ取得し、取得した項目とメッセージとのsubjects/choicesがすべて一致する場合のみ、
-    # Answerコンテナーの項目をupsertする
+    # 1項目のみ取得し、取得した項目とメッセージとのsubjects/choices/communityVotesが
+    # すべて一致する場合のみ、Answerコンテナーの項目をupsertする
     # 上記以外の場合は不正なメッセージとみなし、その場で正常終了する
     if (
         len(items) == 1
         and items[0]["subjects"] == message_answer["subjects"]
         and items[0]["choices"] == message_answer["choices"]
+        and items[0]["communityVotes"] == message_answer["communityVotes"]
     ):
         container_answer: ContainerProxy = get_read_write_container(
             database_name="Users",
@@ -61,6 +65,7 @@ def queue_triggered_answer(msg: func.QueueMessage):
             "questionNumber": message_answer["questionNumber"],
             "correctIdxes": message_answer["correctIdxes"],
             "explanations": message_answer["explanations"],
+            "communityVotes": message_answer["communityVotes"],
             "testId": message_answer["testId"],
         }
         logging.info({"answer_item": answer_item})

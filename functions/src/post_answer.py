@@ -75,7 +75,8 @@ def get_question_items(test_id: str, question_number: str) -> list[Question]:
     return list(
         container.query_items(
             query=(
-                "SELECT c.subjects, c.choices, c.indicateSubjectImgIdxes, c.indicateChoiceImgs "
+                "SELECT c.subjects, c.choices, c.indicateSubjectImgIdxes, "
+                "c.indicateChoiceImgs, c.communityVotes "
                 "FROM c WHERE c.testId = @testId AND c.number = @number"
             ),
             parameters=[
@@ -361,12 +362,14 @@ def post_answer(req: func.HttpRequest) -> func.HttpResponse:
                 "choices": items[0].get("choices"),
                 "correctIdxes": correct_answers["correct_indexes"],
                 "explanations": correct_answers["explanations"],
+                "communityVotes": items[0].get("communityVotes"),
             }
         )
 
         body: PostAnswerRes = {
             "correctIdxes": correct_answers["correct_indexes"],
             "explanations": correct_answers["explanations"],
+            "communityVotes": items[0].get("communityVotes"),
         }
         return func.HttpResponse(
             body=json.dumps(body),

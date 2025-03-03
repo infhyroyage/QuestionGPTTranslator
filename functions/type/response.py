@@ -10,6 +10,7 @@ class GetAnswerRes(TypedDict):
 
     correctIdxes: List[int]
     explanations: List[str]
+    communityVotes: List[str]
 
 
 class GetHealthcheckRes(TypedDict):
@@ -75,6 +76,7 @@ class PostAnswerRes(TypedDict, total=False):
 
     correctIdxes: List[int]
     explanations: List[str]
+    communityVotes: List[str]
 
 
 class PutEn2JaRes(TypedDict):

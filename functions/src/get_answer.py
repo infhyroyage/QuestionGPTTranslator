@@ -65,7 +65,10 @@ def get_answer(req: func.HttpRequest) -> func.HttpResponse:
         # Answerコンテナーから項目取得
         items: list[Answer] = list(
             container.query_items(
-                query="SELECT c.correctIdxes, c.explanations FROM c WHERE c.id = @id",
+                query=(
+                    "SELECT c.correctIdxes, c.explanations, c.communityVotes "
+                    "FROM c WHERE c.id = @id"
+                ),
                 parameters=[{"name": "@id", "value": f"{test_id}_{question_number}"}],
             )
         )

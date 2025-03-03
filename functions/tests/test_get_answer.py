@@ -69,6 +69,7 @@ class TestGetAnswer(TestCase):
             {
                 "correctIdxes": [1],
                 "explanations": ["Option 1 is correct because..."],
+                "communityVotes": ["BC (70%)", "BD (30%)"],
             }
         ]
         mock_container.query_items.return_value = mock_items
@@ -88,6 +89,7 @@ class TestGetAnswer(TestCase):
         expected_body = {
             "correctIdxes": [1],
             "explanations": ["Option 1 is correct because..."],
+            "communityVotes": ["BC (70%)", "BD (30%)"],
         }
         self.assertEqual(json.loads(response.get_body().decode()), expected_body)
         mock_logging.info.assert_called_once_with({"items": [expected_body]})
@@ -146,8 +148,16 @@ class TestGetAnswer(TestCase):
         mock_validate_request.return_value = None
         mock_container = MagicMock()
         mock_container.query_items.return_value = [
-            {"correctIdxes": [1], "explanations": ["Option 1 is correct because..."]},
-            {"correctIdxes": [2], "explanations": ["Option 2 is correct because..."]},
+            {
+                "correctIdxes": [1],
+                "explanations": ["Option 1 is correct because..."],
+                "communityVotes": ["BC (70%)", "BD (30%)"],
+            },
+            {
+                "correctIdxes": [2],
+                "explanations": ["Option 2 is correct because..."],
+                "communityVotes": ["AD (70%)", "AE (30%)"],
+            },
         ]
         mock_get_read_only_container.return_value = mock_container
 
@@ -169,10 +179,12 @@ class TestGetAnswer(TestCase):
                     {
                         "correctIdxes": [1],
                         "explanations": ["Option 1 is correct because..."],
+                        "communityVotes": ["BC (70%)", "BD (30%)"],
                     },
                     {
                         "correctIdxes": [2],
                         "explanations": ["Option 2 is correct because..."],
+                        "communityVotes": ["AD (70%)", "AE (30%)"],
                     },
                 ]
             }
