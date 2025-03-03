@@ -171,6 +171,11 @@ paths:
                     items:
                       type: string
                       nullable: true
+                  communityVotes:
+                    type: array
+                    items:
+                      type: string
+                      nullable: true
         "400":
           description: リクエストパラメーターが不正です
           content:
@@ -231,6 +236,10 @@ paths:
                     items:
                       type: integer
                   explanations:
+                    type: array
+                    items:
+                      type: string
+                  communityVotes:
                     type: array
                     items:
                       type: string
