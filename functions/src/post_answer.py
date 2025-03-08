@@ -221,7 +221,7 @@ Unless there is an instruction such as "Select THREE" in the question, there wil
 
     return [
         {
-            "role": "system",
+            "role": "developer",
             "content": SYSTEM_PROMPT,
         },
         {
@@ -238,7 +238,7 @@ def generate_correct_answers(
     indicate_choice_imgs: list[str | None] | None,
 ) -> CorrectAnswers | None:
     """
-    Azure OpenAIにコールして、正解の選択肢のインデックス・正解/不正解の理由を生成する
+    正解の選択肢のインデックス・正解/不正解の理由を生成する
 
     Args:
         subjects (list[str]): 問題文/画像URLのリスト
@@ -259,7 +259,7 @@ def generate_correct_answers(
         for retry_number in range(MAX_RETRY_NUMBER):
             logging.info({"retry_number": retry_number})
 
-            # Azure OpenAIのレスポンスを取得
+            # AnswerFormatのStructuredOutputでAzure OpenAIのチャット補完を実行
             response = AzureOpenAI(
                 api_key=os.environ["OPENAI_API_KEY"],
                 api_version=os.environ["OPENAI_API_VERSION"],

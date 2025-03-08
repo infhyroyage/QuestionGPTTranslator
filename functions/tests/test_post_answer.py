@@ -184,7 +184,7 @@ class TestCreateChatCompletionsMessages(unittest.TestCase):
             messages,
             [
                 {
-                    "role": "system",
+                    "role": "developer",
                     "content": SYSTEM_PROMPT,
                 },
                 {
@@ -224,7 +224,7 @@ class TestCreateChatCompletionsMessages(unittest.TestCase):
             messages,
             [
                 {
-                    "role": "system",
+                    "role": "developer",
                     "content": SYSTEM_PROMPT,
                 },
                 {
@@ -273,7 +273,7 @@ class TestCreateChatCompletionsMessages(unittest.TestCase):
             messages,
             [
                 {
-                    "role": "system",
+                    "role": "developer",
                     "content": SYSTEM_PROMPT,
                 },
                 {
@@ -338,7 +338,7 @@ class TestGenerateCorrectAnswers(unittest.TestCase):
         """リトライせずに、正解の選択肢のインデックス・正解/不正解の理由を生成するテスト"""
 
         mock_messages = [
-            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "developer", "content": SYSTEM_PROMPT},
             {
                 "role": "user",
                 "content": [
@@ -413,7 +413,7 @@ class TestGenerateCorrectAnswers(unittest.TestCase):
         """MAX_RETRY_NUMBER回リトライしても、正解の選択肢のインデックス・正解/不正解の理由が生成できない場合のテスト"""
 
         mock_messages = [
-            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "developer", "content": SYSTEM_PROMPT},
             {
                 "role": "user",
                 "content": [
@@ -470,7 +470,7 @@ class TestGenerateCorrectAnswers(unittest.TestCase):
         """正解の選択肢のインデックス・正解/不正解の理由の生成でエラーが発生した場合のテスト"""
 
         mock_messages = [
-            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "developer", "content": SYSTEM_PROMPT},
             {
                 "role": "user",
                 "content": [
