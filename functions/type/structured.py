@@ -9,6 +9,9 @@ class AnswerFormat(BaseModel):
     """
 
     correct_indexes: list[int] = Field(
-        ..., description="正解の選択肢のインデックス(1から始まる)のリスト"
+        ..., description="An array of indexes of correct options"
     )
-    explanations: list[str] = Field(..., description="正解/不正解の理由のリスト")
+    explanations: list[str] = Field(
+        ...,
+        description="An array of explanations of why each option is correct/incorrect",
+    )
