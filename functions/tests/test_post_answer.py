@@ -130,13 +130,19 @@ class TestCreateChatCompletionsMessages(unittest.TestCase):
         "2. Launch the cluster instances with no SSH key pairs. Use AWS Systems Manager Run Command to remotely manage the cluster instances.\n"
         "3. Launch the cluster instances with no SSH key pairs. Use AWS Trusted Advisor to remotely manage the cluster instances.\n"
         "---\n"
-        'For the question and choices in this first example, generate a sentence that shows the correct option, starting with "Correct Option: ", followed by sentences that explain why each option is correct/incorrect, as follows:\n'
+        "For the question and choices in this first example, generate the JSON format with `correct_indexes` and `explanations`.\n"
+        "`correct_indexes` shows an array of indexes of correct options and `explanations` shows an array of explanations of why each option is correct/incorrect.\n"
+        'Since there is no instructions such as "Select THREE" in the question, the number of `correct_indexes` is only one, as follows:\n'
         "---\n"
-        "Correct Option: 2\n"
-        "This option is incorrect because the requirements state that the only inbound port that should be open is 443.\n"
-        "This option is incorrect because the requirements state that the only inbound port that should be open is 443.\n"
-        "This option is correct because AWS Systems Manager Run Command requires no inbound ports to be open. Run Command operates entirely over outbound HTTPS, which is open by default for security groups.\n"
-        "This option is incorrect because AWS Trusted Advisor does not perform this management function.\n"
+        "{\n"
+        '    "correct_indexes": [2],\n'
+        '    "explanations": [\n'
+        '        "This option is incorrect because the requirements state that the only inbound port that should be open is 443.",\n'
+        '        "This option is incorrect because the requirements state that the only inbound port that should be open is 443.",\n'
+        '        "This option is correct because AWS Systems Manager Run Command requires no inbound ports to be open. Run Command operates entirely over outbound HTTPS, which is open by default for security groups.",\n'
+        '        "This option is incorrect because AWS Trusted Advisor does not perform this management function."\n'
+        "    ]\n"
+        "}\n"
         "---\n\n"
         "# Second Example\n"
         "Assume that the following question and choices are given:\n"
@@ -153,18 +159,23 @@ class TestCreateChatCompletionsMessages(unittest.TestCase):
         "3. Migrate all EC2 instance types to Graviton2.\n"
         "4. Replace the ALB for the application tier instances with a company-managed load balancer.\n"
         "---\n"
-        'For the question and choices in this second example, generate a sentence that shows the correct options, starting with "Correct Options: ", followed by sentences that explain why each option is correct/incorrect, as follows:\n'
+        "For the question and choices in this second example, generate the JSON format with `correct_indexes` and `explanations`.\n"
+        "`correct_indexes` shows an array of indexes of correct options and `explanations` shows an array of explanations of why each option is correct/incorrect.\n"
+        'Since there is an instruction such as "Select TWO" in the question, the number of `correct_indexes` is two, as follows:\n'
         "---\n"
-        "Correct Options: 1, 2\n"
-        "This option is incorrect because additional EC2 instances will not minimize operational overhead. A managed service would be a better option.\n"
-        "This option is correct because you can improve availability and scalability of the web tier by placing the web tier behind an Application Load Balancer (ALB). The ALB serves as the single point of contact for clients and distributes incoming application traffic to the Amazon EC2 instances.\n"
-        "This option is correct because Amazon Aurora Serverless provides high performance and high availability with reduced operational complexity.\n"
-        "This option is incorrect because the application includes Windows instances, which are not available for Graviton2.\n"
-        "This option is incorrect because a company-managed load balancer will not minimize operational overhead.\n"
+        "{\n"
+        '    "correct_indexes": [1, 2],\n'
+        '    "explanations": [\n'
+        '        "This option is incorrect because additional EC2 instances will not minimize operational overhead. A managed service would be a better option.",\n'
+        '        "This option is correct because you can improve availability and scalability of the web tier by placing the web tier behind an Application Load Balancer (ALB). The ALB serves as the single point of contact for clients and distributes incoming application traffic to the Amazon EC2 instances.",\n'
+        '        "This option is correct because Amazon Aurora Serverless provides high performance and high availability with reduced operational complexity.",\n'
+        '        "This option is incorrect because the application includes Windows instances, which are not available for Graviton2.",\n'
+        '        "This option is incorrect because a company-managed load balancer will not minimize operational overhead."\n'
+        "    ]\n"
+        "}\n"
         "---\n\n"
         "# Main Topic\n"
-        "For the question and choices below, generate sentences that show the correct option/options and explain why each option is correct/incorrect.\n"
-        'Unless there is an instruction such as "Select THREE" in the question, there will generally only be one correct option.\n'
+        "For the question and choices below, generate the JSON format with `correct_indexes` and `explanations`.\n"
         "---\n"
     )
     USER_CONTENT_TEXT_FOOTER = "---"

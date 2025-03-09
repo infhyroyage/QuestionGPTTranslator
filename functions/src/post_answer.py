@@ -126,13 +126,19 @@ Which solution will meet these requirements?
 2. Launch the cluster instances with no SSH key pairs. Use AWS Systems Manager Run Command to remotely manage the cluster instances.
 3. Launch the cluster instances with no SSH key pairs. Use AWS Trusted Advisor to remotely manage the cluster instances.
 ---
-For the question and choices in this first example, generate a sentence that shows the correct option, starting with "Correct Option: ", followed by sentences that explain why each option is correct/incorrect, as follows:
+For the question and choices in this first example, generate the JSON format with `correct_indexes` and `explanations`.
+`correct_indexes` shows an array of indexes of correct options and `explanations` shows an array of explanations of why each option is correct/incorrect.
+Since there is no instructions such as "Select THREE" in the question, the number of `correct_indexes` is only one, as follows:
 ---
-Correct Option: 2
-This option is incorrect because the requirements state that the only inbound port that should be open is 443.
-This option is incorrect because the requirements state that the only inbound port that should be open is 443.
-This option is correct because AWS Systems Manager Run Command requires no inbound ports to be open. Run Command operates entirely over outbound HTTPS, which is open by default for security groups.
-This option is incorrect because AWS Trusted Advisor does not perform this management function.
+{
+    "correct_indexes": [2],
+    "explanations": [
+        "This option is incorrect because the requirements state that the only inbound port that should be open is 443.",
+        "This option is incorrect because the requirements state that the only inbound port that should be open is 443.",
+        "This option is correct because AWS Systems Manager Run Command requires no inbound ports to be open. Run Command operates entirely over outbound HTTPS, which is open by default for security groups.",
+        "This option is incorrect because AWS Trusted Advisor does not perform this management function."
+    ]
+}
 ---
 
 # Second Example
@@ -151,19 +157,24 @@ Which combination of actions should the solutions architect take to meet these r
 3. Migrate all EC2 instance types to Graviton2.
 4. Replace the ALB for the application tier instances with a company-managed load balancer.
 ---
-For the question and choices in this second example, generate a sentence that shows the correct options, starting with "Correct Options: ", followed by sentences that explain why each option is correct/incorrect, as follows:
+For the question and choices in this second example, generate the JSON format with `correct_indexes` and `explanations`.
+`correct_indexes` shows an array of indexes of correct options and `explanations` shows an array of explanations of why each option is correct/incorrect.
+Since there is an instruction such as "Select TWO" in the question, the number of `correct_indexes` is two, as follows:
 ---
-Correct Options: 1, 2
-This option is incorrect because additional EC2 instances will not minimize operational overhead. A managed service would be a better option.
-This option is correct because you can improve availability and scalability of the web tier by placing the web tier behind an Application Load Balancer (ALB). The ALB serves as the single point of contact for clients and distributes incoming application traffic to the Amazon EC2 instances.
-This option is correct because Amazon Aurora Serverless provides high performance and high availability with reduced operational complexity.
-This option is incorrect because the application includes Windows instances, which are not available for Graviton2.
-This option is incorrect because a company-managed load balancer will not minimize operational overhead.
+{
+    "correct_indexes": [1, 2],
+    "explanations": [
+        "This option is incorrect because additional EC2 instances will not minimize operational overhead. A managed service would be a better option.",
+        "This option is correct because you can improve availability and scalability of the web tier by placing the web tier behind an Application Load Balancer (ALB). The ALB serves as the single point of contact for clients and distributes incoming application traffic to the Amazon EC2 instances.",
+        "This option is correct because Amazon Aurora Serverless provides high performance and high availability with reduced operational complexity.",
+        "This option is incorrect because the application includes Windows instances, which are not available for Graviton2.",
+        "This option is incorrect because a company-managed load balancer will not minimize operational overhead."
+    ]
+}
 ---
 
 # Main Topic
-For the question and choices below, generate sentences that show the correct option/options and explain why each option is correct/incorrect.
-Unless there is an instruction such as "Select THREE" in the question, there will generally only be one correct option.
+For the question and choices below, generate the JSON format with `correct_indexes` and `explanations`.
 ---
 """
 
