@@ -48,7 +48,6 @@ jobs:
             openAIDeployment=${{ vars.OPENAI_DEPLOYMENT }}
             openAIEndpoint=${{ vars.OPENAI_ENDPOINT }}
             openAIModel=${{ vars.OPENAI_MODEL }}
-            translatorKey=${{ secrets.TRANSLATOR_KEY }}
 
   # 短期間でAzure Functionsのアプリケーション設定を複数回更新すると、正常終了したのにも関わらず更新しない場合があるため
   # 1回のみ更新するようにJob/Stepを構成する

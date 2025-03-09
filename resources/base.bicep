@@ -10,8 +10,6 @@ param openAIApiVersion string
 param openAIDeployment string
 param openAIEndpoint string
 param openAIModel string
-@secure()
-param translatorKey string
 
 var apimApisName = 'apis-functions'
 var apisHealthcheckName = 'apis-healthcheck-functions'
@@ -42,6 +40,8 @@ var lawName = 'qgtranslator-je-law'
 var storageBlobContainerName = 'import-items'
 var storageName = 'qgtranslatorjesa'
 var storageQueueName = 'answers'
+
+var translatorName = 'qgtranslator-je-translator'
 
 var vaultName = 'qgtranslator-je-vault'
 var vaultSecretNames = {
@@ -397,6 +397,19 @@ resource functions 'Microsoft.Web/sites@2022-09-01' = {
   }
 }
 
+// Translator
+resource translator 'Microsoft.CognitiveServices/accounts@2024-10-01' = {
+  name: translatorName
+  location: location
+  sku: {
+    name: 'F0'
+  }
+  kind: 'TextTranslation'
+  properties: {
+    publicNetworkAccess: 'Enabled'
+  }
+}
+
 // Key Vault
 resource vault 'Microsoft.KeyVault/vaults@2023-02-01' = {
   name: vaultName
@@ -518,6 +531,6 @@ resource vaultSecretsTranslatorKey 'Microsoft.KeyVault/vaults/secrets@2023-02-01
     attributes: {
       enabled: true
     }
-    value: translatorKey
+    value: translator.listKeys().key1
   }
 }
