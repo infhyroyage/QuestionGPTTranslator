@@ -335,9 +335,9 @@ class TestGenerateCorrectAnswers(unittest.TestCase):
         {
             "OPENAI_API_KEY": "test_api_key",
             "OPENAI_API_VERSION": "test_api_version",
-            "OPENAI_DEPLOYMENT": "test_deployment",
+            "OPENAI_DEPLOYMENT_NAME": "test_deployment_name",
             "OPENAI_ENDPOINT": "test_endpoint",
-            "OPENAI_MODEL": "test_model",
+            "OPENAI_MODEL_NAME": "test_model_name",
         },
     )
     def test_generate_correct_answers_no_retry(
@@ -386,11 +386,11 @@ class TestGenerateCorrectAnswers(unittest.TestCase):
         mock_azure_openai.assert_called_once_with(
             api_key="test_api_key",
             api_version="test_api_version",
-            azure_deployment="test_deployment",
+            azure_deployment="test_deployment_name",
             azure_endpoint="test_endpoint",
         )
         mock_azure_openai.return_value.beta.chat.completions.parse.assert_called_once_with(
-            model="test_model",
+            model="test_model_name",
             messages=mock_messages,
             response_format=AnswerFormat,
         )
@@ -410,9 +410,9 @@ class TestGenerateCorrectAnswers(unittest.TestCase):
         {
             "OPENAI_API_KEY": "test_api_key",
             "OPENAI_API_VERSION": "test_api_version",
-            "OPENAI_DEPLOYMENT": "test_deployment",
+            "OPENAI_DEPLOYMENT_NAME": "test_deployment_name",
             "OPENAI_ENDPOINT": "test_endpoint",
-            "OPENAI_MODEL": "test_model",
+            "OPENAI_MODEL_NAME": "test_model_name",
         },
     )
     def test_generate_correct_answers_max_retry(
@@ -467,9 +467,9 @@ class TestGenerateCorrectAnswers(unittest.TestCase):
         {
             "OPENAI_API_KEY": "test_api_key",
             "OPENAI_API_VERSION": "test_api_version",
-            "OPENAI_DEPLOYMENT": "test_deployment",
+            "OPENAI_DEPLOYMENT_NAME": "test_deployment_name",
             "OPENAI_ENDPOINT": "test_endpoint",
-            "OPENAI_MODEL": "test_model",
+            "OPENAI_MODEL_NAME": "test_model_name",
         },
     )
     def test_generate_correct_answers_raise_error(

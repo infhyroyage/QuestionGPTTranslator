@@ -5,11 +5,10 @@ param azureApimPublisherEmail string
 param deeplAuthKey string
 param location string = resourceGroup().location
 @secure()
-param openAIApiKey string
 param openAIApiVersion string
-param openAIDeployment string
-param openAIEndpoint string
-param openAIModel string
+param openAIDeploymentName string
+param openAILocation string
+param openAIModelName string
 
 var apimApisName = 'apis-functions'
 var apisHealthcheckName = 'apis-healthcheck-functions'
@@ -36,6 +35,8 @@ var functionsName = 'qgtranslator-je-func'
 var insightsName = 'qgtranslator-je-insights'
 
 var lawName = 'qgtranslator-je-law'
+
+var openAIName = 'qgtranslator-eus2-openai'
 
 var storageBlobContainerName = 'import-items'
 var storageName = 'qgtranslatorjesa'
@@ -249,6 +250,37 @@ resource cosmosDBDatabaseUsersContainerAnswer 'Microsoft.DocumentDb/databaseAcco
   }
 }
 
+// OpenAI
+resource openAI 'Microsoft.CognitiveServices/accounts@2024-10-01' = {
+  name: openAIName
+  location: openAILocation
+  sku: {
+    name: 'S0'
+  }
+  kind: 'AIServices'
+  properties: {
+    publicNetworkAccess: 'Enabled'
+  }
+}
+
+resource openAIDeployments 'Microsoft.CognitiveServices/accounts/deployments@2024-10-01' = {
+  parent: openAI
+  name: openAIDeploymentName
+  sku: {
+    name: 'GlobalStandard'
+    capacity: 500
+  }
+  properties: {
+    model: {
+      format: 'OpenAI'
+      name: openAIModelName
+      version: openAIApiVersion
+    }
+    versionUpgradeOption: 'OnceCurrentVersionExpired'
+    currentCapacity: 500
+  }
+}
+
 // Storage Account
 resource storage 'Microsoft.Storage/storageAccounts@2023-05-01' = {
   name: storageName
@@ -370,16 +402,16 @@ resource functions 'Microsoft.Web/sites@2022-09-01' = {
           value: openAIApiVersion
         }
         {
-          name: 'OPENAI_DEPLOYMENT'
-          value: openAIDeployment
+          name: 'OPENAI_DEPLOYMENT_NAME'
+          value: openAIDeploymentName
         }
         {
           name: 'OPENAI_ENDPOINT'
-          value: openAIEndpoint
+          value: openAI.properties.endpoint
         }
         {
-          name: 'OPENAI_MODEL'
-          value: openAIModel
+          name: 'OPENAI_MODEL_NAME'
+          value: openAIModelName
         }
         {
           name: 'WEBSITE_ENABLE_SYNC_UPDATE_SITE'
@@ -521,7 +553,7 @@ resource vaultSecretsOpenAIApiKey 'Microsoft.KeyVault/vaults/secrets@2023-02-01'
     attributes: {
       enabled: true
     }
-    value: openAIApiKey
+    value: openAI.listKeys().key1
   }
 }
 resource vaultSecretsTranslatorKey 'Microsoft.KeyVault/vaults/secrets@2023-02-01' = {

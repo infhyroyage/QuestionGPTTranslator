@@ -43,11 +43,10 @@ jobs:
             azureAdEAContributorObjectId=${{ vars.AZURE_AD_EA_CONTRIBUTOR_OBJECT_ID }}
             azureApimPublisherEmail=${{ secrets.AZURE_APIM_PUBLISHER_EMAIL }}
             deeplAuthKey=${{ secrets.DEEPL_AUTH_KEY }}
-            openAIApiKey=${{ secrets.OPENAI_API_KEY }}
             openAIApiVersion=${{ vars.OPENAI_API_VERSION }}
-            openAIDeployment=${{ vars.OPENAI_DEPLOYMENT }}
-            openAIEndpoint=${{ vars.OPENAI_ENDPOINT }}
-            openAIModel=${{ vars.OPENAI_MODEL }}
+            openAIDeploymentName=${{ vars.OPENAI_DEPLOYMENT_NAME }}
+            openAILocation=${{ vars.OPENAI_LOCATION }}
+            openAIModelName=${{ vars.OPENAI_MODEL_NAME }}
 
   # 短期間でAzure Functionsのアプリケーション設定を複数回更新すると、正常終了したのにも関わらず更新しない場合があるため
   # 1回のみ更新するようにJob/Stepを構成する

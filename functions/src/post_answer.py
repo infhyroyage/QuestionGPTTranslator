@@ -274,10 +274,10 @@ def generate_correct_answers(
             response = AzureOpenAI(
                 api_key=os.environ["OPENAI_API_KEY"],
                 api_version=os.environ["OPENAI_API_VERSION"],
-                azure_deployment=os.environ["OPENAI_DEPLOYMENT"],
+                azure_deployment=os.environ["OPENAI_DEPLOYMENT_NAME"],
                 azure_endpoint=os.environ["OPENAI_ENDPOINT"],
             ).beta.chat.completions.parse(
-                model=os.environ["OPENAI_MODEL"],
+                model=os.environ["OPENAI_MODEL_NAME"],
                 messages=messages,
                 response_format=AnswerFormat,
             )
