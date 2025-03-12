@@ -4,11 +4,11 @@ param azureApimPublisherEmail string
 @secure()
 param deeplAuthKey string
 param location string = resourceGroup().location
-@secure()
 param openAIApiVersion string
 param openAIDeploymentName string
 param openAILocation string
 param openAIModelName string
+param openAIModelVersion string
 
 var apimApisName = 'apis-functions'
 var apisHealthcheckName = 'apis-healthcheck-functions'
@@ -46,16 +46,13 @@ var translatorName = 'qgtranslator-je-translator'
 
 var vaultName = 'qgtranslator-je-vault'
 var vaultSecretNames = {
-  translatorKey: 'translator-key'
   cosmosDBPrimaryKey: 'cosmos-db-primary-key'
   cosmosDBPrimaryReadonlyKey: 'cosmos-db-primary-readonly-key'
   deeplAuthKey: 'deepl-auth-key'
   insightsConnectionString: 'insights-connection-string'
   insightsInstrumentationKey: 'insights-instrumentation-key'
   openAIApiKey: 'openai-api-key'
-  openAIApiVersion: 'openai-api-version'
-  openAIDeployment: 'openai-deployment'
-  openAIEndpoint: 'openai-endpoint'
+  translatorKey: 'translator-key'
 }
 
 // API Management
@@ -274,7 +271,7 @@ resource openAIDeployments 'Microsoft.CognitiveServices/accounts/deployments@202
     model: {
       format: 'OpenAI'
       name: openAIModelName
-      version: openAIApiVersion
+      version: openAIModelVersion
     }
     versionUpgradeOption: 'OnceCurrentVersionExpired'
     currentCapacity: 500
