@@ -15,23 +15,26 @@
 
 ![architecture.drawio](architecture.drawio.svg)
 
-| Azure リソース名           | 概要                                                                                               |
-| -------------------------- | -------------------------------------------------------------------------------------------------- |
-| `qgtranslator-je-apim`     | ユーザー/App Service からアクセスする API Management                                               |
-| `qgtranslator-je-func`     | API Management からアクセスする Functions                                                          |
-| `qgtranslator-je-funcplan` | Functions のプラン                                                                                 |
-| `qgtranslatorjesa`         | Functions から参照するストレージアカウント                                                         |
-| `qgtranslator-je-cosmosdb` | Functions からアクセスする Cosmos DB                                                               |
-| `qgtranslator-je-vault`    | シークレットを管理する Key Vault                                                                   |
-| `qgtranslator-je-insights` | App Service/API Management/Functions を一括で監視する Application Insights                         |
-| `(Your Own OpenAI)`        | Functions からアクセスする事前作成の Structured outputs をサポートする Azure OpenAI                |
-| `(Your Own Translator)`    | Functions からアクセスする事前作成の Translator(枠を使い切った場合は代わりに DeepL へアクセスする) |
+| Azure リソース名             | 概要                                                     | リージョン                    |
+| ---------------------------- | -------------------------------------------------------- | ----------------------------- |
+| `qgtranslator-je-apim`       | ユーザー/App Service からアクセスする API Management     | japaneast                     |
+| `qgtranslator-je-func`       | API Management からアクセスする Functions                | japaneast                     |
+| `qgtranslator-je-funcplan`   | Functions のプラン                                       | japaneast                     |
+| `qgtranslatorjesa`           | Functions から参照するストレージアカウント               | japaneast                     |
+| `qgtranslator-je-cosmosdb`   | Functions からアクセスする Cosmos DB                     | japaneast                     |
+| `qgtranslator-je-vault`      | シークレットを管理する Key Vault                         | japaneast                     |
+| `qgtranslator-je-insights`   | API Management/Functions を監視する Application Insights | japaneast                     |
+| `qgtranslator-eus2-openai`   | Functions からアクセスする Azure OpenAI                  | GitHub リポジトリの変数で指定 |
+| `qgtranslator-je-translator` | Functions からアクセスする Translator                    | japaneast                     |
 
 > [!WARNING]  
-> Azure OpenAI は、以下をすべてサポートするモデル・バージョンを使用する必要がある。
+> Azure OpenAI(`qgtranslator-eus2-openai`) は、以下をすべてサポートする場所・モデル名・モデルバージョン・API バージョンを使用する必要がある。
 >
 > - [Structured outputs](https://learn.microsoft.com/ja-jp/azure/ai-services/openai/how-to/structured-outputs)
 > - [Vision-enabled](https://learn.microsoft.com/ja-jp/azure/ai-services/openai/how-to/gpt-with-vision)
+
+> [!NOTE]  
+> Translator(`qgtranslator-je-translator`)の価格レベルは Free(無料)である。この無料枠をすべて使い切った場合、代わりに DeepL へアクセスする。
 
 ## 使用する主要なパッケージのバージョン
 
@@ -46,16 +49,29 @@
 
 Azure リソース/localhost に環境を構築する事前準備として、以下の順で初期構築を必ずすべて行う必要がある。
 
-1. Azure AD 認証認可用サービスプリンシパルの発行
-2. GitHub Actions 用サービスプリンシパルの発行
-3. リポジトリのシークレット・変数設定
-4. インポートデータファイルの作成
+1. Azure サブスクリプションの新規作成
+2. Azure AD 認証認可用サービスプリンシパルの発行
+3. GitHub Actions 用サービスプリンシパルの発行
+4. リポジトリのシークレット・変数設定
+5. インポートデータファイルの作成
 
-### 1. Azure AD 認証認可用サービスプリンシパルの発行
+### 1. Azure サブスクリプションの新規作成
 
-[Microsoft ID Platform](https://learn.microsoft.com/ja-jp/azure/active-directory/develop/v2-overview)経由で Web アプリケーションに認証認可を実現するためのサービスプリンシパル QGTranslator_MSAL を以下の手順で発行する。
+1. [Azure Portal](https://portal.azure.com/) にログインし、サブスクリプションに遷移する。
+2. 「+ 追加」ボタンを押下する。
+3. 表示されたフォームに必要事項を入力し、「確認と作成」ボタンを押下する。
+   - サブスクリプション名: 任意の名前（例: `QuestionGPTTranslator`）
+   - 課金アカウント: 適切な課金アカウントを選択
+   - 請求者セクション: 適切な請求者セクションを選択
+   - プラン: 適切なプランを選択
+4. 内容を確認し、「作成」ボタンを押下する。
+5. 作成されたサブスクリプションのサブスクリプション ID を手元に控える。
 
-1. Azure Portal から Azure AD に遷移する。
+### 2. Azure AD 認証認可用サービスプリンシパルの発行
+
+新規作成した Azure サブスクリプションに対し、[Microsoft ID Platform](https://learn.microsoft.com/ja-jp/azure/active-directory/develop/v2-overview)経由で Web アプリケーションに認証認可を実現するためのサービスプリンシパル QGTranslator_MSAL を以下の手順で発行する。
+
+1. [Azure Portal](https://portal.azure.com/)にログインし、Azure AD に遷移する。
 2. App Registrations > New registration の順で押下し、以下の項目を入力後、Register ボタンを押下してサービスプリンシパルを登録する。
    - Name : `QGTranslator_MSAL`
    - Supported account types : `Accounts in this organizational directory only`
@@ -78,22 +94,23 @@ Azure リソース/localhost に環境を構築する事前準備として、以
    4. Add permissions ボタンを押下。
 8. Manifest から JSON 形式のマニフェストを表示し、`"accessTokenAcceptedVersion"`の値を`null`から`2`に変更する。
 
-### 2. GitHub Actions 用サービスプリンシパルの発行
+### 3. GitHub Actions 用サービスプリンシパルの発行
 
-GitHub Actions から Azure リソースを環境を構築するためのサービスプリンシパル QGTranslator_Contributor を以下の手順で発行する。
+新規作成した Azure サブスクリプションに対し、GitHub Actions から Azure リソースを環境を構築するためのサービスプリンシパル QGTranslator_Contributor を以下の手順で発行する。
 
-1. Azure CLI にてログイン後、以下のコマンドを実行し、サービスプリンシパル`QGTranslator_Contributor`を発行する。
+1. [Azure Portal](https://portal.azure.com/)にログインし、CloudShell を起動する。
+2. 以下のコマンドを実行し、サービスプリンシパル`QGTranslator_Contributor`を発行する。
    ```bash
-   az ad sp create-for-rbac --name QGTranslator_Contributor --role Contributor --scope /subscriptions/{サブスクリプションID}
+   az ad sp create-for-rbac --name QGTranslator_Contributor --role Contributor --scope /subscriptions/{手元に控えたサブスクリプションID}
    ```
-2. 1 のコマンドを実行して得た以下の値を、それぞれ手元に控える。
+3. 2 のコマンドを実行して得た以下の値を、それぞれ手元に控える。
    - `appId`(=クライアント ID)
    - `password`(=クライアントシークレット)
-3. Azure Portal から Azure AD > App Registrations に遷移する。
-4. QGTranslator_Contributor のリンク先にある Overview にある「Managed application in local directory」のリンク「QGTranslator_Contributor」を押下し、QGTranslator_Contributor のエンタープライズアプリケーションに遷移する。
-5. Overview の Properties にある「Object ID」の値(=エンタープライズアプリケーションのオブジェクト ID)を手元に控える。
+4. CloudShell を閉じ、Azure AD > App Registrations に遷移する。
+5. QGTranslator_Contributor のリンク先にある Overview にある「Managed application in local directory」のリンク「QGTranslator_Contributor」を押下し、QGTranslator_Contributor のエンタープライズアプリケーションに遷移する。
+6. Overview の Properties にある「Object ID」の値(=エンタープライズアプリケーションのオブジェクト ID)を手元に控える。
 
-### 3. リポジトリのシークレット・変数設定
+### 4. リポジトリのシークレット・変数設定
 
 QuestionGPTTranslator リポジトリの Setting > Secrets And variables > Actions より、以下のシークレット・変数をすべて設定する。
 
@@ -106,8 +123,6 @@ Secrets タブから「New repository secret」ボタンを押下して、下記
 | AZURE_APIM_PUBLISHER_EMAIL            | API Management の発行者メールアドレス                            |
 | AZURE_AD_SP_CONTRIBUTOR_CLIENT_SECRET | 2.で発行した QGTranslator_Contributor のクライアントシークレット |
 | DEEPL_AUTH_KEY                        | DeepL API の認証キー                                             |
-| OPENAI_API_KEY                        | 事前に作成した Azure OpenAI の API キー                          |
-| TRANSLATOR_KEY                        | 事前に作成した Translator のキー                                 |
 
 #### 変数
 
@@ -115,17 +130,18 @@ Variables タブから「New repository variable」ボタンを押下して、�
 
 | 変数名                            | 変数値                                                                                    |
 | --------------------------------- | ----------------------------------------------------------------------------------------- |
-| AZURE_AD_EA_CONTRIBUTOR_OBJECT_ID | 2.で発行した QGTranslator_Contributor のエンタープライズアプリケーションのオブジェクト ID |
-| AZURE_AD_SP_CONTRIBUTOR_CLIENT_ID | 2.で発行した QGTranslator_Contributor のクライアント ID                                   |
-| AZURE_AD_SP_MSAL_CLIENT_ID        | 1.で発行した QGTranslator_MSAL のクライアント ID                                          |
-| AZURE_SUBSCRIPTION_ID             | Azure サブスクリプション ID                                                               |
+| AZURE_AD_EA_CONTRIBUTOR_OBJECT_ID | 3.で発行した QGTranslator_Contributor のエンタープライズアプリケーションのオブジェクト ID |
+| AZURE_AD_SP_CONTRIBUTOR_CLIENT_ID | 3.で発行した QGTranslator_Contributor のクライアント ID                                   |
+| AZURE_AD_SP_MSAL_CLIENT_ID        | 2.で発行した QGTranslator_MSAL のクライアント ID                                          |
+| AZURE_SUBSCRIPTION_ID             | 1.で新規作成した Azure サブスクリプションのサブスクリプション ID                          |
 | AZURE_TENANT_ID                   | Azure ディレクトリ ID                                                                     |
-| OPENAI_API_VERSION                | 事前に作成した Azure OpenAI の API バージョン                                             |
-| OPENAI_DEPLOYMENT                 | 事前に作成した Azure OpenAI のデプロイ名                                                  |
-| OPENAI_ENDPOINT                   | 事前に作成した Azure OpenAI のエンドポイント                                              |
-| OPENAI_MODEL                      | 事前に作成した Azure OpenAI のモデル名                                                    |
+| OPENAI_API_VERSION                | Azure OpenAI の API バージョン                                                            |
+| OPENAI_DEPLOYMENT_NAME            | Azure OpenAI のデプロイ名                                                                 |
+| OPENAI_LOCATION                   | Azure OpenAI のリージョン                                                                 |
+| OPENAI_MODEL_NAME                 | Azure OpenAI のモデル名                                                                   |
+| OPENAI_MODEL_VERSION              | Azure OpenAI のモデルのバージョン                                                         |
 
-### 4. インポートデータファイルの作成
+### 5. インポートデータファイルの作成
 
 `qgtranslator-je-cosmosdb`に格納するデータは、GitHub 上で管理せず、**インポートデータファイル**と呼ぶ特定のフォーマットで記述した Typescript のソースコードを、ローカル上で管理する運用としている。
 インポートデータファイルは、ローカルで git clone した QuestionGPTTranslator リポジトリ直下に`data/(コース名)/(テスト名).json`のパスでディレクトリ・json ファイルを作成する必要がある。
@@ -186,7 +202,15 @@ json の各キーの説明を、以下に示す。
    ```
 4. 3 のターミナルで以下のコマンドを実行し、論理的に削除した`qgtranslator-je-apim`を物理的に削除する。
    ```bash
-   az rest -m DELETE -u "https://management.azure.com/subscriptions/(サブスクリプションID)/providers/Microsoft.ApiManagement/locations/japaneast/deletedservices/qgtranslator-je-apim?api-version=2022-08-01"
+   az rest -m DELETE -u "https://management.azure.com/subscriptions/(手元に控えたサブスクリプションID)/providers/Microsoft.ApiManagement/locations/japaneast/deletedservices/qgtranslator-je-apim?api-version=2022-08-01"
+   ```
+5. 4 のターミナルで以下のコマンドを実行し、論理的に削除した`qgtranslator-je-translator`を物理的に削除する。
+   ```bash
+   az resource delete --ids /subscriptions/{手元に控えたサブスクリプションID}/providers/Microsoft.CognitiveServices/locations/japaneast/resourceGroups/qgtranslator-je/deletedAccounts/qgtranslator-je-translator
+   ```
+6. 5 のターミナルで以下のコマンドを実行し、論理的に削除した`qgtranslator-eus2-openai`を物理的に削除する。
+   ```bash
+   az resource delete --ids /subscriptions/{手元に控えたサブスクリプションID}/providers/Microsoft.CognitiveServices/locations/{Azure OpenAIのリージョン}/resourceGroups/qgtranslator-je/deletedAccounts/qgtranslator-eus2-openai
    ```
 
 ## API 追加開発時の対応
@@ -233,16 +257,16 @@ Azure にリソースを構築せず、localhost 上で以下のサーバーを�
        "COSMOSDB_KEY": "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==",
        "COSMOSDB_READONLY_KEY": "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==",
        "COSMOSDB_URI": "http://localhost:8081",
-       "DEEPL_AUTH_KEY": "(Azureリソース環境構築時にGitHubへ登録したシークレットDEEPL_AUTH_KEYの値)",
+       "DEEPL_AUTH_KEY": "(DeepL APIの認証キー)",
        "FUNCTIONS_WORKER_RUNTIME": "python",
        "NODE_TLS_REJECT_UNAUTHORIZED": "0",
-       "OPENAI_API_KEY": "(Azureリソース環境構築時にGitHubへ登録したシークレットOPENAI_API_KEYの値)",
-       "OPENAI_API_VERSION": "(Azureリソース環境構築時にGitHubへ登録した変数OPENAI_API_VERSIONの値)",
-       "OPENAI_DEPLOYMENT": "(Azureリソース環境構築時にGitHubへ登録した変数OPENAI_DEPLOYMENTの値)",
-       "OPENAI_ENDPOINT": "(Azureリソース環境構築時にGitHubへ登録した変数OPENAI_ENDPOINTの値)",
-       "OPENAI_MODEL": "(Azureリソース環境構築時にGitHubへ登録した変数OPENAI_MODELの値)",
+       "OPENAI_API_KEY": "(Azure OpenAIのAPIキー)",
+       "OPENAI_API_VERSION": "(Azure OpenAIのAPIバージョン)",
+       "OPENAI_DEPLOYMENT_NAME": "(Azure OpenAIのデプロイ名)",
+       "OPENAI_ENDPOINT": "(Azure OpenAIのエンドポイント)",
+       "OPENAI_MODEL_NAME": "(Azure OpenAIのモデル名)",
        "PYTHON_PATH": "./venv/bin/python",
-       "TRANSLATOR_KEY": "(Azureリソース環境構築時にGitHubへ登録したシークレットTRANSLATOR_KEYの値)"
+       "TRANSLATOR_KEY": "(TranslatorのAPIキー)"
      },
      "Host": {
        "CORS": "*",
@@ -293,6 +317,7 @@ Azure にリソースを構築せず、localhost 上で以下のサーバーを�
 1. リポジトリの各シークレット・変数の削除
 2. GitHub Actions 用サービスプリンシパルの削除
 3. Azure AD 認証認可用サービスプリンシパルの削除
+4. Azure サブスクリプションの削除
 
 ### 1. リポジトリのシークレット・変数の削除
 
@@ -300,10 +325,17 @@ QuestionGPTTranslator リポジトリの Setting > Secrets And variables > Actio
 
 ### 2. GitHub Actions 用サービスプリンシパルの削除
 
-1. Azure Portal から Azure AD > App Registrations に遷移する。
+1. [Azure Portal](https://portal.azure.com/) にログインし、Azure AD > App Registrations に遷移する。
 2. QGTranslator_Contributor のリンク先にある Delete ボタンを押下し、「I understand the implications of deleting this app registration.」のチェックを入れて Delete ボタンを押下する。
 
 ### 3. Azure AD 認証認可用サービスプリンシパルの削除
 
-1. Azure Portal から Azure AD > App Registrations に遷移する。
+1. [Azure Portal](https://portal.azure.com/) にログインし、Azure AD > App Registrations に遷移する。
 2. QGTranslator_MSAL のリンク先にある Delete ボタンを押下し、「I understand the implications of deleting this app registration.」のチェックを入れて Delete ボタンを押下する。
+
+### 4. Azure サブスクリプションの削除
+
+1. [Azure Portal](https://portal.azure.com/) にログインし、左側のメニューから「サブスクリプション」を選択する。
+2. 削除したいサブスクリプションを選択する。
+3. 上部メニューから「削除」ボタンを押下する。
+4. 確認ダイアログが表示されるので、サブスクリプション名を入力し、「削除」ボタンを押下する。
