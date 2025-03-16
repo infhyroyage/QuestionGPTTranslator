@@ -298,7 +298,8 @@ resource storageBlob 'Microsoft.Storage/storageAccounts/blobServices@2023-05-01'
     }
     deleteRetentionPolicy: {
       allowPermanentDelete: false
-      enabled: false
+      enabled: true
+      days: 1
     }
   }
 }
