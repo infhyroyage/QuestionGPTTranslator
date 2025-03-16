@@ -152,12 +152,10 @@ resource cosmosDB 'Microsoft.DocumentDb/databaseAccounts@2023-04-15' = {
   location: location
   properties: {
     backupPolicy: {
-      periodicModeProperties: {
-        backupIntervalInMinutes: 240
-        backupRetentionIntervalInHours: 8
-        backupStorageRedundancy: 'Local'
+      continuousModeProperties: {
+        tier: 'Continuous7Days'
       }
-      type: 'Periodic'
+      type: 'Continuous'
     }
     capabilities: [
       {
