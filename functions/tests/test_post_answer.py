@@ -572,7 +572,7 @@ class TestPostAnswer(unittest.TestCase):
     @patch("src.post_answer.generate_correct_answers")
     @patch("src.post_answer.queue_message_answer")
     @patch("src.post_answer.logging")
-    def test_post_answer(  # pylint: disable=too-many-arguments
+    def test_post_answer(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         mock_logging,
         mock_queue_message_answer,
