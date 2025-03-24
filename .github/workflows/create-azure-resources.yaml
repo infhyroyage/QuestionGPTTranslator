@@ -124,6 +124,7 @@ jobs:
           resourceGroupName: ${{ env.RESOURCE_GROUP }}
           template: ./resources/connect-apim-2-functions.bicep
           parameters: >-
+            functionsName=${{ vars.FUNCTIONS_NAME }}
             vaultName=${{ vars.VAULT_NAME }}
 
   use-deploy-functions-app-workflow:
