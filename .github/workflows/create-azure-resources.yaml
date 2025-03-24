@@ -9,7 +9,6 @@ on:
       - resources**
 
 env:
-  FUNCTIONS_NAME: qgtranslator-je-func
   LOCATION: japaneast
   RESOURCE_GROUP: qgtranslator-je
 
@@ -41,7 +40,9 @@ jobs:
           parameters: >-
             azureAdEAContributorObjectId=${{ vars.AZURE_AD_EA_CONTRIBUTOR_OBJECT_ID }}
             azureApimPublisherEmail=${{ secrets.AZURE_APIM_PUBLISHER_EMAIL }}
+            cosmosDBName=${{ vars.COSMOSDB_NAME }}
             deeplAuthKey=${{ secrets.DEEPL_AUTH_KEY }}
+            functionsName=${{ vars.FUNCTIONS_NAME }}
             openAIApiVersion=${{ vars.OPENAI_API_VERSION }}
             openAIDeploymentName=${{ vars.OPENAI_DEPLOYMENT_NAME }}
             openAILocation=${{ vars.OPENAI_LOCATION }}
@@ -98,7 +99,7 @@ jobs:
         run: |
           az functionapp config appsettings set \
             -g ${{ env.RESOURCE_GROUP }} \
-            -n ${{ env.FUNCTIONS_NAME }} \
+            -n ${{ vars.FUNCTIONS_NAME }} \
             --settings @resources/functions-appsettings.json
 
   # FunctionsにAzureWebJobsStorageのアプリケーション設定をせずにデプロイすると
@@ -132,6 +133,7 @@ jobs:
       AZURE_AD_SP_CONTRIBUTOR_CLIENT_ID: ${{ vars.AZURE_AD_SP_CONTRIBUTOR_CLIENT_ID }}
       AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
       AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+      FUNCTIONS_NAME: ${{ vars.FUNCTIONS_NAME }}
     secrets:
       AZURE_AD_SP_CONTRIBUTOR_CLIENT_SECRET: ${{ secrets.AZURE_AD_SP_CONTRIBUTOR_CLIENT_SECRET }}
 

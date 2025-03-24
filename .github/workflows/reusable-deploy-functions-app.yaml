@@ -13,8 +13,7 @@ on:
         required: true
         type: string
       FUNCTIONS_NAME:
-        default: qgtranslator-je-func
-        required: false
+        required: true
         type: string
       PYTHON_VERSION:
         default: "3.11"

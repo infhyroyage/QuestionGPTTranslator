@@ -15,17 +15,17 @@
 
 ![architecture.drawio](architecture.drawio.svg)
 
-| Azure リソース名                     | 概要                                                     | リージョン                              |
-| ------------------------------------ | -------------------------------------------------------- | --------------------------------------- |
-| `qgtranslator-je-apim`               | ユーザーからアクセスする API Management                  | japaneast                               |
-| `qgtranslator-je-func`               | API Management からアクセスする Functions                | japaneast                               |
-| `qgtranslator-je-funcplan`           | Functions のプラン                                       | japaneast                               |
-| リポジトリの変数`STORAGE_NAME`で指定 | Functions から参照するストレージアカウント               | japaneast                               |
-| `qgtranslator-je-cosmosdb`           | Functions からアクセスする Cosmos DB                     | japaneast                               |
-| リポジトリの変数`VAULT_NAME`で指定   | シークレットを管理する Key Vault                         | japaneast                               |
-| `qgtranslator-je-insights`           | API Management/Functions を監視する Application Insights | japaneast                               |
-| `qgtranslator-eus2-openai`           | Functions からアクセスする Azure OpenAI                  | リポジトリの変数`OPENAI_LOCATION`で指定 |
-| `qgtranslator-je-translator`         | Functions からアクセスする Translator                    | japaneast                               |
+| Azure リソース名                       | 概要                                                     | リージョン                              |
+| -------------------------------------- | -------------------------------------------------------- | --------------------------------------- |
+| `qgtranslator-je-apim`                 | ユーザーからアクセスする API Management                  | japaneast                               |
+| リポジトリの変数`FUNCTIONS_NAME`で指定 | API Management からアクセスする Functions                | japaneast                               |
+| `qgtranslator-je-funcplan`             | Functions のプラン                                       | japaneast                               |
+| リポジトリの変数`STORAGE_NAME`で指定   | Functions から参照するストレージアカウント               | japaneast                               |
+| リポジトリの変数`COSMOSDB_NAME`で指定  | Functions からアクセスする Cosmos DB                     | japaneast                               |
+| リポジトリの変数`VAULT_NAME`で指定     | シークレットを管理する Key Vault                         | japaneast                               |
+| `qgtranslator-je-insights`             | API Management/Functions を監視する Application Insights | japaneast                               |
+| `qgtranslator-eus2-openai`             | Functions からアクセスする Azure OpenAI                  | リポジトリの変数`OPENAI_LOCATION`で指定 |
+| `qgtranslator-je-translator`           | Functions からアクセスする Translator                    | japaneast                               |
 
 > [!WARNING]  
 > Azure OpenAI(`qgtranslator-eus2-openai`) は、以下をすべてサポートする場所・モデル名・モデルバージョン・API バージョンを使用する必要がある。
@@ -135,6 +135,8 @@ Variables タブから「New repository variable」ボタンを押下して、�
 | AZURE_AD_SP_MSAL_CLIENT_ID        | 2.で発行した QGTranslator_MSAL のクライアント ID                                          |
 | AZURE_SUBSCRIPTION_ID             | 1.で新規作成した Azure サブスクリプションのサブスクリプション ID                          |
 | AZURE_TENANT_ID                   | Azure ディレクトリ ID                                                                     |
+| COSMOSDB_NAME                     | Azure Cosmos DB 名                                                                        |
+| FUNCTIONS_NAME                    | Azure Functions 名                                                                        |
 | OPENAI_API_VERSION                | Azure OpenAI の API バージョン                                                            |
 | OPENAI_DEPLOYMENT_NAME            | Azure OpenAI のデプロイ名                                                                 |
 | OPENAI_LOCATION                   | Azure OpenAI のリージョン                                                                 |
@@ -145,7 +147,7 @@ Variables タブから「New repository variable」ボタンを押下して、�
 
 ### 5. インポートデータファイルの作成
 
-`qgtranslator-je-cosmosdb`に格納するデータは、GitHub 上で管理せず、**インポートデータファイル**と呼ぶ特定のフォーマットで記述した Typescript のソースコードを、ローカル上で管理する運用としている。
+Azure Cosmos DB に格納するデータそのものは、GitHub 上で管理せず、**インポートデータファイル**と呼ぶ特定のフォーマットで記述した Typescript のソースコードを、ローカル上で管理する運用としている。
 インポートデータファイルは、ローカルで git clone した QuestionGPTTranslator リポジトリ直下に`data/(コース名)/(テスト名).json`のパスでディレクトリ・json ファイルを作成する必要がある。
 インポートデータファイルの json フォーマットを以下に示す。
 

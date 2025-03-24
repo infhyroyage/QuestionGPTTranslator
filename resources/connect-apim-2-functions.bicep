@@ -1,3 +1,4 @@
+param functionsName string
 param vaultName string
 
 var apimBackendsName = 'backends-functions'
@@ -5,8 +6,6 @@ var apimName = 'qgtranslator-je-apim'
 var apimNamedValuesNames = {
   functionsDefaultHostKey: 'named-values-functions-default-host-key'
 }
-
-var functionsName = 'qgtranslator-je-func'
 
 var vaultSecretNames = {
   functionsDefaultHostKey: 'functions-default-host-key'

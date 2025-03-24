@@ -1,8 +1,10 @@
 param azureAdEAContributorObjectId string
 @secure()
 param azureApimPublisherEmail string
+param cosmosDBName string
 @secure()
 param deeplAuthKey string
+param functionsName string
 param location string = resourceGroup().location
 param openAIApiVersion string
 param openAIDeploymentName string
@@ -29,10 +31,8 @@ var cosmosDBContainerNames = {
 var cosmosDBDatabaseNames = {
   users: 'Users'
 }
-var cosmosDBName = 'qgtranslator-je-cosmosdb'
 
 var functionsPlanName = 'qgtranslator-je-funcplan'
-var functionsName = 'qgtranslator-je-func'
 
 var insightsName = 'qgtranslator-je-insights'
 
