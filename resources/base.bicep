@@ -1,3 +1,4 @@
+param apimName string
 param azureAdEAContributorObjectId string
 @secure()
 param azureApimPublisherEmail string
@@ -17,11 +18,9 @@ param vaultName string
 var apimApisName = 'apis-functions'
 var apisHealthcheckName = 'apis-healthcheck-functions'
 var apimLoggersName = 'loggers-insights'
-var apimName = 'qgtranslator-je-apim'
 var apimNamedValuesNames = {
   insightsInstrumentationKey: 'named-values-insights-instrumentation-key'
 }
-var apimOrgName = 'qgtranslator-je-apim-org'
 
 var cosmosDBContainerNames = {
   answer: 'Answer'
@@ -76,7 +75,7 @@ resource apim 'Microsoft.ApiManagement/service@2022-08-01' = {
       'Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Tls11': 'false'
     }
     publisherEmail: azureApimPublisherEmail
-    publisherName: apimOrgName
+    publisherName: concat(apimName, '-org')
   }
 }
 resource apimApis 'Microsoft.ApiManagement/service/apis@2022-08-01' = {

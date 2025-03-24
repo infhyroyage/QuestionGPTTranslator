@@ -12,8 +12,7 @@ on:
         required: false
         type: string
       APIM_NAME:
-        default: qgtranslator-je-apim
-        required: false
+        required: true
         type: string
       AZURE_AD_SP_CONTRIBUTOR_CLIENT_ID:
         required: true
@@ -92,6 +91,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@main
+
+      - name: Update Swagger
+        run: |
+          sed -i.bak \
+            -e "s|{API_URI}|https://${{ inputs.APIM_NAME }}.azure-api.net|g" \
+            apim/apis-healthcheck-functions-swagger.yaml
 
       - name: Login Azure as Contributor
         uses: azure/login@v2

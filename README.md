@@ -17,7 +17,7 @@
 
 | Azure リソース名                       | 概要                                                     | リージョン                              |
 | -------------------------------------- | -------------------------------------------------------- | --------------------------------------- |
-| `qgtranslator-je-apim`                 | ユーザーからアクセスする API Management                  | japaneast                               |
+| リポジトリの変数`APIM_NAME`で指定      | ユーザーからアクセスする API Management                  | japaneast                               |
 | リポジトリの変数`FUNCTIONS_NAME`で指定 | API Management からアクセスする Functions                | japaneast                               |
 | `qgtranslator-je-funcplan`             | Functions のプラン                                       | japaneast                               |
 | リポジトリの変数`STORAGE_NAME`で指定   | Functions から参照するストレージアカウント               | japaneast                               |
@@ -204,9 +204,9 @@ json の各キーの説明を、以下に示す。
    ```bash
    az keyvault purge -n (リポジトリの変数VAULT_NAMEの値)
    ```
-4. 3 のターミナルで以下のコマンドを実行し、論理的に削除した`qgtranslator-je-apim`を物理的に削除する。
+4. 3 のターミナルで以下のコマンドを実行し、論理的に削除した Azure API Management を物理的に削除する。
    ```bash
-   az rest -m DELETE -u "https://management.azure.com/subscriptions/(手元に控えたサブスクリプションID)/providers/Microsoft.ApiManagement/locations/japaneast/deletedservices/qgtranslator-je-apim?api-version=2022-08-01"
+   az rest -m DELETE -u "https://management.azure.com/subscriptions/(手元に控えたサブスクリプションID)/providers/Microsoft.ApiManagement/locations/japaneast/deletedservices/(リポジトリの変数APIM_NAMEの値)?api-version=2022-08-01"
    ```
 5. 4 のターミナルで以下のコマンドを実行し、論理的に削除した`qgtranslator-je-translator`を物理的に削除する。
    ```bash

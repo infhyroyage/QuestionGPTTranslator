@@ -4,7 +4,7 @@ info:
   description: FunctionsのヘルスチェックAPIリファレンスです
   version: "1.0"
 servers:
-  - url: https://qgtranslator-je-apim.azure-api.net
+  - url: "{API_URI}"
 paths:
   /healthcheck:
     get:

@@ -13,6 +13,7 @@ jobs:
   use-deploy-apim-workflow:
     uses: ./.github/workflows/reusable-deploy-apim.yaml
     with:
+      APIM_NAME: ${{ vars.APIM_NAME }}
       AZURE_AD_SP_CONTRIBUTOR_CLIENT_ID: ${{ vars.AZURE_AD_SP_CONTRIBUTOR_CLIENT_ID }}
       AZURE_AD_SP_MSAL_CLIENT_ID: ${{ vars.AZURE_AD_SP_MSAL_CLIENT_ID }}
       AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}

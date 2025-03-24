@@ -38,6 +38,7 @@ jobs:
           resourceGroupName: ${{ env.RESOURCE_GROUP }}
           template: ./resources/base.bicep
           parameters: >-
+            apimName=${{ vars.APIM_NAME }}
             azureAdEAContributorObjectId=${{ vars.AZURE_AD_EA_CONTRIBUTOR_OBJECT_ID }}
             azureApimPublisherEmail=${{ secrets.AZURE_APIM_PUBLISHER_EMAIL }}
             cosmosDBName=${{ vars.COSMOSDB_NAME }}
@@ -142,6 +143,7 @@ jobs:
     needs: connect-apim-2-functions
     uses: ./.github/workflows/reusable-deploy-apim.yaml
     with:
+      APIM_NAME: ${{ vars.APIM_NAME }}
       AZURE_AD_SP_CONTRIBUTOR_CLIENT_ID: ${{ vars.AZURE_AD_SP_CONTRIBUTOR_CLIENT_ID }}
       AZURE_AD_SP_MSAL_CLIENT_ID: ${{ vars.AZURE_AD_SP_MSAL_CLIENT_ID }}
       AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
