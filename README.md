@@ -15,17 +15,17 @@
 
 ![architecture.drawio](architecture.drawio.svg)
 
-| Azure リソース名             | 概要                                                     | リージョン                    |
-| ---------------------------- | -------------------------------------------------------- | ----------------------------- |
-| `qgtranslator-je-apim`       | ユーザー/App Service からアクセスする API Management     | japaneast                     |
-| `qgtranslator-je-func`       | API Management からアクセスする Functions                | japaneast                     |
-| `qgtranslator-je-funcplan`   | Functions のプラン                                       | japaneast                     |
-| `qgtranslatorjesa`           | Functions から参照するストレージアカウント               | japaneast                     |
-| `qgtranslator-je-cosmosdb`   | Functions からアクセスする Cosmos DB                     | japaneast                     |
-| `qgtranslator-je-vault`      | シークレットを管理する Key Vault                         | japaneast                     |
-| `qgtranslator-je-insights`   | API Management/Functions を監視する Application Insights | japaneast                     |
-| `qgtranslator-eus2-openai`   | Functions からアクセスする Azure OpenAI                  | GitHub リポジトリの変数で指定 |
-| `qgtranslator-je-translator` | Functions からアクセスする Translator                    | japaneast                     |
+| Azure リソース名                     | 概要                                                     | リージョン                              |
+| ------------------------------------ | -------------------------------------------------------- | --------------------------------------- |
+| `qgtranslator-je-apim`               | ユーザーからアクセスする API Management                  | japaneast                               |
+| `qgtranslator-je-func`               | API Management からアクセスする Functions                | japaneast                               |
+| `qgtranslator-je-funcplan`           | Functions のプラン                                       | japaneast                               |
+| リポジトリの変数`STORAGE_NAME`で指定 | Functions から参照するストレージアカウント               | japaneast                               |
+| `qgtranslator-je-cosmosdb`           | Functions からアクセスする Cosmos DB                     | japaneast                               |
+| `qgtranslator-je-vault`              | シークレットを管理する Key Vault                         | japaneast                               |
+| `qgtranslator-je-insights`           | API Management/Functions を監視する Application Insights | japaneast                               |
+| `qgtranslator-eus2-openai`           | Functions からアクセスする Azure OpenAI                  | リポジトリの変数`OPENAI_LOCATION`で指定 |
+| `qgtranslator-je-translator`         | Functions からアクセスする Translator                    | japaneast                               |
 
 > [!WARNING]  
 > Azure OpenAI(`qgtranslator-eus2-openai`) は、以下をすべてサポートする場所・モデル名・モデルバージョン・API バージョンを使用する必要がある。
@@ -140,6 +140,7 @@ Variables タブから「New repository variable」ボタンを押下して、�
 | OPENAI_LOCATION                   | Azure OpenAI のリージョン                                                                 |
 | OPENAI_MODEL_NAME                 | Azure OpenAI のモデル名                                                                   |
 | OPENAI_MODEL_VERSION              | Azure OpenAI のモデルのバージョン                                                         |
+| STORAGE_NAME                      | Azure ストレージアカウント名                                                              |
 
 ### 5. インポートデータファイルの作成
 
@@ -186,7 +187,7 @@ json の各キーの説明を、以下に示す。
 2. QuestionGPTTranslator リポジトリの Actions > 左側の Create Azure Resources > 最後の実行名 の順で押下し、右上の「Re-run jobs」から「Re-run all jobs」を押下し、確認ダイアログ内の「Re-run jobs」ボタンを押下する。
 3. ターミナルを起動して以下のコマンドを実行し、Azure にデプロイ済のストレージアカウントに対し、すべてのインポートデータファイルを 1 つずつ繰り返しアップロードする。
    ```bash
-   az storage blob directory upload --account-name qgtranslatorjesa -c import-items -s "functions/data/*" -d . -r
+   az storage blob directory upload --account-name (リポジトリの変数STORAGE_NAMEの値) -c import-items -s "functions/data/*" -d . -r
    ```
 
 ### 削除手順

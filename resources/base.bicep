@@ -9,6 +9,7 @@ param openAIDeploymentName string
 param openAILocation string
 param openAIModelName string
 param openAIModelVersion string
+param storageName string
 
 var apimApisName = 'apis-functions'
 var apisHealthcheckName = 'apis-healthcheck-functions'
@@ -39,7 +40,6 @@ var lawName = 'qgtranslator-je-law'
 var openAIName = 'qgtranslator-eus2-openai'
 
 var storageBlobContainerName = 'import-items'
-var storageName = 'qgtranslatorjesa'
 var storageQueueName = 'answers'
 
 var translatorName = 'qgtranslator-je-translator'
