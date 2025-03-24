@@ -75,7 +75,7 @@ resource apim 'Microsoft.ApiManagement/service@2022-08-01' = {
       'Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Tls11': 'false'
     }
     publisherEmail: azureApimPublisherEmail
-    publisherName: concat(apimName, '-org')
+    publisherName: '${apimName}-org'
   }
 }
 resource apimApis 'Microsoft.ApiManagement/service/apis@2022-08-01' = {
