@@ -2,12 +2,12 @@
   {
     "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
     "slotSetting": false,
-    "value": "@Microsoft.KeyVault(VaultName=qgtranslator-je-vault;SecretName=insights-instrumentation-key)"
+    "value": "@Microsoft.KeyVault(VaultName={vaultName};SecretName=insights-instrumentation-key)"
   },
   {
     "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
     "slotSetting": false,
-    "value": "@Microsoft.KeyVault(VaultName=qgtranslator-je-vault;SecretName=insights-connection-string)"
+    "value": "@Microsoft.KeyVault(VaultName={vaultName};SecretName=insights-connection-string)"
   },
   {
     "name": "COSMOSDB_KEY",
@@ -22,12 +22,12 @@
   {
     "name": "DEEPL_AUTH_KEY",
     "slotSetting": false,
-    "value": "@Microsoft.KeyVault(VaultName=qgtranslator-je-vault;SecretName=deepl-auth-key)"
+    "value": "@Microsoft.KeyVault(VaultName={vaultName};SecretName=deepl-auth-key)"
   },
   {
     "name": "OPENAI_API_KEY",
     "slotSetting": false,
-    "value": "@Microsoft.KeyVault(VaultName=qgtranslator-je-vault;SecretName=openai-api-key)"
+    "value": "@Microsoft.KeyVault(VaultName={vaultName};SecretName=openai-api-key)"
   },
   {
     "name": "TRANSLATOR_KEY",

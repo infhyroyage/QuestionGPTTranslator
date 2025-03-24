@@ -22,7 +22,7 @@
 | `qgtranslator-je-funcplan`           | Functions のプラン                                       | japaneast                               |
 | リポジトリの変数`STORAGE_NAME`で指定 | Functions から参照するストレージアカウント               | japaneast                               |
 | `qgtranslator-je-cosmosdb`           | Functions からアクセスする Cosmos DB                     | japaneast                               |
-| `qgtranslator-je-vault`              | シークレットを管理する Key Vault                         | japaneast                               |
+| リポジトリの変数`VAULT_NAME`で指定   | シークレットを管理する Key Vault                         | japaneast                               |
 | `qgtranslator-je-insights`           | API Management/Functions を監視する Application Insights | japaneast                               |
 | `qgtranslator-eus2-openai`           | Functions からアクセスする Azure OpenAI                  | リポジトリの変数`OPENAI_LOCATION`で指定 |
 | `qgtranslator-je-translator`         | Functions からアクセスする Translator                    | japaneast                               |
@@ -141,6 +141,7 @@ Variables タブから「New repository variable」ボタンを押下して、�
 | OPENAI_MODEL_NAME                 | Azure OpenAI のモデル名                                                                   |
 | OPENAI_MODEL_VERSION              | Azure OpenAI のモデルのバージョン                                                         |
 | STORAGE_NAME                      | Azure ストレージアカウント名                                                              |
+| VAULT_NAME                        | Azure Key Vault 名                                                                        |
 
 ### 5. インポートデータファイルの作成
 
@@ -197,9 +198,9 @@ json の各キーの説明を、以下に示す。
    ```bash
    az group delete -n qgtranslator-je -y
    ```
-3. 2 のターミナルで以下のコマンドを実行し、論理的に削除した`qgtranslator-je-vault`を物理的に削除する。
+3. 2 のターミナルで以下のコマンドを実行し、論理的に削除した Azure Key Vault を物理的に削除する。
    ```bash
-   az keyvault purge -n qgtranslator-je-vault
+   az keyvault purge -n (リポジトリの変数VAULT_NAMEの値)
    ```
 4. 3 のターミナルで以下のコマンドを実行し、論理的に削除した`qgtranslator-je-apim`を物理的に削除する。
    ```bash

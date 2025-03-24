@@ -10,6 +10,7 @@ param openAILocation string
 param openAIModelName string
 param openAIModelVersion string
 param storageName string
+param vaultName string
 
 var apimApisName = 'apis-functions'
 var apisHealthcheckName = 'apis-healthcheck-functions'
@@ -44,7 +45,6 @@ var storageQueueName = 'answers'
 
 var translatorName = 'qgtranslator-je-translator'
 
-var vaultName = 'qgtranslator-je-vault'
 var vaultSecretNames = {
   cosmosDBPrimaryKey: 'cosmos-db-primary-key'
   cosmosDBPrimaryReadonlyKey: 'cosmos-db-primary-readonly-key'

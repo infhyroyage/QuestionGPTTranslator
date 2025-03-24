@@ -12,7 +12,6 @@ env:
   FUNCTIONS_NAME: qgtranslator-je-func
   LOCATION: japaneast
   RESOURCE_GROUP: qgtranslator-je
-  VAULT_NAME: qgtranslator-je-vault
 
 jobs:
   create-resources:
@@ -49,6 +48,7 @@ jobs:
             openAIModelName=${{ vars.OPENAI_MODEL_NAME }}
             openAIModelVersion=${{ vars.OPENAI_MODEL_VERSION }}
             storageName=${{ vars.STORAGE_NAME }}
+            vaultName=${{ vars.VAULT_NAME }}
 
   # 短期間でAzure Functionsのアプリケーション設定を複数回更新すると、正常終了したのにも関わらず更新しない場合があるため
   # 1回のみ更新するようにJob/Stepを構成する
@@ -68,21 +68,21 @@ jobs:
         run: |
           translatorKey=$( \
             az keyvault secret show \
-              --vault-name ${{ env.VAULT_NAME }} \
+              --vault-name ${{ vars.VAULT_NAME }} \
               -n translator-key \
               --query id \
               -o tsv \
           )
           cosmosdbKey=$( \
             az keyvault secret show \
-              --vault-name ${{ env.VAULT_NAME }} \
+              --vault-name ${{ vars.VAULT_NAME }} \
               -n cosmos-db-primary-key \
               --query id \
               -o tsv \
           )
           cosmosdbReadonlyKey=$( \
             az keyvault secret show \
-              --vault-name ${{ env.VAULT_NAME }} \
+              --vault-name ${{ vars.VAULT_NAME }} \
               -n cosmos-db-primary-readonly-key \
               --query id \
               -o tsv \
@@ -91,6 +91,7 @@ jobs:
             -e "s|{translatorKey}|${translatorKey}|g" \
             -e "s|{cosmosdbKey}|${cosmosdbKey}|g" \
             -e "s|{cosmosdbReadonlyKey}|${cosmosdbReadonlyKey}|g" \
+            -e "s|{vaultName}|${{ vars.VAULT_NAME }}|g" \
             resources/functions-appsettings.json
 
       - name: Update Functions Application Settings
@@ -121,6 +122,8 @@ jobs:
           subscriptionId: ${{ vars.AZURE_SUBSCRIPTION_ID }}
           resourceGroupName: ${{ env.RESOURCE_GROUP }}
           template: ./resources/connect-apim-2-functions.bicep
+          parameters: >-
+            vaultName=${{ vars.VAULT_NAME }}
 
   use-deploy-functions-app-workflow:
     needs: set-functions-appsettings
