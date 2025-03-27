@@ -4,7 +4,7 @@ azure-storage-queue==12.12.0
 coverage==7.7.0
 openai==1.58.1
 pydantic==2.10.6
-pylint==3.3.4
+pylint==3.3.6
 requests==2.32.3
 
 # 関数アプリを認識しない障害の暫定対処として、cryptographyのバージョンを43.0.3に固定している
