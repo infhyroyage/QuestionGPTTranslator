@@ -15,17 +15,17 @@
 
 ![architecture.drawio](architecture.drawio.svg)
 
-| Azure リソース名                       | 概要                                                     | リージョン                              |
-| -------------------------------------- | -------------------------------------------------------- | --------------------------------------- |
-| リポジトリの変数`APIM_NAME`で指定      | ユーザーからアクセスする API Management                  | japaneast                               |
-| リポジトリの変数`FUNCTIONS_NAME`で指定 | API Management からアクセスする Functions                | japaneast                               |
-| `qgtranslator-je-funcplan`             | Functions のプラン                                       | japaneast                               |
-| リポジトリの変数`STORAGE_NAME`で指定   | Functions から参照するストレージアカウント               | japaneast                               |
-| リポジトリの変数`COSMOSDB_NAME`で指定  | Functions からアクセスする Cosmos DB                     | japaneast                               |
-| リポジトリの変数`VAULT_NAME`で指定     | シークレットを管理する Key Vault                         | japaneast                               |
-| `qgtranslator-je-insights`             | API Management/Functions を監視する Application Insights | japaneast                               |
-| `qgtranslator-eus2-openai`             | Functions からアクセスする Azure OpenAI                  | リポジトリの変数`OPENAI_LOCATION`で指定 |
-| `qgtranslator-je-translator`           | Functions からアクセスする Translator                    | japaneast                               |
+| Azure リソース名                        | 概要                                                     | リージョン                              |
+| --------------------------------------- | -------------------------------------------------------- | --------------------------------------- |
+| リポジトリの変数`APIM_NAME`で指定       | ユーザーからアクセスする API Management                  | japaneast                               |
+| リポジトリの変数`FUNCTIONS_NAME`で指定  | API Management からアクセスする Functions                | japaneast                               |
+| `qgtranslator-je-funcplan`              | Functions のプラン                                       | japaneast                               |
+| リポジトリの変数`STORAGE_NAME`で指定    | Functions から参照するストレージアカウント               | japaneast                               |
+| リポジトリの変数`COSMOSDB_NAME`で指定   | Functions からアクセスする Cosmos DB                     | japaneast                               |
+| リポジトリの変数`VAULT_NAME`で指定      | シークレットを管理する Key Vault                         | japaneast                               |
+| `qgtranslator-je-insights`              | API Management/Functions を監視する Application Insights | japaneast                               |
+| リポジトリの変数`OPENAI_NAME`で指定     | Functions からアクセスする Azure OpenAI                  | リポジトリの変数`OPENAI_LOCATION`で指定 |
+| リポジトリの変数`TRANSLATOR_NAME`で指定 | Functions からアクセスする Translator                    | japaneast                               |
 
 > [!WARNING]  
 > Azure OpenAI(`qgtranslator-eus2-openai`) は、以下をすべてサポートする場所・モデル名・モデルバージョン・API バージョンを使用する必要がある。
@@ -34,7 +34,7 @@
 > - [Vision-enabled](https://learn.microsoft.com/ja-jp/azure/ai-services/openai/how-to/gpt-with-vision)
 
 > [!NOTE]  
-> Translator(`qgtranslator-je-translator`)の価格レベルは Free(無料)である。この無料枠をすべて使い切った場合、代わりに DeepL へアクセスする。
+> Translator の価格レベルは Free(無料)とする。この無料枠をすべて使い切った場合、代わりに DeepL へアクセスする。
 
 ## 使用する主要なパッケージのバージョン
 
@@ -130,6 +130,7 @@ Variables タブから「New repository variable」ボタンを押下して、�
 
 | 変数名                            | 変数値                                                                                    |
 | --------------------------------- | ----------------------------------------------------------------------------------------- |
+| APIM_NAME                         | Azure API Management 名                                                                   |
 | AZURE_AD_EA_CONTRIBUTOR_OBJECT_ID | 3.で発行した QGTranslator_Contributor のエンタープライズアプリケーションのオブジェクト ID |
 | AZURE_AD_SP_CONTRIBUTOR_CLIENT_ID | 3.で発行した QGTranslator_Contributor のクライアント ID                                   |
 | AZURE_AD_SP_MSAL_CLIENT_ID        | 2.で発行した QGTranslator_MSAL のクライアント ID                                          |
@@ -142,7 +143,9 @@ Variables タブから「New repository variable」ボタンを押下して、�
 | OPENAI_LOCATION                   | Azure OpenAI のリージョン                                                                 |
 | OPENAI_MODEL_NAME                 | Azure OpenAI のモデル名                                                                   |
 | OPENAI_MODEL_VERSION              | Azure OpenAI のモデルのバージョン                                                         |
+| OPENAI_NAME                       | Azure OpenAI 名                                                                           |
 | STORAGE_NAME                      | Azure ストレージアカウント名                                                              |
+| TRANSLATOR_NAME                   | Azure Translator 名                                                                       |
 | VAULT_NAME                        | Azure Key Vault 名                                                                        |
 
 ### 5. インポートデータファイルの作成
@@ -208,13 +211,13 @@ json の各キーの説明を、以下に示す。
    ```bash
    az rest -m DELETE -u "https://management.azure.com/subscriptions/(手元に控えたサブスクリプションID)/providers/Microsoft.ApiManagement/locations/japaneast/deletedservices/(リポジトリの変数APIM_NAMEの値)?api-version=2022-08-01"
    ```
-5. 4 のターミナルで以下のコマンドを実行し、論理的に削除した`qgtranslator-je-translator`を物理的に削除する。
+5. 4 のターミナルで以下のコマンドを実行し、論理的に削除した Azure Translator を物理的に削除する。
    ```bash
-   az resource delete --ids /subscriptions/{手元に控えたサブスクリプションID}/providers/Microsoft.CognitiveServices/locations/japaneast/resourceGroups/qgtranslator-je/deletedAccounts/qgtranslator-je-translator
+   az resource delete --ids /subscriptions/{手元に控えたサブスクリプションID}/providers/Microsoft.CognitiveServices/locations/japaneast/resourceGroups/qgtranslator-je/deletedAccounts/(リポジトリの変数TRANSLATOR_NAMEの値)
    ```
-6. 5 のターミナルで以下のコマンドを実行し、論理的に削除した`qgtranslator-eus2-openai`を物理的に削除する。
+6. 5 のターミナルで以下のコマンドを実行し、論理的に削除した Azure OpenAI を物理的に削除する。
    ```bash
-   az resource delete --ids /subscriptions/{手元に控えたサブスクリプションID}/providers/Microsoft.CognitiveServices/locations/{Azure OpenAIのリージョン}/resourceGroups/qgtranslator-je/deletedAccounts/qgtranslator-eus2-openai
+   az resource delete --ids /subscriptions/{手元に控えたサブスクリプションID}/providers/Microsoft.CognitiveServices/locations/(リポジトリの変数OPENAI_LOCATIONの値)/resourceGroups/qgtranslator-je/deletedAccounts/(リポジトリの変数OPENAI_NAMEの値)
    ```
 
 ## API 追加開発時の対応

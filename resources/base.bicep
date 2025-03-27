@@ -12,7 +12,9 @@ param openAIDeploymentName string
 param openAILocation string
 param openAIModelName string
 param openAIModelVersion string
+param openAIName string
 param storageName string
+param translatorName string
 param vaultName string
 
 var apimApisName = 'apis-functions'
@@ -37,12 +39,8 @@ var insightsName = 'qgtranslator-je-insights'
 
 var lawName = 'qgtranslator-je-law'
 
-var openAIName = 'qgtranslator-eus2-openai'
-
 var storageBlobContainerName = 'import-items'
 var storageQueueName = 'answers'
-
-var translatorName = 'qgtranslator-je-translator'
 
 var vaultSecretNames = {
   cosmosDBPrimaryKey: 'cosmos-db-primary-key'

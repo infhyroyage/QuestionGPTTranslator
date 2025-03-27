@@ -49,7 +49,9 @@ jobs:
             openAILocation=${{ vars.OPENAI_LOCATION }}
             openAIModelName=${{ vars.OPENAI_MODEL_NAME }}
             openAIModelVersion=${{ vars.OPENAI_MODEL_VERSION }}
+            openAIName=${{ vars.OPENAI_NAME }}
             storageName=${{ vars.STORAGE_NAME }}
+            translatorName=${{ vars.TRANSLATOR_NAME }}
             vaultName=${{ vars.VAULT_NAME }}
 
   # 短期間でAzure Functionsのアプリケーション設定を複数回更新すると、正常終了したのにも関わらず更新しない場合があるため
