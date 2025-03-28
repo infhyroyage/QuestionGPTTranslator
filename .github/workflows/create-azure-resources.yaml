@@ -30,6 +30,9 @@ jobs:
             -n ${{ env.RESOURCE_GROUP }} \
             -l ${{ env.LOCATION }}
 
+      - name: Upgrade Bicep
+        run: az bicep upgrade
+
       - name: Create Resources
         uses: azure/arm-deploy@v2
         with:
@@ -118,6 +121,9 @@ jobs:
         uses: azure/login@v2
         with:
           creds: '{"clientId":"${{ vars.AZURE_AD_SP_CONTRIBUTOR_CLIENT_ID }}","clientSecret":"${{ secrets.AZURE_AD_SP_CONTRIBUTOR_CLIENT_SECRET }}","subscriptionId":"${{ vars.AZURE_SUBSCRIPTION_ID }}","tenantId":"${{ vars.AZURE_TENANT_ID }}"}'
+
+      - name: Upgrade Bicep
+        run: az bicep upgrade
 
       - name: Create Resources
         uses: azure/arm-deploy@v2
