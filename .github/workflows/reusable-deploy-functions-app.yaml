@@ -86,5 +86,6 @@ jobs:
               --account-name ${{ inputs.STORAGE_NAME }} \
               -c github-actions-deploy \
               --account-key $STORAGE_ACCOUNT_KEY1 \
-              --name "$BLOB_NAME"
+              --name "$BLOB_NAME" \
+              --delete-snapshots include
           done
