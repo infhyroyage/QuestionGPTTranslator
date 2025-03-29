@@ -19,6 +19,9 @@ on:
         default: "3.11"
         required: false
         type: string
+      STORAGE_NAME:
+        required: true
+        type: string
     secrets:
       AZURE_AD_SP_CONTRIBUTOR_CLIENT_SECRET:
         required: true
@@ -55,3 +58,33 @@ jobs:
           package: functions/
           scm-do-build-during-deployment: true # リモートビルドの有効化
           enable-oryx-build: true # リモートビルドの有効化
+
+      - name: Delete non-latest deployment packages
+        run: |
+          # Get Storage Account Key1
+          STORAGE_ACCOUNT_KEY1=$(
+            az storage account keys list \
+              --account-name ${{ inputs.STORAGE_NAME }} \
+              --query "[0].value" \
+              -o tsv
+          )
+
+          # Get a latest deployment package
+          BLOB_NAMES_TO_DELETE=$(
+            az storage blob list \
+              --account-name ${{ inputs.STORAGE_NAME }} \
+              -c github-actions-deploy \
+              --account-key $STORAGE_ACCOUNT_KEY1 \
+              --query "[].{Name:name, LastModified:properties.lastModified}" \
+              --output tsv | sort -k2 -r | tail -n +2 | cut -f1
+          )
+
+          # Delete the BLOBs
+          for BLOB_NAME in $BLOB_NAMES_TO_DELETE; do
+            echo "Deleting: $BLOB_NAME"
+            az storage blob delete \
+              --account-name ${{ inputs.STORAGE_NAME }} \
+              -c github-actions-deploy \
+              --account-key $STORAGE_ACCOUNT_KEY1 \
+              --name "$BLOB_NAME"
+          done
