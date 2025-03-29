@@ -16,6 +16,21 @@ class Answer(TypedDict):
     testId: str
 
 
+class Progress(TypedDict):
+    """
+    Progressコンテナーの項目の型
+    """
+
+    homeAccountId: str
+    testId: str
+    questionNumber: int
+    isCorrect: bool
+    choices: List[str]
+    imgs: List[Optional[str]]
+    selectedIdxes: List[int]
+    correctIdxes: List[int]
+
+
 class EscapeTranslatedIdxes(TypedDict, total=False):
     """
     QuestionコンテナーのescapeTranslatedIdxesフィールドの型
