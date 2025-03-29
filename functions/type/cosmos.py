@@ -21,7 +21,7 @@ class Progress(TypedDict):
     Progressコンテナーの項目の型
     """
 
-    homeAccountId: str
+    userId: str
     testId: str
     questionNumber: int
     isCorrect: bool

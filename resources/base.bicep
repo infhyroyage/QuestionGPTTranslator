@@ -253,7 +253,7 @@ resource cosmosDBDatabaseUsersContainerProgress 'Microsoft.DocumentDb/databaseAc
           [
             {
               order: 'ascending'
-              path: '/homeAccountId'
+              path: '/userId'
             }
             {
               order: 'ascending'
