@@ -35,6 +35,12 @@
         </claim>
       </required-claims>
     </validate-jwt>
+    <!--JWTトークンからユーザー識別子であるsubクレームをデコードしてバックエンドに転送-->
+    <set-header name="X-User-Id" exists-action="override">
+      <value>
+        @(context.Request.Headers.GetValueOrDefault("X-Access-Token","").AsJwt()?.Claims.GetValueOrDefault("sub", ""))
+      </value>
+    </set-header>
     <!--上位スコープのinboundのポリシー適用-->
     <base />
     <!--バックエンド設定-->
