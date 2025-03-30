@@ -21,6 +21,7 @@ class Progress(TypedDict):
     Progressコンテナーの項目の型
     """
 
+    id: str
     userId: str
     testId: str
     questionNumber: int

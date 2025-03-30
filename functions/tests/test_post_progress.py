@@ -377,6 +377,7 @@ class TestPostProgress(unittest.TestCase):
         )
         mock_container.upsert_item.assert_called_once_with(
             {
+                "id": "user-id_test-id_1",
                 "userId": "user-id",
                 "testId": "test-id",
                 "questionNumber": 1,
