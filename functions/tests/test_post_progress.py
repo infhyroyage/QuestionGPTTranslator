@@ -2,7 +2,7 @@
 
 import json
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, call, patch
 
 import azure.functions as func
 from src.post_progress import (
@@ -347,9 +347,7 @@ class TestPostProgress(unittest.TestCase):
         mock_validate_body.return_value = []
         mock_container = MagicMock()
         mock_get_read_write_container.return_value = mock_container
-        mock_query_result = MagicMock()
-        mock_query_result.__next__.return_value = 2
-        mock_container.query_items.return_value = mock_query_result
+        mock_container.query_items.return_value = [{"maxQuestionNumber": 2}]
 
         request_body = {
             "isCorrect": True,
@@ -380,7 +378,7 @@ class TestPostProgress(unittest.TestCase):
         )
         mock_container.query_items.assert_called_once_with(
             query=(
-                "SELECT VALUE MAX(c.questionNumber)"
+                "SELECT MAX(c.questionNumber) as maxQuestionNumber"
                 "FROM c WHERE c.userId = @userId AND c.testId = @testId"
             ),
             parameters=[
@@ -402,12 +400,17 @@ class TestPostProgress(unittest.TestCase):
                 "correctIdxes": [0],
             }
         )
-        mock_logging.info.assert_called_once_with(
-            {
-                "question_number": 3,
-                "test_id": "test-id",
-                "user_id": "user-id",
-            }
+        mock_logging.info.assert_has_calls(
+            [
+                call(
+                    {
+                        "question_number": 3,
+                        "test_id": "test-id",
+                        "user_id": "user-id",
+                    }
+                ),
+                call({"items": [{"maxQuestionNumber": 2}]}),
+            ]
         )
         mock_logging.error.assert_not_called()
 
@@ -474,9 +477,7 @@ class TestPostProgress(unittest.TestCase):
         mock_validate_body.return_value = []
         mock_container = MagicMock()
         mock_get_read_write_container.return_value = mock_container
-        mock_query_result = MagicMock()
-        mock_query_result.__next__.return_value = 1
-        mock_container.query_items.return_value = mock_query_result
+        mock_container.query_items.return_value = [{}]
 
         request_body = {
             "isCorrect": True,
@@ -497,7 +498,7 @@ class TestPostProgress(unittest.TestCase):
         res = post_progress(req)
 
         self.assertEqual(res.status_code, 400)
-        self.assertEqual(res.get_body().decode("utf-8"), "questionNumber must be 2")
+        self.assertEqual(res.get_body().decode("utf-8"), "questionNumber must be 1")
         mock_validate_route_params.assert_called_once_with(req.route_params)
         mock_validate_headers.assert_called_once_with(req.headers)
         mock_validate_body.assert_called_once_with(request_body_encoded)
@@ -507,7 +508,7 @@ class TestPostProgress(unittest.TestCase):
         )
         mock_container.query_items.assert_called_once_with(
             query=(
-                "SELECT VALUE MAX(c.questionNumber)"
+                "SELECT MAX(c.questionNumber) as maxQuestionNumber"
                 "FROM c WHERE c.userId = @userId AND c.testId = @testId"
             ),
             parameters=[
@@ -516,12 +517,17 @@ class TestPostProgress(unittest.TestCase):
             ],
         )
         mock_container.upsert_item.assert_not_called()
-        mock_logging.info.assert_called_once_with(
-            {
-                "question_number": 3,
-                "test_id": "test-id",
-                "user_id": "user-id",
-            }
+        mock_logging.info.assert_has_calls(
+            [
+                call(
+                    {
+                        "question_number": 3,
+                        "test_id": "test-id",
+                        "user_id": "user-id",
+                    }
+                ),
+                call({"items": [{}]}),
+            ]
         )
         mock_logging.error.assert_not_called()
 

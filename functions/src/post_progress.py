@@ -2,6 +2,7 @@
 
 import json
 import logging
+from typing import List
 
 import azure.functions as func
 from azure.cosmos import ContainerProxy
@@ -175,19 +176,20 @@ def post_progress(req: func.HttpRequest) -> func.HttpResponse:
         )
 
         # テストID・ユーザーIDにおける、最後に保存した回答履歴の次の問題番号であるかのチェック
-        max_question_number = next(
+        items: List[dict] = list(
             container.query_items(
                 query=(
-                    "SELECT VALUE MAX(c.questionNumber)"
+                    "SELECT MAX(c.questionNumber) as maxQuestionNumber"
                     "FROM c WHERE c.userId = @userId AND c.testId = @testId"
                 ),
                 parameters=[
                     {"name": "@userId", "value": user_id},
                     {"name": "@testId", "value": test_id},
                 ],
-            ),
-            0,  # まだ保存していない場合は問題番号0とみなす
+            )
         )
+        logging.info({"items": items})
+        max_question_number: int = items[0].get("maxQuestionNumber", 0)
         if question_number != max_question_number + 1:
             return func.HttpResponse(
                 body=f"questionNumber must be {max_question_number + 1}",
