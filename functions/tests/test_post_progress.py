@@ -375,7 +375,27 @@ class TestPostProgress(unittest.TestCase):
             database_name="Users",
             container_name="Progress",
         )
-        mock_logging.info.assert_called_once()
+        mock_container.upsert_item.assert_called_once_with(
+            {
+                "userId": "user-id",
+                "testId": "test-id",
+                "questionNumber": 1,
+                "isCorrect": True,
+                "choiceSentences": ["選択肢1", "選択肢2"],
+                "choiceImgs": [None, "https://example.com/img.png"],
+                "choiceTranslations": ["選択肢1の翻訳", "選択肢2の翻訳"],
+                "selectedIdxes": [0],
+                "correctIdxes": [0],
+            }
+        )
+        mock_logging.info.assert_called_once_with(
+            {
+                "question_number": 1,
+                "test_id": "test-id",
+                "user_id": "user-id",
+            }
+        )
+        mock_logging.error.assert_not_called()
 
     @patch("src.post_progress.validate_route_params")
     @patch("src.post_progress.validate_headers")

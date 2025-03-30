@@ -177,7 +177,7 @@ def post_progress(req: func.HttpRequest) -> func.HttpResponse:
         # Progressの項目を生成してupsert
         req_body: PostProgressReq = json.loads(req_body_encoded.decode("utf-8"))
         container.upsert_item(
-            body={
+            {
                 "userId": user_id,
                 "testId": test_id,
                 "questionNumber": question_number,
