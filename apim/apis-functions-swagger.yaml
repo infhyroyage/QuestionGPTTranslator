@@ -267,6 +267,93 @@ paths:
             application/json:
               schema:
                 type: string
+  /tests/{testId}/progresses/{questionNumber}:
+    post:
+      summary: 回答履歴保存API
+      description: 指定したテストID・問題番号・ユーザーIDでの回答履歴を保存します
+      operationId: post-progress
+      parameters:
+        - name: testId
+          in: path
+          description: テストID
+          required: true
+          schema:
+            type: string
+        - name: questionNumber
+          in: path
+          description: 問題番号
+          required: true
+          schema:
+            type: integer
+        - name: X-User-Id
+          in: header
+          description: ユーザーID
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: 保存する回答履歴の情報
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - isCorrect
+                - choiceSentences
+                - choiceImgs
+                - selectedIdxes
+                - correctIdxes
+              properties:
+                isCorrect:
+                  type: boolean
+                  description: 正解の場合はtrue、不正解の場合はfalse
+                choiceSentences:
+                  type: array
+                  description: 選択肢の文
+                  items:
+                    type: string
+                choiceImgs:
+                  type: array
+                  description: 選択肢の文に続く画像URL(画像がない場合はnull)
+                  items:
+                    type: string
+                    nullable: true
+                choiceTranslations:
+                  type: array
+                  description: 選択肢の文に対応する翻訳文
+                  nullable: true
+                  items:
+                    type: string
+                selectedIdxes:
+                  type: array
+                  description: 選択した選択肢のインデックス
+                  items:
+                    type: integer
+                correctIdxes:
+                  type: array
+                  description: 正解の選択肢のインデックス
+                  items:
+                    type: integer
+        required: true
+      responses:
+        "200":
+          description: サーバー処理が正常終了しました
+          content:
+            application/json:
+              schema:
+                type: string
+        "400":
+          description: リクエストパラメーターが不正です
+          content:
+            application/json:
+              schema:
+                type: string
+        "500":
+          description: サーバー処理が異常終了しました
+          content:
+            application/json:
+              schema:
+                type: string
   /en2ja:
     put:
       summary: 翻訳API
