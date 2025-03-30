@@ -25,8 +25,9 @@ class Progress(TypedDict):
     testId: str
     questionNumber: int
     isCorrect: bool
-    choices: List[str]
-    imgs: List[Optional[str]]
+    choiceSentences: List[str]
+    choiceImgs: List[Optional[str]]
+    choiceTranslations: Optional[List[str]]
     selectedIdxes: List[int]
     correctIdxes: List[int]
 
