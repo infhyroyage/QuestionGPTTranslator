@@ -5,612 +5,465 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 import azure.functions as func
-from src.post_progress import post_progress, validate_request
+from src.post_progress import (
+    post_progress,
+    validate_body,
+    validate_headers,
+    validate_route_params,
+)
 
 
-class TestValidateRequest(unittest.TestCase):
-    """validate_request関数のテストケース"""
+class TestValidateBody(unittest.TestCase):
+    """validate_body関数のテストケース"""
 
-    def test_validate_request_success(self):
+    def test_validate_body_success(self):
         """バリデーションチェックに成功した場合のテスト"""
-
-        req = func.HttpRequest(
-            method="POST",
-            body=json.dumps(
-                {
-                    "isCorrect": True,
-                    "choiceSentences": ["選択肢1", "選択肢2"],
-                    "choiceImgs": [None, "https://example.com/img.png"],
-                    "choiceTranslations": ["選択肢1の翻訳", "選択肢2の翻訳"],
-                    "selectedIdxes": [0],
-                    "correctIdxes": [0],
-                }
-            ).encode("utf-8"),
-            url="/api/tests/test-id/progresses/1",
-            route_params={"testId": "test-id", "questionNumber": "1"},
-            headers={"X-User-Id": "user-id"},
-        )
-        error_message = validate_request(req)
-        self.assertIsNone(error_message)
-
-    def test_validate_request_empty_test_id(self):
-        """testIdが空である場合のテスト"""
-
-        req = func.HttpRequest(
-            method="POST",
-            body=json.dumps(
-                {
-                    "isCorrect": True,
-                    "choiceSentences": ["選択肢1", "選択肢2"],
-                    "choiceImgs": [None, "https://example.com/img.png"],
-                    "choiceTranslations": ["選択肢1の翻訳", "選択肢2の翻訳"],
-                    "selectedIdxes": [0],
-                    "correctIdxes": [0],
-                }
-            ).encode("utf-8"),
-            url="/api/tests//progresses/1",
-            route_params={"testId": "", "questionNumber": "1"},
-            headers={"X-User-Id": "user-id"},
-        )
-        error_message = validate_request(req)
-        self.assertEqual(error_message, "testId is Empty")
-
-    def test_validate_request_empty_question_number(self):
-        """questionNumberが空である場合のテスト"""
-
-        req = func.HttpRequest(
-            method="POST",
-            body=json.dumps(
-                {
-                    "isCorrect": True,
-                    "choiceSentences": ["選択肢1", "選択肢2"],
-                    "choiceImgs": [None, "https://example.com/img.png"],
-                    "choiceTranslations": ["選択肢1の翻訳", "選択肢2の翻訳"],
-                    "selectedIdxes": [0],
-                    "correctIdxes": [0],
-                }
-            ).encode("utf-8"),
-            url="/api/tests/test-id/progresses/",
-            route_params={"testId": "test-id", "questionNumber": ""},
-            headers={"X-User-Id": "user-id"},
-        )
-        error_message = validate_request(req)
-        self.assertEqual(error_message, "questionNumber is Empty")
-
-    def test_validate_request_invalid_question_number(self):
-        """questionNumberが数字ではない場合のテスト"""
-
-        req = func.HttpRequest(
-            method="POST",
-            body=json.dumps(
-                {
-                    "isCorrect": True,
-                    "choiceSentences": ["選択肢1", "選択肢2"],
-                    "choiceImgs": [None, "https://example.com/img.png"],
-                    "choiceTranslations": ["選択肢1の翻訳", "選択肢2の翻訳"],
-                    "selectedIdxes": [0],
-                    "correctIdxes": [0],
-                }
-            ).encode("utf-8"),
-            url="/api/tests/test-id/progresses/abc",
-            route_params={"testId": "test-id", "questionNumber": "abc"},
-            headers={"X-User-Id": "user-id"},
-        )
-        error_message = validate_request(req)
-        self.assertEqual(error_message, "Invalid questionNumber: abc")
-
-    def test_validate_request_empty_user_id(self):
-        """X-User-Idヘッダーが空である場合のテスト"""
-
-        req = func.HttpRequest(
-            method="POST",
-            body=json.dumps(
-                {
-                    "isCorrect": True,
-                    "choiceSentences": ["選択肢1", "選択肢2"],
-                    "choiceImgs": [None, "https://example.com/img.png"],
-                    "choiceTranslations": ["選択肢1の翻訳", "選択肢2の翻訳"],
-                    "selectedIdxes": [0],
-                    "correctIdxes": [0],
-                }
-            ).encode("utf-8"),
-            url="/api/tests/test-id/progresses/1",
-            route_params={"testId": "test-id", "questionNumber": "1"},
-            headers={},
-        )
-        error_message = validate_request(req)
-        self.assertEqual(error_message, "X-User-Id header is Empty")
-
-    def test_validate_request_empty_body(self):
-        """リクエストボディが空である場合のテスト"""
-
-        req = func.HttpRequest(
-            method="POST",
-            body=None,
-            url="/api/tests/test-id/progresses/1",
-            route_params={"testId": "test-id", "questionNumber": "1"},
-            headers={"X-User-Id": "user-id"},
-        )
-        error_message = validate_request(req)
-        self.assertEqual(error_message, "Request Body is Empty")
-
-    def test_validate_request_missing_is_correct(self):
-        """リクエストボディにisCorrectが存在しない場合のテスト"""
-
-        req = func.HttpRequest(
-            method="POST",
-            body=json.dumps(
-                {
-                    "choiceSentences": ["選択肢1", "選択肢2"],
-                    "choiceImgs": [None, "https://example.com/img.png"],
-                    "choiceTranslations": ["選択肢1の翻訳", "選択肢2の翻訳"],
-                    "selectedIdxes": [0],
-                    "correctIdxes": [0],
-                }
-            ).encode("utf-8"),
-            url="/api/tests/test-id/progresses/1",
-            route_params={"testId": "test-id", "questionNumber": "1"},
-            headers={"X-User-Id": "user-id"},
-        )
-        error_message = validate_request(req)
-        self.assertEqual(error_message, "isCorrect is required")
-
-    def test_validate_request_invalid_is_correct(self):
-        """isCorrectがboolでない場合のテスト"""
-
-        req = func.HttpRequest(
-            method="POST",
-            body=json.dumps(
-                {
-                    "isCorrect": "true",
-                    "choiceSentences": ["選択肢1", "選択肢2"],
-                    "choiceImgs": [None, "https://example.com/img.png"],
-                    "choiceTranslations": ["選択肢1の翻訳", "選択肢2の翻訳"],
-                    "selectedIdxes": [0],
-                    "correctIdxes": [0],
-                }
-            ).encode("utf-8"),
-            url="/api/tests/test-id/progresses/1",
-            route_params={"testId": "test-id", "questionNumber": "1"},
-            headers={"X-User-Id": "user-id"},
-        )
-        error_message = validate_request(req)
-        self.assertEqual(error_message, "Invalid isCorrect: true")
-
-    def test_validate_request_missing_choice_sentences(self):
-        """リクエストボディにchoiceSentencesが存在しない場合のテスト"""
-
-        req = func.HttpRequest(
-            method="POST",
-            body=json.dumps(
-                {
-                    "isCorrect": True,
-                    "choiceImgs": [None, "https://example.com/img.png"],
-                    "choiceTranslations": ["選択肢1の翻訳", "選択肢2の翻訳"],
-                    "selectedIdxes": [0],
-                    "correctIdxes": [0],
-                }
-            ).encode("utf-8"),
-            url="/api/tests/test-id/progresses/1",
-            route_params={"testId": "test-id", "questionNumber": "1"},
-            headers={"X-User-Id": "user-id"},
-        )
-        error_message = validate_request(req)
-        self.assertEqual(error_message, "choiceSentences is required")
-
-    def test_validate_request_invalid_choice_sentences(self):
-        """choiceSentencesがlistでない場合のテスト"""
-
-        req = func.HttpRequest(
-            method="POST",
-            body=json.dumps(
-                {
-                    "isCorrect": True,
-                    "choiceSentences": "選択肢1",
-                    "choiceImgs": [None, "https://example.com/img.png"],
-                    "choiceTranslations": ["選択肢1の翻訳"],
-                    "selectedIdxes": [0],
-                    "correctIdxes": [0],
-                }
-            ).encode("utf-8"),
-            url="/api/tests/test-id/progresses/1",
-            route_params={"testId": "test-id", "questionNumber": "1"},
-            headers={"X-User-Id": "user-id"},
-        )
-        error_message = validate_request(req)
-        self.assertEqual(error_message, "Invalid choiceSentences: 選択肢1")
-
-    def test_validate_request_invalid_choice_sentence_item(self):
-        """choiceSentencesの要素が文字列でない場合のテスト"""
-
-        req = func.HttpRequest(
-            method="POST",
-            body=json.dumps(
-                {
-                    "isCorrect": True,
-                    "choiceSentences": ["選択肢1", 2],
-                    "choiceImgs": [None, "https://example.com/img.png"],
-                    "choiceTranslations": ["選択肢1の翻訳", "選択肢2の翻訳"],
-                    "selectedIdxes": [0],
-                    "correctIdxes": [0],
-                }
-            ).encode("utf-8"),
-            url="/api/tests/test-id/progresses/1",
-            route_params={"testId": "test-id", "questionNumber": "1"},
-            headers={"X-User-Id": "user-id"},
-        )
-        error_message = validate_request(req)
-        self.assertEqual(error_message, "Invalid choiceSentences[1]: 2")
-
-    def test_validate_request_missing_choice_imgs(self):
-        """リクエストボディにchoiceImgsが存在しない場合のテスト"""
-
-        req = func.HttpRequest(
-            method="POST",
-            body=json.dumps(
-                {
-                    "isCorrect": True,
-                    "choiceSentences": ["選択肢1", "選択肢2"],
-                    "choiceTranslations": ["選択肢1の翻訳", "選択肢2の翻訳"],
-                    "selectedIdxes": [0],
-                    "correctIdxes": [0],
-                }
-            ).encode("utf-8"),
-            url="/api/tests/test-id/progresses/1",
-            route_params={"testId": "test-id", "questionNumber": "1"},
-            headers={"X-User-Id": "user-id"},
-        )
-        error_message = validate_request(req)
-        self.assertEqual(error_message, "choiceImgs is required")
-
-    def test_validate_request_invalid_choice_imgs(self):
-        """choiceImgsがlistでない場合のテスト"""
-
-        req = func.HttpRequest(
-            method="POST",
-            body=json.dumps(
-                {
-                    "isCorrect": True,
-                    "choiceSentences": ["選択肢1", "選択肢2"],
-                    "choiceImgs": "https://example.com/img.png",
-                    "choiceTranslations": ["選択肢1の翻訳", "選択肢2の翻訳"],
-                    "selectedIdxes": [0],
-                    "correctIdxes": [0],
-                }
-            ).encode("utf-8"),
-            url="/api/tests/test-id/progresses/1",
-            route_params={"testId": "test-id", "questionNumber": "1"},
-            headers={"X-User-Id": "user-id"},
-        )
-        error_message = validate_request(req)
-        self.assertEqual(
-            error_message, "Invalid choiceImgs: https://example.com/img.png"
-        )
-
-    def test_validate_request_invalid_choice_img_item(self):
-        """choiceImgsの要素が文字列でない場合のテスト"""
-
-        req = func.HttpRequest(
-            method="POST",
-            body=json.dumps(
-                {
-                    "isCorrect": True,
-                    "choiceSentences": ["選択肢1", "選択肢2"],
-                    "choiceImgs": [None, 123],
-                    "choiceTranslations": ["選択肢1の翻訳", "選択肢2の翻訳"],
-                    "selectedIdxes": [0],
-                    "correctIdxes": [0],
-                }
-            ).encode("utf-8"),
-            url="/api/tests/test-id/progresses/1",
-            route_params={"testId": "test-id", "questionNumber": "1"},
-            headers={"X-User-Id": "user-id"},
-        )
-        error_message = validate_request(req)
-        self.assertEqual(error_message, "Invalid choiceImgs[1]: 123")
-
-    def test_validate_request_invalid_choice_translations(self):
-        """choiceTranslationsがlistでない場合のテスト"""
-
-        req = func.HttpRequest(
-            method="POST",
-            body=json.dumps(
-                {
-                    "isCorrect": True,
-                    "choiceSentences": ["選択肢1"],
-                    "choiceImgs": [None, "https://example.com/img.png"],
-                    "choiceTranslations": "選択肢1の翻訳",
-                    "selectedIdxes": [0],
-                    "correctIdxes": [0],
-                }
-            ).encode("utf-8"),
-            url="/api/tests/test-id/progresses/1",
-            route_params={"testId": "test-id", "questionNumber": "1"},
-            headers={"X-User-Id": "user-id"},
-        )
-        error_message = validate_request(req)
-        self.assertEqual(error_message, "Invalid choiceTranslations: 選択肢1の翻訳")
-
-    def test_validate_request_invalid_choice_translation_item(self):
-        """choiceTranslationsの要素が文字列でない場合のテスト"""
-
-        req = func.HttpRequest(
-            method="POST",
-            body=json.dumps(
-                {
-                    "isCorrect": True,
-                    "choiceSentences": ["選択肢1", "選択肢2"],
-                    "choiceImgs": [None, "https://example.com/img.png"],
-                    "choiceTranslations": [
-                        "選択肢1の翻訳",
-                        123,
-                    ],
-                    "selectedIdxes": [0],
-                    "correctIdxes": [0],
-                }
-            ).encode("utf-8"),
-            url="/api/tests/test-id/progresses/1",
-            route_params={"testId": "test-id", "questionNumber": "1"},
-            headers={"X-User-Id": "user-id"},
-        )
-        error_message = validate_request(req)
-        self.assertEqual(error_message, "Invalid choiceTranslations[1]: 123")
-
-    def test_validate_request_missing_selected_idxes(self):
-        """リクエストボディにselectedIdxesが存在しない場合のテスト"""
-
-        req = func.HttpRequest(
-            method="POST",
-            body=json.dumps(
-                {
-                    "isCorrect": True,
-                    "choiceSentences": ["選択肢1", "選択肢2"],
-                    "choiceImgs": [None, "https://example.com/img.png"],
-                    "choiceTranslations": ["選択肢1の翻訳", "選択肢2の翻訳"],
-                    "correctIdxes": [0],
-                }
-            ).encode("utf-8"),
-            url="/api/tests/test-id/progresses/1",
-            route_params={"testId": "test-id", "questionNumber": "1"},
-            headers={"X-User-Id": "user-id"},
-        )
-        error_message = validate_request(req)
-        self.assertEqual(error_message, "selectedIdxes is required")
-
-    def test_validate_request_invalid_selected_idxes(self):
-        """selectedIdxesがlistでない場合のテスト"""
-
-        req = func.HttpRequest(
-            method="POST",
-            body=json.dumps(
-                {
-                    "isCorrect": True,
-                    "choiceSentences": ["選択肢1", "選択肢2"],
-                    "choiceImgs": [None, "https://example.com/img.png"],
-                    "choiceTranslations": ["選択肢1の翻訳", "選択肢2の翻訳"],
-                    "selectedIdxes": 0,
-                    "correctIdxes": [0],
-                }
-            ).encode("utf-8"),
-            url="/api/tests/test-id/progresses/1",
-            route_params={"testId": "test-id", "questionNumber": "1"},
-            headers={"X-User-Id": "user-id"},
-        )
-        error_message = validate_request(req)
-        self.assertEqual(error_message, "Invalid selectedIdxes: 0")
-
-    def test_validate_request_invalid_selected_idx_item(self):
-        """selectedIdxesの要素が数値でない場合のテスト"""
-
-        req = func.HttpRequest(
-            method="POST",
-            body=json.dumps(
-                {
-                    "isCorrect": True,
-                    "choiceSentences": ["選択肢1", "選択肢2"],
-                    "choiceImgs": [None, "https://example.com/img.png"],
-                    "choiceTranslations": ["選択肢1の翻訳", "選択肢2の翻訳"],
-                    "selectedIdxes": [0, "1"],
-                    "correctIdxes": [0],
-                }
-            ).encode("utf-8"),
-            url="/api/tests/test-id/progresses/1",
-            route_params={"testId": "test-id", "questionNumber": "1"},
-            headers={"X-User-Id": "user-id"},
-        )
-        error_message = validate_request(req)
-        self.assertEqual(error_message, "Invalid selectedIdxes[1]: 1")
-
-    def test_validate_request_missing_correct_idxes(self):
-        """リクエストボディにcorrectIdxesが存在しない場合のテスト"""
-
-        req = func.HttpRequest(
-            method="POST",
-            body=json.dumps(
-                {
-                    "isCorrect": True,
-                    "choiceSentences": ["選択肢1", "選択肢2"],
-                    "choiceImgs": [None, "https://example.com/img.png"],
-                    "choiceTranslations": ["選択肢1の翻訳", "選択肢2の翻訳"],
-                    "selectedIdxes": [0],
-                }
-            ).encode("utf-8"),
-            url="/api/tests/test-id/progresses/1",
-            route_params={"testId": "test-id", "questionNumber": "1"},
-            headers={"X-User-Id": "user-id"},
-        )
-        error_message = validate_request(req)
-        self.assertEqual(error_message, "correctIdxes is required")
-
-    def test_validate_request_invalid_correct_idxes(self):
-        """correctIdxesがlistでない場合のテスト"""
-
-        req = func.HttpRequest(
-            method="POST",
-            body=json.dumps(
-                {
-                    "isCorrect": True,
-                    "choiceSentences": ["選択肢1", "選択肢2"],
-                    "choiceImgs": [None, "https://example.com/img.png"],
-                    "choiceTranslations": ["選択肢1の翻訳", "選択肢2の翻訳"],
-                    "selectedIdxes": [0],
-                    "correctIdxes": 0,
-                }
-            ).encode("utf-8"),
-            url="/api/tests/test-id/progresses/1",
-            route_params={"testId": "test-id", "questionNumber": "1"},
-            headers={"X-User-Id": "user-id"},
-        )
-        error_message = validate_request(req)
-        self.assertEqual(error_message, "Invalid correctIdxes: 0")
-
-    def test_validate_request_invalid_correct_idx_item(self):
-        """correctIdxesの要素が数値でない場合のテスト"""
-
-        req = func.HttpRequest(
-            method="POST",
-            body=json.dumps(
-                {
-                    "isCorrect": True,
-                    "choiceSentences": ["選択肢1", "選択肢2"],
-                    "choiceImgs": [None, "https://example.com/img.png"],
-                    "choiceTranslations": ["選択肢1の翻訳", "選択肢2の翻訳"],
-                    "selectedIdxes": [0],
-                    "correctIdxes": [0, "1"],
-                }
-            ).encode("utf-8"),
-            url="/api/tests/test-id/progresses/1",
-            route_params={"testId": "test-id", "questionNumber": "1"},
-            headers={"X-User-Id": "user-id"},
-        )
-        error_message = validate_request(req)
-        self.assertEqual(error_message, "Invalid correctIdxes[1]: 1")
-
-
-class TestPostProgress(unittest.TestCase):
-    """post_progress関数のテストケース"""
-
-    @patch("src.post_progress.validate_request")
-    @patch("src.post_progress.get_read_write_container")
-    @patch("src.post_progress.logging")
-    def test_post_progress_success(
-        self, mock_logging, mock_get_read_write_container, mock_validate_request
-    ):
-        """正常系のテスト"""
-
-        mock_validate_request.return_value = None
-        mock_container = MagicMock()
-        mock_get_read_write_container.return_value = mock_container
 
         req_body = {
             "isCorrect": True,
             "choiceSentences": ["選択肢1", "選択肢2"],
             "choiceImgs": [None, "https://example.com/img.png"],
             "choiceTranslations": ["選択肢1の翻訳", "選択肢2の翻訳"],
-            "selectedIdxes": [0, 1],
-            "correctIdxes": [2, 3],
+            "selectedIdxes": [0],
+            "correctIdxes": [0],
         }
-        req = func.HttpRequest(
-            method="POST",
-            body=json.dumps(req_body).encode("utf-8"),
-            url="/api/tests/test-id/progresses/1",
-            route_params={"testId": "test-id", "questionNumber": "1"},
-            headers={"X-User-Id": "user-id"},
-        )
+        req_body_encoded = json.dumps(req_body).encode("utf-8")
+        errors = validate_body(req_body_encoded)
+        self.assertEqual(errors, [])
 
-        resp = post_progress(req)
+    def test_validate_body_empty(self):
+        """リクエストボディが空の場合のテスト"""
 
-        self.assertEqual(resp.status_code, 200)
-        self.assertEqual(resp.get_body().decode("utf-8"), "OK")
-        mock_validate_request.assert_called_once_with(req)
-        mock_get_read_write_container.assert_called_once_with(
-            database_name="Users", container_name="Progress"
-        )
-        mock_container.upsert_item.assert_called_once_with(
-            body={
-                "userId": "user-id",
-                "testId": "test-id",
-                "questionNumber": 1,
-                "isCorrect": True,
-                "choiceSentences": ["選択肢1", "選択肢2"],
-                "choiceImgs": [None, "https://example.com/img.png"],
-                "choiceTranslations": ["選択肢1の翻訳", "選択肢2の翻訳"],
-                "selectedIdxes": [0, 1],
-                "correctIdxes": [2, 3],
-            }
-        )
-        mock_logging.info.assert_called_once_with(
-            {
-                "question_number": 1,
-                "test_id": "test-id",
-                "user_id": "user-id",
-            }
-        )
-        mock_logging.error.assert_not_called()
+        req_body_encoded = None
+        errors = validate_body(req_body_encoded)
+        self.assertEqual(errors, ["Request Body is Empty"])
 
-    @patch("src.post_progress.validate_request")
+    def test_validate_body_missing_is_correct(self):
+        """リクエストボディにisCorrectが存在しない場合のテスト"""
+
+        req_body = {
+            "choiceSentences": ["選択肢1", "選択肢2"],
+            "choiceImgs": [None, "https://example.com/img.png"],
+            "choiceTranslations": ["選択肢1の翻訳", "選択肢2の翻訳"],
+            "selectedIdxes": [0],
+            "correctIdxes": [0],
+        }
+        req_body_encoded = json.dumps(req_body).encode("utf-8")
+        errors = validate_body(req_body_encoded)
+        self.assertEqual(errors, ["isCorrect is required"])
+
+    def test_validate_body_invalid_is_correct(self):
+        """isCorrectがboolでない場合のテスト"""
+
+        req_body = {
+            "isCorrect": "true",
+            "choiceSentences": ["選択肢1", "選択肢2"],
+            "choiceImgs": [None, "https://example.com/img.png"],
+            "choiceTranslations": ["選択肢1の翻訳", "選択肢2の翻訳"],
+            "selectedIdxes": [0],
+            "correctIdxes": [0],
+        }
+        req_body_encoded = json.dumps(req_body).encode("utf-8")
+        errors = validate_body(req_body_encoded)
+        self.assertEqual(errors, ["Invalid isCorrect: true"])
+
+    def test_validate_body_missing_choice_sentences(self):
+        """リクエストボディにchoiceSentencesが存在しない場合のテスト"""
+
+        req_body = {
+            "isCorrect": True,
+            "choiceImgs": [None, "https://example.com/img.png"],
+            "choiceTranslations": ["選択肢1の翻訳", "選択肢2の翻訳"],
+            "selectedIdxes": [0],
+            "correctIdxes": [0],
+        }
+        req_body_encoded = json.dumps(req_body).encode("utf-8")
+        errors = validate_body(req_body_encoded)
+        self.assertEqual(errors, ["choiceSentences is required"])
+
+    def test_validate_body_invalid_choice_sentences(self):
+        """choiceSentencesがlistでない場合のテスト"""
+
+        req_body = {
+            "isCorrect": True,
+            "choiceSentences": "選択肢1",
+            "choiceImgs": [None, "https://example.com/img.png"],
+            "choiceTranslations": ["選択肢1の翻訳"],
+            "selectedIdxes": [0],
+            "correctIdxes": [0],
+        }
+        req_body_encoded = json.dumps(req_body).encode("utf-8")
+        errors = validate_body(req_body_encoded)
+        self.assertEqual(errors, ["Invalid choiceSentences: 選択肢1"])
+
+    def test_validate_body_invalid_choice_sentence_item(self):
+        """choiceSentencesの要素が文字列でない場合のテスト"""
+
+        req_body = {
+            "isCorrect": True,
+            "choiceSentences": ["選択肢1", 2],
+            "choiceImgs": [None, "https://example.com/img.png"],
+            "choiceTranslations": ["選択肢1の翻訳", "選択肢2の翻訳"],
+            "selectedIdxes": [0],
+            "correctIdxes": [0],
+        }
+        req_body_encoded = json.dumps(req_body).encode("utf-8")
+        errors = validate_body(req_body_encoded)
+        self.assertEqual(errors, ["Invalid choiceSentences[1]: 2"])
+
+    def test_validate_body_missing_choice_imgs(self):
+        """リクエストボディにchoiceImgsが存在しない場合のテスト"""
+
+        req_body = {
+            "isCorrect": True,
+            "choiceSentences": ["選択肢1", "選択肢2"],
+            "choiceTranslations": ["選択肢1の翻訳", "選択肢2の翻訳"],
+            "selectedIdxes": [0],
+            "correctIdxes": [0],
+        }
+        req_body_encoded = json.dumps(req_body).encode("utf-8")
+        errors = validate_body(req_body_encoded)
+        self.assertEqual(errors, ["choiceImgs is required"])
+
+    def test_validate_body_invalid_choice_imgs(self):
+        """choiceImgsがlistでない場合のテスト"""
+
+        req_body = {
+            "isCorrect": True,
+            "choiceSentences": ["選択肢1", "選択肢2"],
+            "choiceImgs": "https://example.com/img.png",
+            "choiceTranslations": ["選択肢1の翻訳", "選択肢2の翻訳"],
+            "selectedIdxes": [0],
+            "correctIdxes": [0],
+        }
+        req_body_encoded = json.dumps(req_body).encode("utf-8")
+        errors = validate_body(req_body_encoded)
+        self.assertEqual(errors, ["Invalid choiceImgs: https://example.com/img.png"])
+
+    def test_validate_body_invalid_choice_img_item(self):
+        """choiceImgsの要素が文字列でない場合のテスト"""
+
+        req_body = {
+            "isCorrect": True,
+            "choiceSentences": ["選択肢1", "選択肢2"],
+            "choiceImgs": [None, 2],
+            "choiceTranslations": ["選択肢1の翻訳", "選択肢2の翻訳"],
+            "selectedIdxes": [0],
+            "correctIdxes": [0],
+        }
+        req_body_encoded = json.dumps(req_body).encode("utf-8")
+        errors = validate_body(req_body_encoded)
+        self.assertEqual(errors, ["Invalid choiceImgs[1]: 2"])
+
+    def test_validate_body_invalid_choice_translations(self):
+        """choiceTranslationsがlistでない場合のテスト"""
+
+        req_body = {
+            "isCorrect": True,
+            "choiceSentences": ["選択肢1", "選択肢2"],
+            "choiceImgs": [None, "https://example.com/img.png"],
+            "choiceTranslations": "選択肢1の翻訳",
+            "selectedIdxes": [0],
+            "correctIdxes": [0],
+        }
+        req_body_encoded = json.dumps(req_body).encode("utf-8")
+        errors = validate_body(req_body_encoded)
+        self.assertEqual(errors, ["Invalid choiceTranslations: 選択肢1の翻訳"])
+
+    def test_validate_body_invalid_choice_translation_item(self):
+        """choiceTranslationsの要素が文字列でない場合のテスト"""
+
+        req_body = {
+            "isCorrect": True,
+            "choiceSentences": ["選択肢1", "選択肢2"],
+            "choiceImgs": [None, "https://example.com/img.png"],
+            "choiceTranslations": ["選択肢1の翻訳", 2],
+            "selectedIdxes": [0],
+            "correctIdxes": [0],
+        }
+        req_body_encoded = json.dumps(req_body).encode("utf-8")
+        errors = validate_body(req_body_encoded)
+        self.assertEqual(errors, ["Invalid choiceTranslations[1]: 2"])
+
+    def test_validate_body_missing_selected_idxes(self):
+        """リクエストボディにselectedIdxesが存在しない場合のテスト"""
+
+        req_body = {
+            "isCorrect": True,
+            "choiceSentences": ["選択肢1", "選択肢2"],
+            "choiceImgs": [None, "https://example.com/img.png"],
+            "choiceTranslations": ["選択肢1の翻訳", "選択肢2の翻訳"],
+            "correctIdxes": [0],
+        }
+        req_body_encoded = json.dumps(req_body).encode("utf-8")
+        errors = validate_body(req_body_encoded)
+        self.assertEqual(errors, ["selectedIdxes is required"])
+
+    def test_validate_body_invalid_selected_idxes(self):
+        """selectedIdxesがlistでない場合のテスト"""
+
+        req_body = {
+            "isCorrect": True,
+            "choiceSentences": ["選択肢1", "選択肢2"],
+            "choiceImgs": [None, "https://example.com/img.png"],
+            "choiceTranslations": ["選択肢1の翻訳", "選択肢2の翻訳"],
+            "selectedIdxes": 0,
+            "correctIdxes": [0],
+        }
+        req_body_encoded = json.dumps(req_body).encode("utf-8")
+        errors = validate_body(req_body_encoded)
+        self.assertEqual(errors, ["Invalid selectedIdxes: 0"])
+
+    def test_validate_body_invalid_selected_idx_item(self):
+        """selectedIdxesの要素が数値でない場合のテスト"""
+
+        req_body = {
+            "isCorrect": True,
+            "choiceSentences": ["選択肢1", "選択肢2"],
+            "choiceImgs": [None, "https://example.com/img.png"],
+            "choiceTranslations": ["選択肢1の翻訳", "選択肢2の翻訳"],
+            "selectedIdxes": [0, "1"],
+            "correctIdxes": [0],
+        }
+        req_body_encoded = json.dumps(req_body).encode("utf-8")
+        errors = validate_body(req_body_encoded)
+        self.assertEqual(errors, ["Invalid selectedIdxes[1]: 1"])
+
+    def test_validate_body_missing_correct_idxes(self):
+        """リクエストボディにcorrectIdxesが存在しない場合のテスト"""
+
+        req_body = {
+            "isCorrect": True,
+            "choiceSentences": ["選択肢1", "選択肢2"],
+            "choiceImgs": [None, "https://example.com/img.png"],
+            "choiceTranslations": ["選択肢1の翻訳", "選択肢2の翻訳"],
+            "selectedIdxes": [0],
+        }
+        req_body_encoded = json.dumps(req_body).encode("utf-8")
+        errors = validate_body(req_body_encoded)
+        self.assertEqual(errors, ["correctIdxes is required"])
+
+    def test_validate_body_invalid_correct_idxes(self):
+        """correctIdxesがlistでない場合のテスト"""
+
+        req_body = {
+            "isCorrect": True,
+            "choiceSentences": ["選択肢1", "選択肢2"],
+            "choiceImgs": [None, "https://example.com/img.png"],
+            "choiceTranslations": ["選択肢1の翻訳", "選択肢2の翻訳"],
+            "selectedIdxes": [0],
+            "correctIdxes": 0,
+        }
+        req_body_encoded = json.dumps(req_body).encode("utf-8")
+        errors = validate_body(req_body_encoded)
+        self.assertEqual(errors, ["Invalid correctIdxes: 0"])
+
+    def test_validate_body_invalid_correct_idx_item(self):
+        """correctIdxesの要素が数値でない場合のテスト"""
+
+        req_body = {
+            "isCorrect": True,
+            "choiceSentences": ["選択肢1", "選択肢2"],
+            "choiceImgs": [None, "https://example.com/img.png"],
+            "choiceTranslations": ["選択肢1の翻訳", "選択肢2の翻訳"],
+            "selectedIdxes": [0],
+            "correctIdxes": [0, "1"],
+        }
+        req_body_encoded = json.dumps(req_body).encode("utf-8")
+        errors = validate_body(req_body_encoded)
+        self.assertEqual(errors, ["Invalid correctIdxes[1]: 1"])
+
+
+class TestValidateRouteParams(unittest.TestCase):
+    """validate_route_params関数のテストケース"""
+
+    def test_validate_route_params_success(self):
+        """バリデーションチェックに成功した場合のテスト"""
+
+        route_params = {"testId": "test-id", "questionNumber": "1"}
+        errors = validate_route_params(route_params)
+        self.assertEqual(errors, [])
+
+    def test_validate_route_params_empty_test_id(self):
+        """testIdが空である場合のテスト"""
+
+        route_params = {"testId": "", "questionNumber": "1"}
+        errors = validate_route_params(route_params)
+        self.assertEqual(errors, ["testId is Empty"])
+
+    def test_validate_route_params_empty_question_number(self):
+        """questionNumberが空である場合のテスト"""
+
+        route_params = {"testId": "test-id", "questionNumber": ""}
+        errors = validate_route_params(route_params)
+        self.assertEqual(errors, ["questionNumber is Empty"])
+
+    def test_validate_route_params_invalid_question_number(self):
+        """questionNumberが数字ではない場合のテスト"""
+
+        route_params = {"testId": "test-id", "questionNumber": "abc"}
+        errors = validate_route_params(route_params)
+        self.assertEqual(errors, ["Invalid questionNumber: abc"])
+
+
+class TestValidateHeaders(unittest.TestCase):
+    """validate_headers関数のテストケース"""
+
+    def test_validate_headers_success(self):
+        """バリデーションチェックに成功した場合のテスト"""
+
+        headers = {"X-User-Id": "user-id"}
+        errors = validate_headers(headers)
+        self.assertEqual(errors, [])
+
+    def test_validate_headers_empty_user_id(self):
+        """X-User-Idヘッダーが空である場合のテスト"""
+
+        headers = {}
+        errors = validate_headers(headers)
+        self.assertEqual(errors, ["X-User-Id header is Empty"])
+
+
+class TestPostProgress(unittest.TestCase):
+    """post_progress関数のテストケース"""
+
+    @patch("src.post_progress.validate_route_params")
+    @patch("src.post_progress.validate_headers")
+    @patch("src.post_progress.validate_body")
+    @patch("src.post_progress.get_read_write_container")
     @patch("src.post_progress.logging")
-    def test_post_progress_validation_error(self, mock_logging, mock_validate_request):
-        """バリデーションチェックに失敗した場合のテスト"""
+    def test_post_progress_success(  # pylint: disable=too-many-arguments, too-many-positional-arguments
+        self,
+        mock_logging,
+        mock_get_read_write_container,
+        mock_validate_body,
+        mock_validate_headers,
+        mock_validate_route_params,
+    ):
+        """レスポンスが正常であることのテスト"""
 
-        mock_validate_request.return_value = "Validation Error"
+        mock_validate_route_params.return_value = []
+        mock_validate_headers.return_value = []
+        mock_validate_body.return_value = []
+        mock_container = MagicMock()
+        mock_get_read_write_container.return_value = mock_container
 
+        request_body = {
+            "isCorrect": True,
+            "choiceSentences": ["選択肢1", "選択肢2"],
+            "choiceImgs": [None, "https://example.com/img.png"],
+            "choiceTranslations": ["選択肢1の翻訳", "選択肢2の翻訳"],
+            "selectedIdxes": [0],
+            "correctIdxes": [0],
+        }
+        request_body_encoded = json.dumps(request_body).encode("utf-8")
         req = func.HttpRequest(
             method="POST",
-            body=b"{}",
+            body=request_body_encoded,
             url="/api/tests/test-id/progresses/1",
             route_params={"testId": "test-id", "questionNumber": "1"},
             headers={"X-User-Id": "user-id"},
         )
+        res = post_progress(req)
 
-        resp = post_progress(req)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.get_body().decode("utf-8"), "OK")
+        mock_validate_route_params.assert_called_once_with(req.route_params)
+        mock_validate_headers.assert_called_once_with(req.headers)
+        mock_validate_body.assert_called_once_with(request_body_encoded)
+        mock_get_read_write_container.assert_called_once_with(
+            database_name="Users",
+            container_name="Progress",
+        )
+        mock_logging.info.assert_called_once()
 
-        self.assertEqual(resp.status_code, 400)
-        self.assertEqual(resp.get_body().decode("utf-8"), "Validation Error")
-        mock_validate_request.assert_called_once_with(req)
+    @patch("src.post_progress.validate_route_params")
+    @patch("src.post_progress.validate_headers")
+    @patch("src.post_progress.validate_body")
+    @patch("src.post_progress.logging")
+    def test_post_progress_validation_error(
+        self,
+        mock_logging,
+        mock_validate_body,
+        mock_validate_headers,
+        mock_validate_route_params,
+    ):
+        """バリデーションエラーが発生した場合のテスト"""
+
+        mock_validate_route_params.return_value = []
+        mock_validate_headers.return_value = []
+        mock_validate_body.return_value = ["Validation Error"]
+
+        request_body = {
+            "isCorrect": True,
+            "choiceSentences": ["選択肢1", "選択肢2"],
+            "choiceImgs": [None, "https://example.com/img.png"],
+            "choiceTranslations": ["選択肢1の翻訳", "選択肢2の翻訳"],
+            "selectedIdxes": [0],
+            "correctIdxes": [0],
+        }
+        request_body_encoded = json.dumps(request_body).encode("utf-8")
+        req = func.HttpRequest(
+            method="POST",
+            body=request_body_encoded,
+            url="/api/tests/test-id/progresses/1",
+            route_params={"testId": "test-id", "questionNumber": "1"},
+            headers={"X-User-Id": "user-id"},
+        )
+        res = post_progress(req)
+
+        self.assertEqual(res.status_code, 400)
+        self.assertEqual(res.get_body().decode("utf-8"), "Validation Error")
+        mock_validate_route_params.assert_called_once_with(req.route_params)
+        mock_validate_headers.assert_called_once_with(req.headers)
+        mock_validate_body.assert_called_once_with(request_body_encoded)
         mock_logging.info.assert_not_called()
         mock_logging.error.assert_not_called()
 
-    @patch("src.post_progress.validate_request")
+    @patch("src.post_progress.validate_route_params")
+    @patch("src.post_progress.validate_headers")
+    @patch("src.post_progress.validate_body")
     @patch("src.post_progress.get_read_write_container")
     @patch("src.post_progress.logging")
-    def test_post_progress_exception(
-        self, mock_logging, mock_get_read_write_container, mock_validate_request
+    def test_post_progress_exception(  # pylint: disable=too-many-arguments, too-many-positional-arguments
+        self,
+        mock_logging,
+        mock_get_read_write_container,
+        mock_validate_body,
+        mock_validate_headers,
+        mock_validate_route_params,
     ):
         """例外が発生した場合のテスト"""
 
-        mock_validate_request.return_value = None
-        mock_get_read_write_container.side_effect = Exception(
-            "Error in src.post_progress.get_read_write_container"
-        )
+        mock_validate_route_params.return_value = []
+        mock_validate_headers.return_value = []
+        mock_validate_body.return_value = []
+        mock_get_read_write_container.side_effect = Exception("Test Exception")
 
+        request_body = {
+            "isCorrect": True,
+            "choiceSentences": ["選択肢1", "選択肢2"],
+            "choiceImgs": [None, "https://example.com/img.png"],
+            "choiceTranslations": ["選択肢1の翻訳", "選択肢2の翻訳"],
+            "selectedIdxes": [0],
+            "correctIdxes": [0],
+        }
+        request_body_encoded = json.dumps(request_body).encode("utf-8")
         req = func.HttpRequest(
             method="POST",
-            body=json.dumps(
-                {
-                    "isCorrect": True,
-                    "choiceSentences": ["選択肢1", "選択肢2"],
-                    "choiceImgs": [None, "https://example.com/img.png"],
-                    "choiceTranslations": ["選択肢1の翻訳", "選択肢2の翻訳"],
-                    "selectedIdxes": [0, 1],
-                    "correctIdxes": [2, 3],
-                }
-            ).encode("utf-8"),
+            body=request_body_encoded,
             url="/api/tests/test-id/progresses/1",
             route_params={"testId": "test-id", "questionNumber": "1"},
             headers={"X-User-Id": "user-id"},
         )
+        res = post_progress(req)
 
-        resp = post_progress(req)
-
-        self.assertEqual(resp.status_code, 500)
-        self.assertEqual(resp.get_body().decode("utf-8"), "Internal Server Error")
-        mock_validate_request.assert_called_once_with(req)
+        self.assertEqual(res.status_code, 500)
+        self.assertEqual(res.get_body().decode("utf-8"), "Internal Server Error")
+        mock_validate_route_params.assert_called_once_with(req.route_params)
+        mock_validate_headers.assert_called_once_with(req.headers)
+        mock_validate_body.assert_called_once_with(request_body_encoded)
         mock_logging.info.assert_called_once_with(
-            {
-                "question_number": 1,
-                "test_id": "test-id",
-                "user_id": "user-id",
-            }
+            {"question_number": 1, "test_id": "test-id", "user_id": "user-id"}
         )
         mock_logging.error.assert_called_once()

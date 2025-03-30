@@ -9,34 +9,43 @@ from type.request import PostProgressReq
 from util.cosmos import get_read_write_container
 
 
-def validate_request(req: func.HttpRequest) -> str | None:
-    """
-    リクエストのバリデーションチェックを行う
+def _validate_list_field(field_name: str, field_value, expected_type=str) -> list:
+    """リクエストボディ内のlist型のフィールドのバリデーションを行う
 
     Args:
-        req (func.HttpRequest): リクエスト
+        field_name (str): フィールド名
+        field_value: フィールド値
+        expected_type: 期待する型
 
     Returns:
-        str | None: バリデーションチェックに成功した場合はNone、失敗した場合はエラーメッセージ
+        list: バリデーションチェックに成功した場合は空のリスト、失敗した場合はエラーメッセージのリスト
     """
 
     errors = []
 
-    test_id = req.route_params.get("testId")
-    if not test_id:
-        errors.append("testId is Empty")
+    if not isinstance(field_value, list):
+        errors.append(f"Invalid {field_name}: {field_value}")
+    else:
+        for i, item in enumerate(field_value):
+            if item is not None and not isinstance(item, expected_type):
+                errors.append(f"Invalid {field_name}[{i}]: {item}")
 
-    question_number = req.route_params.get("questionNumber")
-    if not question_number:
-        errors.append("questionNumber is Empty")
-    elif not question_number.isdigit():
-        errors.append(f"Invalid questionNumber: {question_number}")
+    return errors
 
-    user_id = req.headers.get("X-User-Id")
-    if not user_id:
-        errors.append("X-User-Id header is Empty")
 
-    req_body_encoded: bytes = req.get_body()
+def validate_body(req_body_encoded: bytes) -> list:
+    """
+    リクエストボディのバリデーションを行う
+
+    Args:
+        req_body_encoded (bytes): リクエストボディ
+
+    Returns:
+        list: バリデーションチェックに成功した場合は空のリスト、失敗した場合はエラーメッセージのリスト
+    """
+
+    errors = []
+
     if not req_body_encoded:
         errors.append("Request Body is Empty")
     else:
@@ -47,56 +56,80 @@ def validate_request(req: func.HttpRequest) -> str | None:
         elif not isinstance(req_body["isCorrect"], bool):
             errors.append(f"Invalid isCorrect: {req_body['isCorrect']}")
 
-        if "choiceSentences" not in req_body:
-            errors.append("choiceSentences is required")
-        elif not isinstance(req_body["choiceSentences"], list):
-            errors.append(f"Invalid choiceSentences: {req_body['choiceSentences']}")
-        else:
-            for i, sentence in enumerate(req_body["choiceSentences"]):
-                if not isinstance(sentence, str):
-                    errors.append(f"Invalid choiceSentences[{i}]: {sentence}")
-
-        if "choiceImgs" not in req_body:
-            errors.append("choiceImgs is required")
-        elif not isinstance(req_body["choiceImgs"], list):
-            errors.append(f"Invalid choiceImgs: {req_body['choiceImgs']}")
-        else:
-            for i, img in enumerate(req_body["choiceImgs"]):
-                if img is not None and not isinstance(img, str):
-                    errors.append(f"Invalid choiceImgs[{i}]: {img}")
+        list_fields = {
+            "choiceSentences": str,
+            "choiceImgs": None,
+            "selectedIdxes": int,
+            "correctIdxes": int,
+        }
+        for field, expected_type in list_fields.items():
+            if field not in req_body:
+                errors.append(f"{field} is required")
+            else:
+                if expected_type:
+                    errors.extend(
+                        _validate_list_field(field, req_body[field], expected_type)
+                    )
+                elif field == "choiceImgs":
+                    errors.extend(_validate_list_field(field, req_body[field], str))
 
         if (
             "choiceTranslations" in req_body
             and req_body["choiceTranslations"] is not None
         ):
-            if not isinstance(req_body["choiceTranslations"], list):
-                errors.append(
-                    f"Invalid choiceTranslations: {req_body['choiceTranslations']}"
+            errors.extend(
+                _validate_list_field(
+                    "choiceTranslations", req_body["choiceTranslations"], str
                 )
-            else:
-                for i, translation in enumerate(req_body["choiceTranslations"]):
-                    if not isinstance(translation, str):
-                        errors.append(f"Invalid choiceTranslations[{i}]: {translation}")
+            )
 
-        if "selectedIdxes" not in req_body:
-            errors.append("selectedIdxes is required")
-        elif not isinstance(req_body["selectedIdxes"], list):
-            errors.append(f"Invalid selectedIdxes: {req_body['selectedIdxes']}")
-        else:
-            for i, idx in enumerate(req_body["selectedIdxes"]):
-                if not isinstance(idx, int):
-                    errors.append(f"Invalid selectedIdxes[{i}]: {idx}")
+    return errors
 
-        if "correctIdxes" not in req_body:
-            errors.append("correctIdxes is required")
-        elif not isinstance(req_body["correctIdxes"], list):
-            errors.append(f"Invalid correctIdxes: {req_body['correctIdxes']}")
-        else:
-            for i, idx in enumerate(req_body["correctIdxes"]):
-                if not isinstance(idx, int):
-                    errors.append(f"Invalid correctIdxes[{i}]: {idx}")
 
-    return errors[0] if errors else None
+def validate_route_params(route_params: dict) -> list:
+    """
+    ルートパラメータのバリデーションを行う
+
+    Args:
+        route_params (dict): ルートパラメータ
+
+    Returns:
+        list: バリデーションチェックに成功した場合は空のリスト、失敗した場合はエラーメッセージのリスト
+    """
+
+    errors = []
+
+    test_id = route_params.get("testId")
+    if not test_id:
+        errors.append("testId is Empty")
+
+    question_number = route_params.get("questionNumber")
+    if not question_number:
+        errors.append("questionNumber is Empty")
+    elif not question_number.isdigit():
+        errors.append(f"Invalid questionNumber: {question_number}")
+
+    return errors
+
+
+def validate_headers(headers: dict) -> list:
+    """
+    ヘッダーのバリデーションを行う
+
+    Args:
+        headers (dict): ヘッダー
+
+    Returns:
+        list: バリデーションチェックに成功した場合は空のリスト、失敗した場合はエラーメッセージのリスト
+    """
+
+    errors = []
+
+    user_id = headers.get("X-User-Id")
+    if not user_id:
+        errors.append("X-User-Id header is Empty")
+
+    return errors
 
 
 bp_post_progress = func.Blueprint()
@@ -114,7 +147,12 @@ def post_progress(req: func.HttpRequest) -> func.HttpResponse:
 
     try:
         # バリデーションチェック
-        error_message = validate_request(req)
+        errors = []
+        req_body_encoded: bytes = req.get_body()
+        errors.extend(validate_body(req_body_encoded))  # リクエストボディ
+        errors.extend(validate_route_params(req.route_params))  # ルートパラメータ
+        errors.extend(validate_headers(req.headers))  # ヘッダー
+        error_message = errors[0] if errors else None
         if error_message:
             return func.HttpResponse(body=error_message, status_code=400)
 
@@ -137,7 +175,7 @@ def post_progress(req: func.HttpRequest) -> func.HttpResponse:
         )
 
         # Progressの項目を生成してupsert
-        req_body: PostProgressReq = json.loads(req.get_body().decode("utf-8"))
+        req_body: PostProgressReq = json.loads(req_body_encoded.decode("utf-8"))
         container.upsert_item(
             body={
                 "userId": user_id,
