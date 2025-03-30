@@ -285,9 +285,9 @@ paths:
           required: true
           schema:
             type: integer
-        - name: X-User-Id
+        - name: X-Access-Token
           in: header
-          description: ユーザーID
+          description: Microsoft ID Platformから発行されたアクセストークン
           required: true
           schema:
             type: string
