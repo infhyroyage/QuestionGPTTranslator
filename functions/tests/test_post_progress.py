@@ -5,6 +5,7 @@ import unittest
 from unittest.mock import MagicMock, call, patch
 
 import azure.functions as func
+from azure.cosmos import PartitionKey
 from src.post_progress import (
     post_progress,
     validate_body,
@@ -385,6 +386,7 @@ class TestPostProgress(unittest.TestCase):
                 {"name": "@userId", "value": "user-id"},
                 {"name": "@testId", "value": "test-id"},
             ],
+            partition_key=PartitionKey("test-id"),
         )
         mock_container.upsert_item.assert_called_once_with(
             {
@@ -515,6 +517,7 @@ class TestPostProgress(unittest.TestCase):
                 {"name": "@userId", "value": "user-id"},
                 {"name": "@testId", "value": "test-id"},
             ],
+            partition_key=PartitionKey("test-id"),
         )
         mock_container.upsert_item.assert_not_called()
         mock_logging.info.assert_has_calls(

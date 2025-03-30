@@ -5,7 +5,7 @@ import logging
 from typing import List
 
 import azure.functions as func
-from azure.cosmos import ContainerProxy
+from azure.cosmos import ContainerProxy, PartitionKey
 from type.request import PostProgressReq
 from util.cosmos import get_read_write_container
 
@@ -186,6 +186,7 @@ def post_progress(req: func.HttpRequest) -> func.HttpResponse:
                     {"name": "@userId", "value": user_id},
                     {"name": "@testId", "value": test_id},
                 ],
+                partition_key=PartitionKey(test_id),
             )
         )
         logging.info({"items": items})
