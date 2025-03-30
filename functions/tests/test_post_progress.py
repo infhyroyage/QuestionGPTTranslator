@@ -347,6 +347,9 @@ class TestPostProgress(unittest.TestCase):
         mock_validate_body.return_value = []
         mock_container = MagicMock()
         mock_get_read_write_container.return_value = mock_container
+        mock_query_result = MagicMock()
+        mock_query_result.__next__.return_value = 2
+        mock_container.query_items.return_value = mock_query_result
 
         request_body = {
             "isCorrect": True,
@@ -360,8 +363,8 @@ class TestPostProgress(unittest.TestCase):
         req = func.HttpRequest(
             method="POST",
             body=request_body_encoded,
-            url="/api/tests/test-id/progresses/1",
-            route_params={"testId": "test-id", "questionNumber": "1"},
+            url="/api/tests/test-id/progresses/3",
+            route_params={"testId": "test-id", "questionNumber": "3"},
             headers={"X-User-Id": "user-id"},
         )
         res = post_progress(req)
@@ -375,12 +378,22 @@ class TestPostProgress(unittest.TestCase):
             database_name="Users",
             container_name="Progress",
         )
+        mock_container.query_items.assert_called_once_with(
+            query=(
+                "SELECT VALUE MAX(c.questionNumber)"
+                "FROM c WHERE c.userId = @userId AND c.testId = @testId"
+            ),
+            parameters=[
+                {"name": "@userId", "value": "user-id"},
+                {"name": "@testId", "value": "test-id"},
+            ],
+        )
         mock_container.upsert_item.assert_called_once_with(
             {
-                "id": "user-id_test-id_1",
+                "id": "user-id_test-id_3",
                 "userId": "user-id",
                 "testId": "test-id",
-                "questionNumber": 1,
+                "questionNumber": 3,
                 "isCorrect": True,
                 "choiceSentences": ["選択肢1", "選択肢2"],
                 "choiceImgs": [None, "https://example.com/img.png"],
@@ -391,7 +404,7 @@ class TestPostProgress(unittest.TestCase):
         )
         mock_logging.info.assert_called_once_with(
             {
-                "question_number": 1,
+                "question_number": 3,
                 "test_id": "test-id",
                 "user_id": "user-id",
             }
@@ -427,8 +440,8 @@ class TestPostProgress(unittest.TestCase):
         req = func.HttpRequest(
             method="POST",
             body=request_body_encoded,
-            url="/api/tests/test-id/progresses/1",
-            route_params={"testId": "test-id", "questionNumber": "1"},
+            url="/api/tests/test-id/progresses/3",
+            route_params={"testId": "test-id", "questionNumber": "3"},
             headers={"X-User-Id": "user-id"},
         )
         res = post_progress(req)
@@ -439,6 +452,77 @@ class TestPostProgress(unittest.TestCase):
         mock_validate_headers.assert_called_once_with(req.headers)
         mock_validate_body.assert_called_once_with(request_body_encoded)
         mock_logging.info.assert_not_called()
+        mock_logging.error.assert_not_called()
+
+    @patch("src.post_progress.validate_route_params")
+    @patch("src.post_progress.validate_headers")
+    @patch("src.post_progress.validate_body")
+    @patch("src.post_progress.get_read_write_container")
+    @patch("src.post_progress.logging")
+    def test_post_progress_invalid_question_number(  # pylint: disable=too-many-arguments, too-many-positional-arguments
+        self,
+        mock_logging,
+        mock_get_read_write_container,
+        mock_validate_body,
+        mock_validate_headers,
+        mock_validate_route_params,
+    ):
+        """最後に保存した回答履歴の次の問題番号でない場合のテスト"""
+
+        mock_validate_route_params.return_value = []
+        mock_validate_headers.return_value = []
+        mock_validate_body.return_value = []
+        mock_container = MagicMock()
+        mock_get_read_write_container.return_value = mock_container
+        mock_query_result = MagicMock()
+        mock_query_result.__next__.return_value = 1
+        mock_container.query_items.return_value = mock_query_result
+
+        request_body = {
+            "isCorrect": True,
+            "choiceSentences": ["選択肢1", "選択肢2"],
+            "choiceImgs": [None, "https://example.com/img.png"],
+            "choiceTranslations": ["選択肢1の翻訳", "選択肢2の翻訳"],
+            "selectedIdxes": [0],
+            "correctIdxes": [0],
+        }
+        request_body_encoded = json.dumps(request_body).encode("utf-8")
+        req = func.HttpRequest(
+            method="POST",
+            body=request_body_encoded,
+            url="/api/tests/test-id/progresses/3",
+            route_params={"testId": "test-id", "questionNumber": "3"},
+            headers={"X-User-Id": "user-id"},
+        )
+        res = post_progress(req)
+
+        self.assertEqual(res.status_code, 400)
+        self.assertEqual(res.get_body().decode("utf-8"), "questionNumber must be 2")
+        mock_validate_route_params.assert_called_once_with(req.route_params)
+        mock_validate_headers.assert_called_once_with(req.headers)
+        mock_validate_body.assert_called_once_with(request_body_encoded)
+        mock_get_read_write_container.assert_called_once_with(
+            database_name="Users",
+            container_name="Progress",
+        )
+        mock_container.query_items.assert_called_once_with(
+            query=(
+                "SELECT VALUE MAX(c.questionNumber)"
+                "FROM c WHERE c.userId = @userId AND c.testId = @testId"
+            ),
+            parameters=[
+                {"name": "@userId", "value": "user-id"},
+                {"name": "@testId", "value": "test-id"},
+            ],
+        )
+        mock_container.upsert_item.assert_not_called()
+        mock_logging.info.assert_called_once_with(
+            {
+                "question_number": 3,
+                "test_id": "test-id",
+                "user_id": "user-id",
+            }
+        )
         mock_logging.error.assert_not_called()
 
     @patch("src.post_progress.validate_route_params")
@@ -473,8 +557,8 @@ class TestPostProgress(unittest.TestCase):
         req = func.HttpRequest(
             method="POST",
             body=request_body_encoded,
-            url="/api/tests/test-id/progresses/1",
-            route_params={"testId": "test-id", "questionNumber": "1"},
+            url="/api/tests/test-id/progresses/3",
+            route_params={"testId": "test-id", "questionNumber": "3"},
             headers={"X-User-Id": "user-id"},
         )
         res = post_progress(req)
@@ -485,6 +569,6 @@ class TestPostProgress(unittest.TestCase):
         mock_validate_headers.assert_called_once_with(req.headers)
         mock_validate_body.assert_called_once_with(request_body_encoded)
         mock_logging.info.assert_called_once_with(
-            {"question_number": 1, "test_id": "test-id", "user_id": "user-id"}
+            {"question_number": 3, "test_id": "test-id", "user_id": "user-id"}
         )
         mock_logging.error.assert_called_once()
