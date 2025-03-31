@@ -378,7 +378,7 @@ class TestPostProgress(unittest.TestCase):
         )
         mock_container.query_items.assert_called_once_with(
             query=(
-                "SELECT MAX(c.questionNumber) as maxQuestionNumber"
+                "SELECT MAX(c.questionNumber) as maxQuestionNumber "
                 "FROM c WHERE c.userId = @userId AND c.testId = @testId"
             ),
             parameters=[
@@ -509,7 +509,7 @@ class TestPostProgress(unittest.TestCase):
         )
         mock_container.query_items.assert_called_once_with(
             query=(
-                "SELECT MAX(c.questionNumber) as maxQuestionNumber"
+                "SELECT MAX(c.questionNumber) as maxQuestionNumber "
                 "FROM c WHERE c.userId = @userId AND c.testId = @testId"
             ),
             parameters=[

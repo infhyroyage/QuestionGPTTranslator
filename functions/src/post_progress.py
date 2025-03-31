@@ -179,7 +179,7 @@ def post_progress(req: func.HttpRequest) -> func.HttpResponse:
         items: List[dict] = list(
             container.query_items(
                 query=(
-                    "SELECT MAX(c.questionNumber) as maxQuestionNumber"
+                    "SELECT MAX(c.questionNumber) as maxQuestionNumber "
                     "FROM c WHERE c.userId = @userId AND c.testId = @testId"
                 ),
                 parameters=[
