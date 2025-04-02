@@ -213,7 +213,7 @@ resource cosmosDBDatabaseUsersContainerTest 'Microsoft.DocumentDb/databaseAccoun
         ]
       }
       partitionKey: {
-        paths: ['/id']
+        paths: ['/courseName']
       }
     }
   }
@@ -225,7 +225,7 @@ resource cosmosDBDatabaseUsersContainerQuestion 'Microsoft.DocumentDb/databaseAc
     resource: {
       id: cosmosDBContainerNames.question
       partitionKey: {
-        paths: ['/id']
+        paths: ['/testId']
       }
     }
   }
@@ -237,7 +237,7 @@ resource cosmosDBDatabaseUsersContainerAnswer 'Microsoft.DocumentDb/databaseAcco
     resource: {
       id: cosmosDBContainerNames.answer
       partitionKey: {
-        paths: ['/id']
+        paths: ['/testId']
       }
     }
   }

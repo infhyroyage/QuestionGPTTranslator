@@ -46,7 +46,7 @@ def create_databases_and_containers() -> None:
     # Testコンテナー
     database_res.create_container_if_not_exists(
         id="Test",
-        partition_key=PartitionKey(path="/id"),
+        partition_key=PartitionKey(path="/courseName"),
         # Azure Cosmos DBでは複合インデックスのインデックスポリシーをサポートするが
         # 2024/11/24現在、Azure Cosmos DB Linux-based Emulator (preview)では未サポートのため
         # そのインデックスポリシーを定義しない
@@ -62,12 +62,12 @@ def create_databases_and_containers() -> None:
 
     # Questionコンテナー
     database_res.create_container_if_not_exists(
-        id="Question", partition_key=PartitionKey(path="/id")
+        id="Question", partition_key=PartitionKey(path="/testId")
     )
 
     # Answerコンテナー
     database_res.create_container_if_not_exists(
-        id="Answer", partition_key=PartitionKey(path="/id")
+        id="Answer", partition_key=PartitionKey(path="/testId")
     )
 
     # Progressコンテナー
