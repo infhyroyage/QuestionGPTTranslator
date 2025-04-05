@@ -83,7 +83,6 @@ def get_question_items(test_id: str, question_number: str) -> list[Question]:
                 {"name": "@testId", "value": test_id},
                 {"name": "@number", "value": int(question_number)},
             ],
-            enable_cross_partition_query=True,
         )
     )
 

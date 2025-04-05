@@ -2,7 +2,6 @@
 
 import json
 import logging
-import os
 
 import azure.functions as func
 from azure.cosmos import ContainerProxy
@@ -33,19 +32,7 @@ def get_tests(
         )
 
         # Testコンテナーから全項目取得
-        # Azure Cosmos DBでは複合インデックスのインデックスポリシーをサポートするが
-        # 2024/11/24現在、Azure Cosmos DB Linux-based Emulator (preview)では未サポートのため
-        # Azure上のみORDER BY句を設定
-        query: str = "SELECT c.id, c.courseName, c.testName, c.length FROM c"
-        if os.environ.get("COSMOSDB_URI") != "https://localhost:8081":
-            query += " ORDER BY c.courseName ASC, c.testName ASC"
-
-        items: list[Test] = list(
-            container.query_items(
-                query=query,
-                enable_cross_partition_query=True,
-            )
-        )
+        items: list[Test] = list(container.read_all_items())
         logging.info({"items": items})
 
         # 各項目をcourseName単位でまとめるようにレスポンス整形

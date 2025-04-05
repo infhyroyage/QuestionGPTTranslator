@@ -26,7 +26,7 @@ class TestGetTests(TestCase):
             {"id": "2", "courseName": "Math", "testName": "Geometry", "length": 20},
             {"id": "3", "courseName": "Science", "testName": "Physics", "length": 30},
         ]
-        mock_container.query_items.return_value = mock_items
+        mock_container.read_all_items.return_value = mock_items
         mock_get_read_only_container.return_value = mock_container
 
         req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
@@ -43,10 +43,11 @@ class TestGetTests(TestCase):
             ],
         }
         self.assertEqual(response.get_body().decode(), json.dumps(expected_body))
-        mock_container.query_items.assert_called_once_with(
-            query="SELECT c.id, c.courseName, c.testName, c.length FROM c",
-            enable_cross_partition_query=True,
+        mock_get_read_only_container.assert_called_once_with(
+            database_name="Users",
+            container_name="Test",
         )
+        mock_container.read_all_items.assert_called_once()
         mock_logging.info.assert_has_calls(
             [call({"items": mock_items}), call({"body": expected_body})]
         )
@@ -66,7 +67,7 @@ class TestGetTests(TestCase):
             {"id": "2", "courseName": "Math", "testName": "Geometry", "length": 20},
             {"id": "3", "courseName": "Science", "testName": "Physics", "length": 30},
         ]
-        mock_container.query_items.return_value = mock_items
+        mock_container.read_all_items.return_value = mock_items
         mock_get_read_only_container.return_value = mock_container
 
         req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
@@ -83,13 +84,11 @@ class TestGetTests(TestCase):
             ],
         }
         self.assertEqual(response.get_body().decode(), json.dumps(expected_body))
-        mock_container.query_items.assert_called_once_with(
-            query=(
-                "SELECT c.id, c.courseName, c.testName, c.length FROM c"
-                " ORDER BY c.courseName ASC, c.testName ASC"
-            ),
-            enable_cross_partition_query=True,
+        mock_get_read_only_container.assert_called_once_with(
+            database_name="Users",
+            container_name="Test",
         )
+        mock_container.read_all_items.assert_called_once()
         mock_logging.info.assert_has_calls(
             [call({"items": mock_items}), call({"body": expected_body})]
         )

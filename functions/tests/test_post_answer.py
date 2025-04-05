@@ -108,7 +108,6 @@ class TestGetQuestionItems(unittest.TestCase):
                 {"name": "@testId", "value": "1"},
                 {"name": "@number", "value": 1},
             ],
-            enable_cross_partition_query=True,
         )
 
 
