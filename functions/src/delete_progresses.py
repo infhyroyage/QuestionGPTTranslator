@@ -9,44 +9,30 @@ from azure.cosmos.exceptions import CosmosHttpResponseError
 from util.cosmos import get_read_write_container
 
 
-def validate_route_params(route_params: dict) -> list:
+def validate_request(req: func.HttpRequest) -> str | None:
     """
-    ルートパラメータのバリデーションを行う
+    リクエストのバリデーションチェックを行う
 
     Args:
-        route_params (dict): ルートパラメータ
+        req (func.HttpRequest): HTTPリクエスト
 
     Returns:
-        list: バリデーションチェックに成功した場合は空のリスト、失敗した場合はエラーメッセージのリスト
+        str | None: バリデーションチェックに成功した場合はNone、失敗した場合はエラーメッセージ
     """
 
     errors = []
 
-    test_id = route_params.get("testId")
+    # ルートパラメータのバリデーション
+    test_id = req.route_params.get("testId")
     if not test_id:
         errors.append("testId is Empty")
 
-    return errors
-
-
-def validate_headers(headers: dict) -> list:
-    """
-    ヘッダーのバリデーションを行う
-
-    Args:
-        headers (dict): ヘッダー
-
-    Returns:
-        list: バリデーションチェックに成功した場合は空のリスト、失敗した場合はエラーメッセージのリスト
-    """
-
-    errors = []
-
-    user_id = headers.get("X-User-Id")
+    # ヘッダーのバリデーション
+    user_id = req.headers.get("X-User-Id")
     if not user_id:
         errors.append("X-User-Id header is Empty")
 
-    return errors
+    return errors[0] if errors else None
 
 
 def chunk_list(items: List, chunk_size: int = 50):
@@ -79,10 +65,7 @@ def delete_progresses(req: func.HttpRequest) -> func.HttpResponse:
 
     try:
         # バリデーションチェック
-        errors = []
-        errors.extend(validate_route_params(req.route_params))  # ルートパラメータ
-        errors.extend(validate_headers(req.headers))  # ヘッダー
-        error_message = errors[0] if errors else None
+        error_message = validate_request(req)
         if error_message:
             return func.HttpResponse(body=error_message, status_code=400)
 
@@ -116,10 +99,8 @@ def delete_progresses(req: func.HttpRequest) -> func.HttpResponse:
                 partition_key=test_id,
             )
         )
-        items_count = len(items)
-        logging.info({"items_count": items_count})
-
-        if items_count == 0:
+        logging.info({"items": items})
+        if len(items) == 0:
             return func.HttpResponse(
                 body="OK",
                 status_code=200,
