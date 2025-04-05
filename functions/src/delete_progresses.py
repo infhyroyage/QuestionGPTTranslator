@@ -1,11 +1,11 @@
 """[DELETE] /tests/{testId}/progresses のモジュール"""
 
 import logging
-from typing import List
+from typing import Any, Dict, List, Tuple
 
 import azure.functions as func
 from azure.cosmos import ContainerProxy
-from azure.cosmos.exceptions import CosmosHttpResponseError
+from type.cosmos import Progress
 from util.cosmos import get_read_write_container
 
 
@@ -33,21 +33,6 @@ def validate_request(req: func.HttpRequest) -> str | None:
         errors.append("X-User-Id header is Empty")
 
     return errors[0] if errors else None
-
-
-def chunk_list(items: List, chunk_size: int = 50):
-    """
-    リストを指定サイズのチャンクに分割する
-
-    Args:
-        items (List): 分割対象のリスト
-        chunk_size (int): チャンクサイズ
-
-    Yields:
-        List: 分割されたチャンク
-    """
-    for i in range(0, len(items), chunk_size):
-        yield items[i : i + chunk_size]
 
 
 bp_delete_progresses = func.Blueprint()
@@ -85,8 +70,8 @@ def delete_progresses(req: func.HttpRequest) -> func.HttpResponse:
             container_name="Progress",
         )
 
-        # テストID・ユーザーIDにおける、すべての回答履歴を取得
-        items = list(
+        # 削除対象の回答履歴を全取得
+        items: List[Progress] = list(
             container.query_items(
                 query=(
                     "SELECT c.id "
@@ -100,29 +85,26 @@ def delete_progresses(req: func.HttpRequest) -> func.HttpResponse:
             )
         )
         logging.info({"items": items})
+
+        # 削除対象の回答履歴が存在しない場合は、何もせず正常終了
         if len(items) == 0:
             return func.HttpResponse(
                 body="OK",
                 status_code=200,
             )
 
-        # 複数の項目を効率的に削除（チャンク単位で処理）
-        try:
-            # 30個程度のアイテムなので、1回の処理で十分だが、
-            # スケーラビリティを考慮してチャンク処理を実装
-            for chunk in chunk_list(items, 50):
-                # ストアドプロシージャやバッチ操作が使用できない場合、
-                # バルク処理として複数のdelete_itemを順次実行
-                for item in chunk:
-                    container.delete_item(item=item["id"], partition_key=test_id)
+        # 削除対象の回答履歴を一括削除
+        batch_operations: List[Tuple[str, Tuple[str, ...], Dict[str, Any]]] = [
+            ("delete", (item["id"],), {}) for item in items
+        ]
+        container.execute_item_batch(
+            batch_operations=batch_operations, partition_key=test_id
+        )
 
-            return func.HttpResponse(
-                body="OK",
-                status_code=200,
-            )
-        except CosmosHttpResponseError as e:
-            logging.error("Deletion failed: %s", e)
-            raise
+        return func.HttpResponse(
+            body="OK",
+            status_code=200,
+        )
     except Exception as e:
         logging.error(e)
         return func.HttpResponse(
