@@ -6,4 +6,3 @@ openai==1.58.1
 pydantic==2.10.6
 pylint==3.3.6
 requests==2.32.3
-cryptography==44.0.2
