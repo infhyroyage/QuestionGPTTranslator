@@ -24,7 +24,7 @@ Azure 環境構築後に、以下のサーバーをすべて起動すると、�
 1. 以下をすべてインストールする。
    - Azure Functions Core Tools
    - Docker
-   - Python 3.11
+   - Python 3.12
 2. 以下を記述したファイル`local.settings.json`を QuestionGPTTranslator リポジトリの functions ディレクトリ配下に保存する。
    ```json
    {
@@ -61,9 +61,9 @@ Azure 環境構築後に、以下のサーバーをすべて起動すると、�
    ```
    localcosmosdb     | Started
    ```
-4. 3 とは別のターミナルで以下のコマンドを実行し、Python3.11 の仮想環境を作成・有効化し、PyPI パッケージをインストールする。
+4. 3 とは別のターミナルで以下のコマンドを実行し、Python3.12 の仮想環境を作成・有効化し、PyPI パッケージをインストールする。
    ```bash
-   python3.11 -m venv venv
+   python3.12 -m venv venv
    ./venv/Scripts/activate
    pip install -r requirements.txt
    ```

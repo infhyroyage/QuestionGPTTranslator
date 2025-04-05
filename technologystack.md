@@ -45,22 +45,22 @@
 
 ## Azure Functions の関数アプリ
 
-- azure-cosmos: 4.9.0
-- azure-functions: 1.21.3
-- azure-storage-queue: 12.12.0
-- coverage: 7.7.0
-- openai: 1.58.1
-- pydantic: 2.10.6
-- pylint: 3.3.4
-- requests: 2.32.3
-- cryptography: 43.0.3
-  - 関数アプリを認識しない障害の暫定対処として、cryptography のバージョンを 43.0.3 に固定しているが、2025/02/16 時点でバージョン 44.0.0 以下で脆弱性が報告されているため、[GitHub Issue](https://github.com/Azure/azure-sdk-for-python/issues/38725) を参考に後日更新予定
+- azure-cosmos (Azure Cosmos DB の Python クライアント)
+- azure-functions (Azure Functions の Python クライアント)
+- azure-storage-queue (Azure Storage Queue の Python クライアント)
+- coverage (テストカバレッジの計測)
+- openai (Azure OpenAI の Python クライアント)
+  - 破壊的変更が多いため、dependabot でのアップグレード更新対象外とする
+- pydantic (データモデルの定義)
+- pylint (コードの静的解析)
+- requests (HTTP リクエスト)
 
 ## 開発ツール
 
-- Python: 3.11
-- Azure Functions Core Tools: 4.0.7030 (関数アプリのローカル実行)
-- Docker Compose: 2.31.0 (ローカル開発時の環境構築)
+- Python 3.12 (プログラミング言語)
+  - LLM を扱うためのモジュールが豊富であるため Python を採用
+- Azure Functions Core Tools (関数アプリのローカル実行)
+- Docker Compose (ローカル開発時の環境構築)
   - Azurite (Azure Storage エミュレータ)
   - Azure Cosmos DB Emulator (Azure Cosmos DB エミュレータ)
 

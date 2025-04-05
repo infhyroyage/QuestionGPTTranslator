@@ -446,7 +446,7 @@ resource functions 'Microsoft.Web/sites@2022-09-01' = {
         allowedOrigins: ['https://portal.azure.com']
       }
       ftpsState: 'Disabled'
-      linuxFxVersion: 'python|3.11'
+      linuxFxVersion: 'python|3.12'
       keyVaultReferenceIdentity: 'SystemAssigned'
       use32BitWorkerProcess: false
     }
