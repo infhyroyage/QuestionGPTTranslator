@@ -5,6 +5,7 @@ from unittest import TestCase
 from unittest.mock import MagicMock, call, patch
 
 import azure.functions as func
+from azure.cosmos.exceptions import CosmosResourceNotFoundError
 from src.get_question import get_question, validate_request
 
 
@@ -64,17 +65,15 @@ class TestGetQuestion(TestCase):
 
         mock_validate_request.return_value = None
         mock_container = MagicMock()
-        mock_items = [
-            {
-                "subjects": ["What is the capital of France?"],
-                "choices": ["Paris", "London", "Berlin"],
-                "isMultiplied": False,
-                "indicateSubjectImgIdxes": [0],
-                "indicateChoiceImgs": [None, None, None],
-                "escapeTranslatedIdxes": {"subjects": [0], "choices": [1]},
-            }
-        ]
-        mock_container.query_items.return_value = mock_items
+        mock_item = {
+            "subjects": ["What is the capital of France?"],
+            "choices": ["Paris", "London", "Berlin"],
+            "isMultiplied": False,
+            "indicateSubjectImgIdxes": [0],
+            "indicateChoiceImgs": [None, None, None],
+            "escapeTranslatedIdxes": {"subjects": [0], "choices": [1]},
+        }
+        mock_container.read_item.return_value = mock_item
         mock_get_read_only_container.return_value = mock_container
 
         req = MagicMock(spec=func.HttpRequest)
@@ -116,17 +115,12 @@ class TestGetQuestion(TestCase):
             database_name="Users",
             container_name="Question",
         )
-        mock_container.query_items.assert_called_once_with(
-            query="SELECT c.subjects, c.choices, c.isMultiplied, c.indicateSubjectImgIdxes, "
-            "c.indicateChoiceImgs, c.escapeTranslatedIdxes "
-            "FROM c WHERE c.testId = @testId AND c.number = @number",
-            parameters=[
-                {"name": "@testId", "value": "1"},
-                {"name": "@number", "value": 1},
-            ],
+        mock_container.read_item.assert_called_once_with(
+            item="1_1",
+            partition_key="1",
         )
         mock_logging.info.assert_has_calls(
-            [call({"items": mock_items}), call({"body": expected_body})]
+            [call({"item": mock_item}), call({"body": expected_body})]
         )
         mock_logging.error.assert_not_called()
 
@@ -154,7 +148,7 @@ class TestGetQuestion(TestCase):
 
         mock_validate_request.return_value = None
         mock_container = MagicMock()
-        mock_container.query_items.return_value = []
+        mock_container.read_item.side_effect = CosmosResourceNotFoundError
         mock_get_read_only_container.return_value = mock_container
 
         req = MagicMock(spec=func.HttpRequest)
@@ -169,16 +163,10 @@ class TestGetQuestion(TestCase):
             database_name="Users",
             container_name="Question",
         )
-        mock_container.query_items.assert_called_once_with(
-            query="SELECT c.subjects, c.choices, c.isMultiplied, c.indicateSubjectImgIdxes, "
-            "c.indicateChoiceImgs, c.escapeTranslatedIdxes "
-            "FROM c WHERE c.testId = @testId AND c.number = @number",
-            parameters=[
-                {"name": "@testId", "value": "1"},
-                {"name": "@number", "value": 1},
-            ],
+        mock_container.read_item.assert_called_once_with(
+            item="1_1",
+            partition_key="1",
         )
-        mock_logging.info.assert_called_once_with({"items": []})
         mock_logging.error.assert_not_called()
 
     @patch("src.get_question.validate_request")
@@ -187,15 +175,12 @@ class TestGetQuestion(TestCase):
     def test_get_question_not_unique(
         self, mock_logging, mock_get_read_only_container, mock_validate_request
     ):
-        """問題が一意に取得できない場合のテスト"""
+        """例外が発生した場合のテスト"""
 
         mock_validate_request.return_value = None
-        mock_container = MagicMock()
-        mock_container.query_items.return_value = [
-            {},
-            {},
-        ]
-        mock_get_read_only_container.return_value = mock_container
+        mock_get_read_only_container.side_effect = Exception(
+            "Error in src.get_question.get_read_only_container"
+        )
 
         req = MagicMock(spec=func.HttpRequest)
         req.route_params = {"testId": "1", "questionNumber": "1"}
@@ -205,18 +190,4 @@ class TestGetQuestion(TestCase):
         self.assertEqual(response.status_code, 500)
         self.assertEqual(response.get_body().decode(), "Internal Server Error")
         mock_validate_request.assert_called_once_with(req)
-        mock_get_read_only_container.assert_called_once_with(
-            database_name="Users",
-            container_name="Question",
-        )
-        mock_container.query_items.assert_called_once_with(
-            query="SELECT c.subjects, c.choices, c.isMultiplied, c.indicateSubjectImgIdxes, "
-            "c.indicateChoiceImgs, c.escapeTranslatedIdxes "
-            "FROM c WHERE c.testId = @testId AND c.number = @number",
-            parameters=[
-                {"name": "@testId", "value": "1"},
-                {"name": "@number", "value": 1},
-            ],
-        )
-        mock_logging.info.assert_called_once_with({"items": [{}, {}]})
         mock_logging.error.assert_called_once()

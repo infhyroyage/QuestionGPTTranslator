@@ -7,6 +7,7 @@ from typing import Iterable
 
 import azure.functions as func
 from azure.cosmos import ContainerProxy
+from azure.cosmos.exceptions import CosmosResourceNotFoundError
 from azure.storage.queue import BinaryBase64EncodePolicy, QueueClient
 from openai import AzureOpenAI
 from openai.types.chat.chat_completion_content_part_param import (
@@ -51,40 +52,6 @@ def validate_request(req: func.HttpRequest) -> str | None:
         errors.append(f"Invalid questionNumber: {question_number}")
 
     return errors[0] if errors else None
-
-
-def get_question_items(test_id: str, question_number: str) -> list[Question]:
-    """
-    テストIDと問題番号から、Questionコンテナーの項目を取得する
-
-    Args:
-        test_id (str): テストID
-        question_number (str): 問題番号
-
-    Returns:
-        list[Question]: Questionコンテナーの項目のリスト
-    """
-
-    # Questionコンテナーの読み取り専用インスタンスを取得
-    container: ContainerProxy = get_read_only_container(
-        database_name="Users",
-        container_name="Question",
-    )
-
-    # Questionコンテナーから項目取得
-    return list(
-        container.query_items(
-            query=(
-                "SELECT c.subjects, c.choices, c.indicateSubjectImgIdxes, "
-                "c.indicateChoiceImgs, c.communityVotes "
-                "FROM c WHERE c.testId = @testId AND c.number = @number"
-            ),
-            parameters=[
-                {"name": "@testId", "value": test_id},
-                {"name": "@number", "value": int(question_number)},
-            ],
-        )
-    )
 
 
 def create_chat_completions_messages(
@@ -345,20 +312,27 @@ def post_answer(req: func.HttpRequest) -> func.HttpResponse:
             }
         )
 
-        # Questionコンテナーの項目を取得し、その項目数をチェック
-        items: list[Question] = get_question_items(test_id, question_number)
-        logging.info({"items": items})
-        if len(items) == 0:
+        # Questionコンテナーの読み取り専用インスタンスを取得
+        container: ContainerProxy = get_read_only_container(
+            database_name="Users",
+            container_name="Question",
+        )
+
+        # Questionコンテナーの項目を取得
+        try:
+            item: Question = container.read_item(
+                item=f"{test_id}_{question_number}", partition_key=test_id
+            )
+            logging.info({"item": item})
+        except CosmosResourceNotFoundError:
             return func.HttpResponse(body="Not Found Question", status_code=404)
-        if len(items) > 1:
-            raise ValueError("Not Unique Question")
 
         # 正解の選択肢・正解/不正解の理由を生成
         correct_answers = generate_correct_answers(
-            items[0].get("subjects"),
-            items[0].get("choices"),
-            items[0].get("indicateSubjectImgIdxes"),
-            items[0].get("indicateChoiceImgs"),
+            item.get("subjects"),
+            item.get("choices"),
+            item.get("indicateSubjectImgIdxes"),
+            item.get("indicateChoiceImgs"),
         )
         if correct_answers is None:
             raise ValueError("Failed to generate correct answers")
@@ -368,18 +342,18 @@ def post_answer(req: func.HttpRequest) -> func.HttpResponse:
             {
                 "testId": test_id,
                 "questionNumber": question_number,
-                "subjects": items[0].get("subjects"),
-                "choices": items[0].get("choices"),
+                "subjects": item.get("subjects"),
+                "choices": item.get("choices"),
                 "correctIdxes": correct_answers["correct_indexes"],
                 "explanations": correct_answers["explanations"],
-                "communityVotes": items[0].get("communityVotes"),
+                "communityVotes": item.get("communityVotes"),
             }
         )
 
         body: PostAnswerRes = {
             "correctIdxes": correct_answers["correct_indexes"],
             "explanations": correct_answers["explanations"],
-            "communityVotes": items[0].get("communityVotes"),
+            "communityVotes": item.get("communityVotes"),
         }
         return func.HttpResponse(
             body=json.dumps(body),

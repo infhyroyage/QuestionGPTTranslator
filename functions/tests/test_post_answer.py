@@ -6,12 +6,12 @@ import unittest
 from unittest.mock import MagicMock, call, patch
 
 import azure.functions as func
+from azure.cosmos.exceptions import CosmosResourceNotFoundError
 from src.post_answer import (
     MAX_RETRY_NUMBER,
     SYSTEM_PROMPT,
     create_chat_completions_messages,
     generate_correct_answers,
-    get_question_items,
     post_answer,
     queue_message_answer,
     validate_request,
@@ -63,52 +63,6 @@ class TestValidateRequest(unittest.TestCase):
         result = validate_request(req)
 
         self.assertEqual(result, "Invalid questionNumber: a")
-
-
-class TestGetQuestionItems(unittest.TestCase):
-    """get_question_items関数のテストケース"""
-
-    @patch("src.post_answer.get_read_only_container")
-    def test_get_question_items(self, mock_get_read_only_container):
-        """Questionコンテナーの項目を取得するテスト"""
-
-        mock_container = MagicMock()
-        mock_container.query_items.return_value = [
-            Question(
-                subjects=["What is 2 + 2?"],
-                choices=["3", "4", "5"],
-                communityVotes=["BC (70%)", "BD (30%)"],
-            )
-        ]
-        mock_get_read_only_container.return_value = mock_container
-
-        result = get_question_items("1", "1")
-
-        self.assertEqual(
-            result,
-            [
-                Question(
-                    subjects=["What is 2 + 2?"],
-                    choices=["3", "4", "5"],
-                    communityVotes=["BC (70%)", "BD (30%)"],
-                )
-            ],
-        )
-        mock_get_read_only_container.assert_called_once_with(
-            database_name="Users",
-            container_name="Question",
-        )
-        mock_container.query_items.assert_called_once_with(
-            query=(
-                "SELECT c.subjects, c.choices, c.indicateSubjectImgIdxes, "
-                "c.indicateChoiceImgs, c.communityVotes "
-                "FROM c WHERE c.testId = @testId AND c.number = @number"
-            ),
-            parameters=[
-                {"name": "@testId", "value": "1"},
-                {"name": "@number", "value": 1},
-            ],
-        )
 
 
 class TestCreateChatCompletionsMessages(unittest.TestCase):
@@ -567,7 +521,7 @@ class TestPostAnswer(unittest.TestCase):
     """post_answer関数のテストケース"""
 
     @patch("src.post_answer.validate_request")
-    @patch("src.post_answer.get_question_items")
+    @patch("src.post_answer.get_read_only_container")
     @patch("src.post_answer.generate_correct_answers")
     @patch("src.post_answer.queue_message_answer")
     @patch("src.post_answer.logging")
@@ -576,28 +530,29 @@ class TestPostAnswer(unittest.TestCase):
         mock_logging,
         mock_queue_message_answer,
         mock_generate_correct_answers,
-        mock_get_question_items,
+        mock_get_read_only_container,
         mock_validate_request,
     ):
         """レスポンスが正常であることのテスト"""
 
         mock_validate_request.return_value = None
-        mock_get_question_items.return_value = [
-            Question(
-                subjects=["What is 2 + 2?"],
-                choices=["3", "4", "5"],
-                communityVotes=["BC (70%)", "BD (30%)"],
-            )
-        ]
+        mock_container = MagicMock()
+        mock_item = Question(
+            subjects=["What is 2 + 2?"],
+            choices=["3", "4", "5"],
+            communityVotes=["BC (70%)", "BD (30%)"],
+        )
+        mock_container.read_item.return_value = mock_item
+        mock_get_read_only_container.return_value = mock_container
         mock_generate_correct_answers.return_value = {
             "correct_indexes": [1],
             "explanations": ["Option 2 is correct because 2 + 2 equals 4."],
         }
 
-        req = MagicMock(spec=func.HttpRequest)
+        req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
         req.route_params = {"testId": "1", "questionNumber": "1"}
 
-        response = post_answer(req)
+        response: func.HttpResponse = post_answer(req)
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
@@ -609,35 +564,35 @@ class TestPostAnswer(unittest.TestCase):
             },
         )
         mock_validate_request.assert_called_once_with(req)
-        mock_get_question_items.assert_called_once_with("1", "1")
-        mock_generate_correct_answers.assert_called_once_with(
-            ["What is 2 + 2?"], ["3", "4", "5"], None, None
+        mock_get_read_only_container.assert_called_once_with(
+            database_name="Users",
+            container_name="Question",
         )
+        mock_container.read_item.assert_called_once_with(
+            item="1_1",
+            partition_key="1",
+        )
+        mock_generate_correct_answers.assert_called_once()
+        called_args, _ = mock_generate_correct_answers.call_args
+        self.assertEqual(called_args[0], ["What is 2 + 2?"])
+        self.assertEqual(called_args[1], ["3", "4", "5"])
+        self.assertEqual(called_args[2], None)
+        self.assertEqual(called_args[3], None)
         mock_queue_message_answer.assert_called_once_with(
-            {
-                "testId": "1",
-                "questionNumber": "1",
-                "subjects": ["What is 2 + 2?"],
-                "choices": ["3", "4", "5"],
-                "correctIdxes": [1],
-                "explanations": ["Option 2 is correct because 2 + 2 equals 4."],
-                "communityVotes": ["BC (70%)", "BD (30%)"],
-            }
+            MessageAnswer(
+                testId="1",
+                questionNumber="1",
+                subjects=["What is 2 + 2?"],
+                choices=["3", "4", "5"],
+                correctIdxes=[1],
+                explanations=["Option 2 is correct because 2 + 2 equals 4."],
+                communityVotes=["BC (70%)", "BD (30%)"],
+            )
         )
         mock_logging.info.assert_has_calls(
             [
                 call({"question_number": "1", "test_id": "1"}),
-                call(
-                    {
-                        "items": [
-                            {
-                                "subjects": ["What is 2 + 2?"],
-                                "choices": ["3", "4", "5"],
-                                "communityVotes": ["BC (70%)", "BD (30%)"],
-                            }
-                        ]
-                    }
-                ),
+                call({"item": mock_item}),
             ]
         )
         mock_logging.error.assert_not_called()
@@ -665,20 +620,22 @@ class TestPostAnswer(unittest.TestCase):
         mock_logging.error.assert_not_called()
 
     @patch("src.post_answer.validate_request")
-    @patch("src.post_answer.get_question_items")
+    @patch("src.post_answer.get_read_only_container")
     @patch("src.post_answer.logging")
     def test_post_answer_not_found_question_error(
         self,
         mock_logging,
-        mock_get_question_items,
+        mock_get_read_only_container,
         mock_validate_request,
     ):
         """Questionコンテナーの項目が見つからない場合のテスト"""
 
         mock_validate_request.return_value = None
-        mock_get_question_items.return_value = []
+        mock_container = MagicMock()
+        mock_container.read_item.side_effect = CosmosResourceNotFoundError
+        mock_get_read_only_container.return_value = mock_container
 
-        req = MagicMock(spec=func.HttpRequest)
+        req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
         req.route_params = {"testId": "1", "questionNumber": "1"}
 
         response = post_answer(req)
@@ -686,91 +643,42 @@ class TestPostAnswer(unittest.TestCase):
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.get_body(), b"Not Found Question")
         mock_validate_request.assert_called_once_with(req)
-        mock_get_question_items.assert_called_once_with("1", "1")
-        mock_logging.info.assert_has_calls(
-            [
-                call({"question_number": "1", "test_id": "1"}),
-                call({"items": []}),
-            ]
+        mock_get_read_only_container.assert_called_once_with(
+            database_name="Users",
+            container_name="Question",
         )
+        mock_container.read_item.assert_called_once_with(
+            item="1_1",
+            partition_key="1",
+        )
+        mock_logging.info.assert_called_once()
         mock_logging.error.assert_not_called()
 
     @patch("src.post_answer.validate_request")
-    @patch("src.post_answer.get_question_items")
-    @patch("src.post_answer.logging")
-    def test_post_answer_not_unique_question_error(
-        self,
-        mock_logging,
-        mock_get_question_items,
-        mock_validate_request,
-    ):
-        """Questionコンテナーの項目が見つからない場合のテスト"""
-
-        mock_validate_request.return_value = None
-        mock_get_question_items.return_value = [
-            Question(
-                subjects=["What is 2 + 2?"],
-                choices=["3", "4", "5"],
-            ),
-            Question(
-                subjects=["What is 2 + 2?"],
-                choices=["3", "4", "5"],
-            ),
-        ]
-
-        req = MagicMock(spec=func.HttpRequest)
-        req.route_params = {"testId": "1", "questionNumber": "1"}
-
-        response = post_answer(req)
-
-        self.assertEqual(response.status_code, 500)
-        self.assertEqual(response.get_body(), b"Internal Server Error")
-        mock_validate_request.assert_called_once_with(req)
-        mock_get_question_items.assert_called_once_with("1", "1")
-        mock_logging.info.assert_has_calls(
-            [
-                call({"question_number": "1", "test_id": "1"}),
-                call(
-                    {
-                        "items": [
-                            {
-                                "subjects": ["What is 2 + 2?"],
-                                "choices": ["3", "4", "5"],
-                            },
-                            {
-                                "subjects": ["What is 2 + 2?"],
-                                "choices": ["3", "4", "5"],
-                            },
-                        ]
-                    }
-                ),
-            ]
-        )
-        mock_logging.error.assert_called_once()
-
-    @patch("src.post_answer.validate_request")
-    @patch("src.post_answer.get_question_items")
+    @patch("src.post_answer.get_read_only_container")
     @patch("src.post_answer.generate_correct_answers")
     @patch("src.post_answer.logging")
     def test_post_answer_generate_correct_answers_error(
         self,
         mock_logging,
         mock_generate_correct_answers,
-        mock_get_question_items,
+        mock_get_read_only_container,
         mock_validate_request,
     ):
         """正解の選択肢・正解/不正解の理由を生成できない場合のテスト"""
 
         mock_validate_request.return_value = None
-        mock_get_question_items.return_value = [
-            Question(
-                subjects=["What is 2 + 2?"],
-                choices=["3", "4", "5"],
-            )
-        ]
+        mock_container = MagicMock()
+        mock_item = Question(
+            subjects=["What is 2 + 2?"],
+            choices=["3", "4", "5"],
+            communityVotes=["BC (70%)", "BD (30%)"],
+        )
+        mock_container.read_item.return_value = mock_item
+        mock_get_read_only_container.return_value = mock_container
         mock_generate_correct_answers.return_value = None
 
-        req = MagicMock(spec=func.HttpRequest)
+        req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
         req.route_params = {"testId": "1", "questionNumber": "1"}
 
         response = post_answer(req)
@@ -778,20 +686,24 @@ class TestPostAnswer(unittest.TestCase):
         self.assertEqual(response.status_code, 500)
         self.assertEqual(response.get_body(), b"Internal Server Error")
         mock_validate_request.assert_called_once_with(req)
-        mock_get_question_items.assert_called_once_with("1", "1")
+        mock_get_read_only_container.assert_called_once_with(
+            database_name="Users",
+            container_name="Question",
+        )
+        mock_container.read_item.assert_called_once_with(
+            item="1_1",
+            partition_key="1",
+        )
         mock_generate_correct_answers.assert_called_once_with(
-            ["What is 2 + 2?"], ["3", "4", "5"], None, None
+            ["What is 2 + 2?"],
+            ["3", "4", "5"],
+            None,
+            None,
         )
         mock_logging.info.assert_has_calls(
             [
                 call({"question_number": "1", "test_id": "1"}),
-                call(
-                    {
-                        "items": [
-                            {"subjects": ["What is 2 + 2?"], "choices": ["3", "4", "5"]}
-                        ]
-                    }
-                ),
+                call({"item": mock_item}),
             ]
         )
         mock_logging.error.assert_called_once()

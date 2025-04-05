@@ -48,6 +48,7 @@ def get_tests(
             else:
                 body[item["courseName"]] = [tmp_item]
         logging.info({"body": body})
+
         return func.HttpResponse(
             body=json.dumps(body),
             status_code=200,

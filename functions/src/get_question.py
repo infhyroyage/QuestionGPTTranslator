@@ -5,6 +5,7 @@ import logging
 
 import azure.functions as func
 from azure.cosmos import ContainerProxy
+from azure.cosmos.exceptions import CosmosResourceNotFoundError
 from type.cosmos import Question
 from type.response import GetQuestionRes
 from util.cosmos import get_read_only_container
@@ -57,34 +58,18 @@ def get_question(req: func.HttpRequest) -> func.HttpResponse:
         test_id = req.route_params.get("testId")
         question_number = req.route_params.get("questionNumber")
 
-        # Questionコンテナーの読み取り専用インスタンスを取得
+        # Questionコンテナーから項目取得
         container: ContainerProxy = get_read_only_container(
             database_name="Users",
             container_name="Question",
         )
-
-        # Questionコンテナーから項目取得
-        items: list[Question] = list(
-            container.query_items(
-                query=(
-                    "SELECT c.subjects, c.choices, c.isMultiplied, c.indicateSubjectImgIdxes, "
-                    "c.indicateChoiceImgs, c.escapeTranslatedIdxes "
-                    "FROM c WHERE c.testId = @testId AND c.number = @number"
-                ),
-                parameters=[
-                    {"name": "@testId", "value": test_id},
-                    {"name": "@number", "value": int(question_number)},
-                ],
+        try:
+            result: Question = container.read_item(
+                item=f"{test_id}_{question_number}", partition_key=test_id
             )
-        )
-        logging.info({"items": items})
-
-        # 項目数のチェック
-        if len(items) == 0:
+            logging.info({"item": result})
+        except CosmosResourceNotFoundError:
             return func.HttpResponse(body="Not Found Question", status_code=404)
-        if len(items) > 1:
-            raise ValueError("Not Unique Question")
-        result: Question = items[0]
 
         # レスポンス整形
         body: GetQuestionRes = {

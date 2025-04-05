@@ -23,14 +23,12 @@ class TestQueueTriggeredAnswer(TestCase):
         mock_container_answer = MagicMock()
         mock_get_read_only_container.return_value = mock_container_question
         mock_get_read_write_container.return_value = mock_container_answer
-        query_items_return_value = [
-            {
-                "subjects": ["Subject 1"],
-                "choices": ["Choice 1", "Choice 2"],
-                "communityVotes": ["BC (70%)", "BD (30%)"],
-            }
-        ]
-        mock_container_question.query_items.return_value = query_items_return_value
+        mock_item = {
+            "subjects": ["Subject 1"],
+            "choices": ["Choice 1", "Choice 2"],
+            "communityVotes": ["BC (70%)", "BD (30%)"],
+        }
+        mock_container_question.read_item.return_value = mock_item
 
         message_answer = {
             "testId": "1",
@@ -61,7 +59,7 @@ class TestQueueTriggeredAnswer(TestCase):
         mock_logging.info.assert_has_calls(
             [
                 call({"message_answer": message_answer}),
-                call({"items": query_items_return_value}),
+                call({"item": mock_item}),
                 call({"answer_item": expected_answer_item}),
             ]
         )
@@ -76,7 +74,11 @@ class TestQueueTriggeredAnswer(TestCase):
 
         mock_container_question = MagicMock()
         mock_get_read_only_container.return_value = mock_container_question
-        mock_container_question.query_items.return_value = []
+        mock_container_question.read_item.return_value = {
+            "subjects": ["Different Subject"],
+            "choices": ["Different Choice 1", "Different Choice 2"],
+            "communityVotes": ["XX (100%)"],
+        }
 
         message_answer = {
             "testId": "1",
@@ -99,6 +101,6 @@ class TestQueueTriggeredAnswer(TestCase):
         mock_logging.info.assert_has_calls(
             [
                 call({"message_answer": message_answer}),
-                call({"items": []}),
+                call({"item": mock_container_question.read_item.return_value}),
             ]
         )

@@ -5,6 +5,7 @@ import logging
 
 import azure.functions as func
 from azure.cosmos import ContainerProxy
+from azure.cosmos.exceptions import CosmosResourceNotFoundError
 from type.cosmos import Answer
 from type.response import GetAnswerRes
 from util.cosmos import get_read_only_container
@@ -56,31 +57,28 @@ def get_answer(req: func.HttpRequest) -> func.HttpResponse:
 
         test_id = req.route_params.get("testId")
         question_number = req.route_params.get("questionNumber")
-        # Answerコンテナーの読み取り専用インスタンスを取得
+
+        # Answerコンテナーから項目取得
         container: ContainerProxy = get_read_only_container(
             database_name="Users",
             container_name="Answer",
         )
-
-        # Answerコンテナーから項目取得
-        items: list[Answer] = list(
-            container.query_items(
-                query=(
-                    "SELECT c.correctIdxes, c.explanations, c.communityVotes "
-                    "FROM c WHERE c.id = @id"
-                ),
-                parameters=[{"name": "@id", "value": f"{test_id}_{question_number}"}],
+        try:
+            item: Answer = container.read_item(
+                item=f"{test_id}_{question_number}", partition_key=test_id
             )
-        )
-        logging.info({"items": items})
-
-        # 項目数のチェック
-        if len(items) == 0:
+        except CosmosResourceNotFoundError:
             return func.HttpResponse(body="Not Found Answer", status_code=404)
-        if len(items) > 1:
-            raise ValueError("Not Unique Answer")
+        logging.info({"item": item})
 
-        body: GetAnswerRes = items[0]
+        # レスポンス整形
+        body: GetAnswerRes = {
+            "correctIdxes": item["correctIdxes"],
+            "explanations": item["explanations"],
+            "communityVotes": item["communityVotes"],
+        }
+        logging.info({"body": body})
+
         return func.HttpResponse(
             body=json.dumps(body),
             status_code=200,
