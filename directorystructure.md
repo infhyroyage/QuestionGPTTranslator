@@ -61,7 +61,6 @@
 │   │   └── translation.py                       # 翻訳処理の型定義
 │   ├── data/                                    # インポートデータファイル
 │   ├── .funcignore                              # Azure Functionsデプロイ時の除外設定
-│   ├── .pylintrc                                # pylintコード解析設定
 │   ├── function_app.py                          # 関数アプリのエントリーポイント
 │   ├── host.json                                # 関数アプリ実行環境設定
 │   ├── import_local.py                          # ローカル環境でのインポート処理スクリプト
@@ -78,6 +77,7 @@
 │   └── functions-appsettings.json               # Azure Key Vaultから取得するAzure Functionsのアプリケーション設定
 ├── venv/                                        # Python仮想環境
 ├── .gitignore                                   # Git管理除外設定
+├── .pylintrc                                    # pylintコード解析設定
 ├── architecture.drawio.svg                      # アーキテクチャ図
 ├── azureenvironment.md                          # Azure環境構築手順・削除手順
 ├── compose.yaml                                 # Docker Compose設定
