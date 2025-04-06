@@ -6,7 +6,9 @@ from typing import List
 
 import azure.functions as func
 from azure.cosmos import ContainerProxy
-from type.cosmos import Progress
+from type.cosmos import Progress as CosmosProgress
+from type.response import GetProgressesRes
+from type.response import Progress as ResponseProgress
 from util.cosmos import get_read_only_container
 
 
@@ -72,7 +74,7 @@ def get_progresses(req: func.HttpRequest) -> func.HttpResponse:
         )
 
         # 指定されたテストIDとユーザーIDに関連する全ての進捗項目を取得
-        items: List[Progress] = list(
+        items: List[CosmosProgress] = list(
             container.query_items(
                 query=(
                     "SELECT * FROM c WHERE c.userId = @userId AND c.testId = @testId "
@@ -87,8 +89,23 @@ def get_progresses(req: func.HttpRequest) -> func.HttpResponse:
         )
         logging.info({"items_count": len(items)})
 
+        # レスポンス整形
+        body: GetProgressesRes = []
+        for item in items:
+            progress: ResponseProgress = {
+                "isCorrect": item["isCorrect"],
+                "choiceSentences": item["choiceSentences"],
+                "choiceImgs": item["choiceImgs"],
+                "selectedIdxes": item["selectedIdxes"],
+                "correctIdxes": item["correctIdxes"],
+            }
+            if item.get("choiceTranslations"):
+                progress["choiceTranslations"] = item["choiceTranslations"]
+
+            body.append(progress)
+
         return func.HttpResponse(
-            body=json.dumps(items),
+            body=json.dumps(body),
             status_code=200,
             mimetype="application/json",
         )

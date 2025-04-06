@@ -79,6 +79,27 @@ class PostAnswerRes(TypedDict, total=False):
     communityVotes: List[str]
 
 
+class Progress(TypedDict):
+    """
+    [GET] /tests/{testId}/progresses のレスポンスボディの各要素の型
+    """
+
+    isCorrect: bool
+    choiceSentences: List[str]
+    choiceImgs: List[Optional[str]]
+    choiceTranslations: Optional[List[str]]
+    selectedIdxes: List[int]
+    correctIdxes: List[int]
+
+
+class GetProgressesRes(TypedDict):
+    """
+    [GET] /tests/{testId}/progresses のレスポンスボディの型
+    """
+
+    __root__: List[Progress]
+
+
 class PutEn2JaRes(TypedDict):
     """
     [PUT] /en2ja のレスポンスボディの型
