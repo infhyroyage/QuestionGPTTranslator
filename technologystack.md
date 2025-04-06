@@ -80,12 +80,11 @@
   - `[GET] /healthcheck` のみ、別の Swagger ファイル(apim/apis-healthcheck-functions-swagger.yaml)で管理
   - API Management のデプロイは、この Swagger を利用
 - 認証は Azure AD のサービスプリンシパルを使用し、API Management のポリシーで設定
-- stmt のカバレッジ率をできるだけ 100% にした functions/tests にユニットテストを実装
-- ユニットテストは、以下のコマンドで実行可能
+- 以下のコマンド実行でユニットテストを実行し、 stmt のカバレッジ率が 80% 以上であることを確認
   ```bash
   cd functions && python -m unittest discover -s tests && python -m coverage report
   ```
-- 以下のコマンド実行で、pylint の警告・エラーを出力しないことを確認
+- 以下のコマンド実行で pylint を実行し、警告・エラーを出力しないことを確認
   ```bash
   pylint functions/**/*.py
   ```
