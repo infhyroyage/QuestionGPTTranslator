@@ -6,12 +6,13 @@
         <origin>https://infhyroyage.github.io/</origin>
       </allowed-origins>
       <allowed-methods>
+        <method>DELETE</method>
         <method>GET</method>
         <method>POST</method>
         <method>PUT</method>
       </allowed-methods>
       <allowed-headers>
-        <!--X-Access-Tokenと指定すると、POST/PUTメソッドでCORSエラーが発生するため注意-->
+        <!--X-Access-Tokenのみ許可するように指定すべきだが、指定するとDELETE/POST/PUTメソッドでCORSエラーが発生するため全許可-->
         <header>*</header>
       </allowed-headers>
     </cors>
