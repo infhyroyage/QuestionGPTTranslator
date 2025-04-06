@@ -42,7 +42,10 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run lint
-        run: pylint functions/**/*.py
+        run: |
+          pushd functions
+          pylint **/*.py
+          popd
 
   test:
     runs-on: ubuntu-latest

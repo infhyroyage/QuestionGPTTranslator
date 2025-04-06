@@ -60,6 +60,8 @@
 │   │   ├── structured.py                        # 構造化データの型定義
 │   │   └── translation.py                       # 翻訳処理の型定義
 │   ├── data/                                    # インポートデータファイル
+│   ├── .funcignore                              # Azure Functionsデプロイ時の除外設定
+│   ├── .pylintrc                                # pylintコード解析設定
 │   ├── function_app.py                          # 関数アプリのエントリーポイント
 │   ├── host.json                                # 関数アプリ実行環境設定
 │   ├── import_local.py                          # ローカル環境でのインポート処理スクリプト
@@ -75,9 +77,7 @@
 │   ├── connect-apim-2-functions.bicep           # Azure API ManagementとAzure Functionsとの連携部分のインフラストラクチャ定義
 │   └── functions-appsettings.json               # Azure Key Vaultから取得するAzure Functionsのアプリケーション設定
 ├── venv/                                        # Python仮想環境
-├── .funcignore                                  # Azure Functionsデプロイ時の除外設定
 ├── .gitignore                                   # Git管理除外設定
-├── .pylintrc                                    # pylintコード解析設定
 ├── architecture.drawio.svg                      # アーキテクチャ図
 ├── azureenvironment.md                          # Azure環境構築手順・削除手順
 ├── compose.yaml                                 # Docker Compose設定
