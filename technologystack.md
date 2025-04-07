@@ -82,7 +82,7 @@
 - 認証は Azure AD のサービスプリンシパルを使用し、API Management のポリシーで設定
 - 以下のコマンド実行でユニットテストを実行し、カバレッジ率が 80% 以上であることを確認
   ```bash
-  cd functions && python -m unittest discover -s tests && python -m coverage report && cd ..
+  cd functions && coverage run -m unittest discover -s tests && coverage report && cd ..
   ```
 - 以下のコマンド実行で pylint を実行し、警告・エラーを出力しないことを確認
   ```bash
