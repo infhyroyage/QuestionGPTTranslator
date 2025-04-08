@@ -175,7 +175,7 @@ def post_progress(req: func.HttpRequest) -> func.HttpResponse:
             container_name="Progress",
         )
 
-        # テストID・ユーザーIDにおける、最後に保存した回答履歴の次の問題番号であるかのチェック
+        # テストID・ユーザーIDにおける、最後に保存した回答履歴の問題番号、または次の問題番号であるかのチェック
         items: List[dict] = list(
             container.query_items(
                 query=(
@@ -191,11 +191,13 @@ def post_progress(req: func.HttpRequest) -> func.HttpResponse:
         )
         logging.info({"items": items})
         max_question_number: int = items[0].get("maxQuestionNumber", 0)
-        if question_number != max_question_number + 1:
-            return func.HttpResponse(
-                body=f"questionNumber must be {max_question_number + 1}",
-                status_code=400,
+        if question_number not in (max_question_number, max_question_number + 1):
+            body = (
+                f"questionNumber must be {max_question_number} or {max_question_number + 1}"
+                if max_question_number > 0
+                else f"questionNumber must be {max_question_number + 1}"
             )
+            return func.HttpResponse(body=body, status_code=400)
 
         # Progressの項目を生成してupsert
         req_body: PostProgressReq = json.loads(req_body_encoded.decode("utf-8"))

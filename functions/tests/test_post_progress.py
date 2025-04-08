@@ -463,7 +463,7 @@ class TestPostProgress(unittest.TestCase):
     @patch("src.post_progress.validate_body")
     @patch("src.post_progress.get_read_write_container")
     @patch("src.post_progress.logging")
-    def test_post_progress_invalid_question_number(  # pylint: disable=too-many-arguments, too-many-positional-arguments
+    def test_post_progress_invalid_question_number_without_saved_progress(  # pylint: disable=too-many-arguments, too-many-positional-arguments
         self,
         mock_logging,
         mock_get_read_write_container,
@@ -471,7 +471,7 @@ class TestPostProgress(unittest.TestCase):
         mock_validate_headers,
         mock_validate_route_params,
     ):
-        """最後に保存した回答履歴の次の問題番号でない場合のテスト"""
+        """何も回答履歴を保存していない場合に、誤った問題番号を指定した場合のテスト"""
 
         mock_validate_route_params.return_value = []
         mock_validate_headers.return_value = []
@@ -529,6 +529,83 @@ class TestPostProgress(unittest.TestCase):
                     }
                 ),
                 call({"items": [{}]}),
+            ]
+        )
+        mock_logging.error.assert_not_called()
+
+    @patch("src.post_progress.validate_route_params")
+    @patch("src.post_progress.validate_headers")
+    @patch("src.post_progress.validate_body")
+    @patch("src.post_progress.get_read_write_container")
+    @patch("src.post_progress.logging")
+    def test_post_progress_invalid_question_number_with_saved_progress(  # pylint: disable=too-many-arguments, too-many-positional-arguments
+        self,
+        mock_logging,
+        mock_get_read_write_container,
+        mock_validate_body,
+        mock_validate_headers,
+        mock_validate_route_params,
+    ):
+        """途中まで回答履歴を保存した場合に、誤った問題番号を指定した場合のテスト"""
+
+        mock_validate_route_params.return_value = []
+        mock_validate_headers.return_value = []
+        mock_validate_body.return_value = []
+        mock_container = MagicMock()
+        mock_get_read_write_container.return_value = mock_container
+        mock_container.query_items.return_value = [{"maxQuestionNumber": 1}]
+
+        request_body = {
+            "isCorrect": True,
+            "choiceSentences": ["選択肢1", "選択肢2"],
+            "choiceImgs": [None, "https://example.com/img.png"],
+            "choiceTranslations": ["選択肢1の翻訳", "選択肢2の翻訳"],
+            "selectedIdxes": [0],
+            "correctIdxes": [0],
+        }
+        request_body_encoded = json.dumps(request_body).encode("utf-8")
+        req = func.HttpRequest(
+            method="POST",
+            body=request_body_encoded,
+            url="/api/tests/test-id/progresses/3",
+            route_params={"testId": "test-id", "questionNumber": "3"},
+            headers={"X-User-Id": "user-id"},
+        )
+        res = post_progress(req)
+
+        self.assertEqual(res.status_code, 400)
+        self.assertEqual(
+            res.get_body().decode("utf-8"), "questionNumber must be 1 or 2"
+        )
+        mock_validate_route_params.assert_called_once_with(req.route_params)
+        mock_validate_headers.assert_called_once_with(req.headers)
+        mock_validate_body.assert_called_once_with(request_body_encoded)
+        mock_get_read_write_container.assert_called_once_with(
+            database_name="Users",
+            container_name="Progress",
+        )
+        mock_container.query_items.assert_called_once_with(
+            query=(
+                "SELECT MAX(c.questionNumber) as maxQuestionNumber "
+                "FROM c WHERE c.userId = @userId AND c.testId = @testId"
+            ),
+            parameters=[
+                {"name": "@userId", "value": "user-id"},
+                {"name": "@testId", "value": "test-id"},
+            ],
+            partition_key="test-id",
+        )
+        mock_container.upsert_item.assert_not_called()
+        mock_logging.info.assert_has_calls(
+            [
+                call(
+                    {
+                        "question_number": 3,
+                        "test_id": "test-id",
+                        "user_id": "user-id",
+                    }
+                ),
+                call({"items": [{"maxQuestionNumber": 1}]}),
             ]
         )
         mock_logging.error.assert_not_called()
