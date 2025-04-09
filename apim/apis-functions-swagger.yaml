@@ -320,6 +320,11 @@ paths:
                       items:
                         type: string
                         nullable: true
+                    choiceTranslations:
+                      type: array
+                      items:
+                        type: string
+                      nullable: true
                     selectedIdxes:
                       type: array
                       items:
@@ -439,6 +444,12 @@ paths:
                   items:
                     type: string
                     nullable: true
+                choiceTranslations:
+                  type: array
+                  description: 選択肢の文に対応する翻訳文
+                  nullable: true
+                  items:
+                    type: string
                 selectedIdxes:
                   type: array
                   description: 選択した選択肢のインデックス

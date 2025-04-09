@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, call, patch
 
 import azure.functions as func
 from src.get_progresses import get_progresses, validate_request
+from type.response import GetProgressesRes
 
 
 class TestValidateRequest(unittest.TestCase):
@@ -77,6 +78,7 @@ class TestGetProgresses(unittest.TestCase):
                 "isCorrect": True,
                 "choiceSentences": ["選択肢1", "選択肢2"],
                 "choiceImgs": [None, "https://example.com/img.png"],
+                "choiceTranslations": ["選択肢1の翻訳", "選択肢2の翻訳"],
                 "selectedIdxes": [0],
                 "correctIdxes": [0],
             },
@@ -106,25 +108,24 @@ class TestGetProgresses(unittest.TestCase):
 
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp.mimetype, "application/json")
-        self.assertEqual(
-            json.loads(resp.get_body().decode()),
-            [
-                {
-                    "isCorrect": True,
-                    "choiceSentences": ["選択肢1", "選択肢2"],
-                    "choiceImgs": [None, "https://example.com/img.png"],
-                    "selectedIdxes": [0],
-                    "correctIdxes": [0],
-                },
-                {
-                    "isCorrect": False,
-                    "choiceSentences": ["選択肢A", "選択肢B"],
-                    "choiceImgs": [None, None],
-                    "selectedIdxes": [0],
-                    "correctIdxes": [1],
-                },
-            ],
-        )
+        expect_body: GetProgressesRes = [
+            {
+                "isCorrect": True,
+                "choiceSentences": ["選択肢1", "選択肢2"],
+                "choiceImgs": [None, "https://example.com/img.png"],
+                "choiceTranslations": ["選択肢1の翻訳", "選択肢2の翻訳"],
+                "selectedIdxes": [0],
+                "correctIdxes": [0],
+            },
+            {
+                "isCorrect": False,
+                "choiceSentences": ["選択肢A", "選択肢B"],
+                "choiceImgs": [None, None],
+                "selectedIdxes": [0],
+                "correctIdxes": [1],
+            },
+        ]
+        self.assertEqual(json.loads(resp.get_body().decode()), expect_body)
         mock_validate_request.assert_called_once_with(req)
         mock_get_read_only_container.assert_called_once_with(
             database_name="Users", container_name="Progress"
