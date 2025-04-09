@@ -23,7 +23,6 @@ class TestValidateBody(unittest.TestCase):
             "isCorrect": True,
             "choiceSentences": ["選択肢1", "選択肢2"],
             "choiceImgs": [None, "https://example.com/img.png"],
-            "choiceTranslations": ["選択肢1の翻訳", "選択肢2の翻訳"],
             "selectedIdxes": [0],
             "correctIdxes": [0],
         }
@@ -44,7 +43,6 @@ class TestValidateBody(unittest.TestCase):
         req_body = {
             "choiceSentences": ["選択肢1", "選択肢2"],
             "choiceImgs": [None, "https://example.com/img.png"],
-            "choiceTranslations": ["選択肢1の翻訳", "選択肢2の翻訳"],
             "selectedIdxes": [0],
             "correctIdxes": [0],
         }
@@ -59,7 +57,6 @@ class TestValidateBody(unittest.TestCase):
             "isCorrect": "true",
             "choiceSentences": ["選択肢1", "選択肢2"],
             "choiceImgs": [None, "https://example.com/img.png"],
-            "choiceTranslations": ["選択肢1の翻訳", "選択肢2の翻訳"],
             "selectedIdxes": [0],
             "correctIdxes": [0],
         }
@@ -73,7 +70,6 @@ class TestValidateBody(unittest.TestCase):
         req_body = {
             "isCorrect": True,
             "choiceImgs": [None, "https://example.com/img.png"],
-            "choiceTranslations": ["選択肢1の翻訳", "選択肢2の翻訳"],
             "selectedIdxes": [0],
             "correctIdxes": [0],
         }
@@ -88,7 +84,6 @@ class TestValidateBody(unittest.TestCase):
             "isCorrect": True,
             "choiceSentences": "選択肢1",
             "choiceImgs": [None, "https://example.com/img.png"],
-            "choiceTranslations": ["選択肢1の翻訳"],
             "selectedIdxes": [0],
             "correctIdxes": [0],
         }
@@ -103,7 +98,6 @@ class TestValidateBody(unittest.TestCase):
             "isCorrect": True,
             "choiceSentences": ["選択肢1", 2],
             "choiceImgs": [None, "https://example.com/img.png"],
-            "choiceTranslations": ["選択肢1の翻訳", "選択肢2の翻訳"],
             "selectedIdxes": [0],
             "correctIdxes": [0],
         }
@@ -117,7 +111,6 @@ class TestValidateBody(unittest.TestCase):
         req_body = {
             "isCorrect": True,
             "choiceSentences": ["選択肢1", "選択肢2"],
-            "choiceTranslations": ["選択肢1の翻訳", "選択肢2の翻訳"],
             "selectedIdxes": [0],
             "correctIdxes": [0],
         }
@@ -132,7 +125,6 @@ class TestValidateBody(unittest.TestCase):
             "isCorrect": True,
             "choiceSentences": ["選択肢1", "選択肢2"],
             "choiceImgs": "https://example.com/img.png",
-            "choiceTranslations": ["選択肢1の翻訳", "選択肢2の翻訳"],
             "selectedIdxes": [0],
             "correctIdxes": [0],
         }
@@ -147,43 +139,12 @@ class TestValidateBody(unittest.TestCase):
             "isCorrect": True,
             "choiceSentences": ["選択肢1", "選択肢2"],
             "choiceImgs": [None, 2],
-            "choiceTranslations": ["選択肢1の翻訳", "選択肢2の翻訳"],
             "selectedIdxes": [0],
             "correctIdxes": [0],
         }
         req_body_encoded = json.dumps(req_body).encode("utf-8")
         errors = validate_body(req_body_encoded)
         self.assertEqual(errors, ["Invalid choiceImgs[1]: 2"])
-
-    def test_validate_body_invalid_choice_translations(self):
-        """choiceTranslationsがlistでない場合のテスト"""
-
-        req_body = {
-            "isCorrect": True,
-            "choiceSentences": ["選択肢1", "選択肢2"],
-            "choiceImgs": [None, "https://example.com/img.png"],
-            "choiceTranslations": "選択肢1の翻訳",
-            "selectedIdxes": [0],
-            "correctIdxes": [0],
-        }
-        req_body_encoded = json.dumps(req_body).encode("utf-8")
-        errors = validate_body(req_body_encoded)
-        self.assertEqual(errors, ["Invalid choiceTranslations: 選択肢1の翻訳"])
-
-    def test_validate_body_invalid_choice_translation_item(self):
-        """choiceTranslationsの要素が文字列でない場合のテスト"""
-
-        req_body = {
-            "isCorrect": True,
-            "choiceSentences": ["選択肢1", "選択肢2"],
-            "choiceImgs": [None, "https://example.com/img.png"],
-            "choiceTranslations": ["選択肢1の翻訳", 2],
-            "selectedIdxes": [0],
-            "correctIdxes": [0],
-        }
-        req_body_encoded = json.dumps(req_body).encode("utf-8")
-        errors = validate_body(req_body_encoded)
-        self.assertEqual(errors, ["Invalid choiceTranslations[1]: 2"])
 
     def test_validate_body_missing_selected_idxes(self):
         """リクエストボディにselectedIdxesが存在しない場合のテスト"""
@@ -192,7 +153,6 @@ class TestValidateBody(unittest.TestCase):
             "isCorrect": True,
             "choiceSentences": ["選択肢1", "選択肢2"],
             "choiceImgs": [None, "https://example.com/img.png"],
-            "choiceTranslations": ["選択肢1の翻訳", "選択肢2の翻訳"],
             "correctIdxes": [0],
         }
         req_body_encoded = json.dumps(req_body).encode("utf-8")
@@ -206,7 +166,6 @@ class TestValidateBody(unittest.TestCase):
             "isCorrect": True,
             "choiceSentences": ["選択肢1", "選択肢2"],
             "choiceImgs": [None, "https://example.com/img.png"],
-            "choiceTranslations": ["選択肢1の翻訳", "選択肢2の翻訳"],
             "selectedIdxes": 0,
             "correctIdxes": [0],
         }
@@ -221,7 +180,6 @@ class TestValidateBody(unittest.TestCase):
             "isCorrect": True,
             "choiceSentences": ["選択肢1", "選択肢2"],
             "choiceImgs": [None, "https://example.com/img.png"],
-            "choiceTranslations": ["選択肢1の翻訳", "選択肢2の翻訳"],
             "selectedIdxes": [0, "1"],
             "correctIdxes": [0],
         }
@@ -236,7 +194,6 @@ class TestValidateBody(unittest.TestCase):
             "isCorrect": True,
             "choiceSentences": ["選択肢1", "選択肢2"],
             "choiceImgs": [None, "https://example.com/img.png"],
-            "choiceTranslations": ["選択肢1の翻訳", "選択肢2の翻訳"],
             "selectedIdxes": [0],
         }
         req_body_encoded = json.dumps(req_body).encode("utf-8")
@@ -250,7 +207,6 @@ class TestValidateBody(unittest.TestCase):
             "isCorrect": True,
             "choiceSentences": ["選択肢1", "選択肢2"],
             "choiceImgs": [None, "https://example.com/img.png"],
-            "choiceTranslations": ["選択肢1の翻訳", "選択肢2の翻訳"],
             "selectedIdxes": [0],
             "correctIdxes": 0,
         }
@@ -265,7 +221,6 @@ class TestValidateBody(unittest.TestCase):
             "isCorrect": True,
             "choiceSentences": ["選択肢1", "選択肢2"],
             "choiceImgs": [None, "https://example.com/img.png"],
-            "choiceTranslations": ["選択肢1の翻訳", "選択肢2の翻訳"],
             "selectedIdxes": [0],
             "correctIdxes": [0, "1"],
         }
@@ -353,7 +308,6 @@ class TestPostProgress(unittest.TestCase):
             "isCorrect": True,
             "choiceSentences": ["選択肢1", "選択肢2"],
             "choiceImgs": [None, "https://example.com/img.png"],
-            "choiceTranslations": ["選択肢1の翻訳", "選択肢2の翻訳"],
             "selectedIdxes": [0],
             "correctIdxes": [0],
         }
@@ -396,7 +350,6 @@ class TestPostProgress(unittest.TestCase):
                 "isCorrect": True,
                 "choiceSentences": ["選択肢1", "選択肢2"],
                 "choiceImgs": [None, "https://example.com/img.png"],
-                "choiceTranslations": ["選択肢1の翻訳", "選択肢2の翻訳"],
                 "selectedIdxes": [0],
                 "correctIdxes": [0],
             }
@@ -436,7 +389,6 @@ class TestPostProgress(unittest.TestCase):
             "isCorrect": True,
             "choiceSentences": ["選択肢1", "選択肢2"],
             "choiceImgs": [None, "https://example.com/img.png"],
-            "choiceTranslations": ["選択肢1の翻訳", "選択肢2の翻訳"],
             "selectedIdxes": [0],
             "correctIdxes": [0],
         }
@@ -484,7 +436,6 @@ class TestPostProgress(unittest.TestCase):
             "isCorrect": True,
             "choiceSentences": ["選択肢1", "選択肢2"],
             "choiceImgs": [None, "https://example.com/img.png"],
-            "choiceTranslations": ["選択肢1の翻訳", "選択肢2の翻訳"],
             "selectedIdxes": [0],
             "correctIdxes": [0],
         }
@@ -559,7 +510,6 @@ class TestPostProgress(unittest.TestCase):
             "isCorrect": True,
             "choiceSentences": ["選択肢1", "選択肢2"],
             "choiceImgs": [None, "https://example.com/img.png"],
-            "choiceTranslations": ["選択肢1の翻訳", "選択肢2の翻訳"],
             "selectedIdxes": [0],
             "correctIdxes": [0],
         }
@@ -634,7 +584,6 @@ class TestPostProgress(unittest.TestCase):
             "isCorrect": True,
             "choiceSentences": ["選択肢1", "選択肢2"],
             "choiceImgs": [None, "https://example.com/img.png"],
-            "choiceTranslations": ["選択肢1の翻訳", "選択肢2の翻訳"],
             "selectedIdxes": [0],
             "correctIdxes": [0],
         }

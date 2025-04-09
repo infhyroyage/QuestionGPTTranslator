@@ -19,6 +19,5 @@ class PostProgressReq(TypedDict):
     isCorrect: bool
     choiceSentences: List[str]
     choiceImgs: List[Optional[str]]
-    choiceTranslations: Optional[List[str]]
     selectedIdxes: List[int]
     correctIdxes: List[int]
