@@ -388,23 +388,18 @@ class TestPostProgress(unittest.TestCase):
             partition_key="test-id",
         )
         mock_container.upsert_item.assert_called_once_with(
-            json.loads(
-                json.dumps(
-                    {
-                        "id": "user-id_test-id_3",
-                        "userId": "user-id",
-                        "testId": "test-id",
-                        "questionNumber": 3,
-                        "isCorrect": True,
-                        "choiceSentences": ["選択肢1", "選択肢2"],
-                        "choiceImgs": [None, "https://example.com/img.png"],
-                        "choiceTranslations": ["選択肢1の翻訳", "選択肢2の翻訳"],
-                        "selectedIdxes": [0],
-                        "correctIdxes": [0],
-                    },
-                    ensure_ascii=False,
-                )
-            )
+            {
+                "id": "user-id_test-id_3",
+                "userId": "user-id",
+                "testId": "test-id",
+                "questionNumber": 3,
+                "isCorrect": True,
+                "choiceSentences": ["選択肢1", "選択肢2"],
+                "choiceImgs": [None, "https://example.com/img.png"],
+                "choiceTranslations": ["選択肢1の翻訳", "選択肢2の翻訳"],
+                "selectedIdxes": [0],
+                "correctIdxes": [0],
+            }
         )
         mock_logging.info.assert_has_calls(
             [

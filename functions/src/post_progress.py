@@ -204,27 +204,19 @@ def post_progress(req: func.HttpRequest) -> func.HttpResponse:
 
         # Progressの項目を生成してupsert
         req_body: PostProgressReq = json.loads(req_body_encoded.decode("utf-8"))
-
-        # JSONとして一度シリアライズ後に再パースすることで、choiceTranslations内の
-        # 日本語テキストの不正なUnicodeエスケープシーケンスの問題を回避
         container.upsert_item(
-            json.loads(
-                json.dumps(
-                    {
-                        "id": f"{user_id}_{test_id}_{question_number}",
-                        "userId": user_id,
-                        "testId": test_id,
-                        "questionNumber": question_number,
-                        "isCorrect": req_body.get("isCorrect"),
-                        "choiceSentences": req_body.get("choiceSentences"),
-                        "choiceImgs": req_body.get("choiceImgs"),
-                        "choiceTranslations": req_body.get("choiceTranslations"),
-                        "selectedIdxes": req_body.get("selectedIdxes"),
-                        "correctIdxes": req_body.get("correctIdxes"),
-                    },
-                    ensure_ascii=False,
-                )
-            )
+            {
+                "id": f"{user_id}_{test_id}_{question_number}",
+                "userId": user_id,
+                "testId": test_id,
+                "questionNumber": question_number,
+                "isCorrect": req_body.get("isCorrect"),
+                "choiceSentences": req_body.get("choiceSentences"),
+                "choiceImgs": req_body.get("choiceImgs"),
+                "choiceTranslations": req_body.get("choiceTranslations"),
+                "selectedIdxes": req_body.get("selectedIdxes"),
+                "correctIdxes": req_body.get("correctIdxes"),
+            }
         )
 
         return func.HttpResponse(
