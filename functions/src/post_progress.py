@@ -75,16 +75,6 @@ def validate_body(req_body_encoded: bytes) -> list:
                 elif field == "choiceImgs":
                     errors.extend(_validate_list_field(field, req_body[field], str))
 
-        if (
-            "choiceTranslations" in req_body
-            and req_body["choiceTranslations"] is not None
-        ):
-            errors.extend(
-                _validate_list_field(
-                    "choiceTranslations", req_body["choiceTranslations"], str
-                )
-            )
-
     return errors
 
 
@@ -214,7 +204,6 @@ def post_progress(req: func.HttpRequest) -> func.HttpResponse:
                 "isCorrect": req_body.get("isCorrect"),
                 "choiceSentences": req_body.get("choiceSentences"),
                 "choiceImgs": req_body.get("choiceImgs"),
-                "choiceTranslations": req_body.get("choiceTranslations"),
                 "selectedIdxes": req_body.get("selectedIdxes"),
                 "correctIdxes": req_body.get("correctIdxes"),
             }

@@ -100,8 +100,6 @@ def get_progresses(req: func.HttpRequest) -> func.HttpResponse:
                 "selectedIdxes": item["selectedIdxes"],
                 "correctIdxes": item["correctIdxes"],
             }
-            if item.get("choiceTranslations"):
-                progress["choiceTranslations"] = item["choiceTranslations"]
 
             body.append(progress)
 
