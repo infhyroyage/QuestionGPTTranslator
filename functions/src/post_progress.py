@@ -190,7 +190,10 @@ def post_progress(req: func.HttpRequest) -> func.HttpResponse:
             )
         )
         logging.info({"items": items})
-        max_question_number: int = items[0].get("maxQuestionNumber", 0)
+        # 何も解答履歴を保存していない場合は、max_question_numberをNoneから0に変換
+        max_question_number: int | None = items[0].get("maxQuestionNumber")
+        if max_question_number is None:
+            max_question_number = 0
         if question_number not in (max_question_number, max_question_number + 1):
             body = (
                 f"questionNumber must be {max_question_number} or {max_question_number + 1}"
@@ -201,19 +204,27 @@ def post_progress(req: func.HttpRequest) -> func.HttpResponse:
 
         # Progressの項目を生成してupsert
         req_body: PostProgressReq = json.loads(req_body_encoded.decode("utf-8"))
+
+        # JSONとして一度シリアライズ後に再パースすることで、choiceTranslations内の
+        # 日本語テキストの不正なUnicodeエスケープシーケンスの問題を回避
         container.upsert_item(
-            {
-                "id": f"{user_id}_{test_id}_{question_number}",
-                "userId": user_id,
-                "testId": test_id,
-                "questionNumber": question_number,
-                "isCorrect": req_body.get("isCorrect"),
-                "choiceSentences": req_body.get("choiceSentences"),
-                "choiceImgs": req_body.get("choiceImgs"),
-                "choiceTranslations": req_body.get("choiceTranslations"),
-                "selectedIdxes": req_body.get("selectedIdxes"),
-                "correctIdxes": req_body.get("correctIdxes"),
-            }
+            json.loads(
+                json.dumps(
+                    {
+                        "id": f"{user_id}_{test_id}_{question_number}",
+                        "userId": user_id,
+                        "testId": test_id,
+                        "questionNumber": question_number,
+                        "isCorrect": req_body.get("isCorrect"),
+                        "choiceSentences": req_body.get("choiceSentences"),
+                        "choiceImgs": req_body.get("choiceImgs"),
+                        "choiceTranslations": req_body.get("choiceTranslations"),
+                        "selectedIdxes": req_body.get("selectedIdxes"),
+                        "correctIdxes": req_body.get("correctIdxes"),
+                    },
+                    ensure_ascii=False,
+                )
+            )
         )
 
         return func.HttpResponse(
