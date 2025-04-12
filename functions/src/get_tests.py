@@ -2,6 +2,7 @@
 
 import json
 import logging
+import traceback
 
 import azure.functions as func
 from azure.cosmos import ContainerProxy
@@ -54,6 +55,6 @@ def get_tests(
             status_code=200,
             mimetype="application/json",
         )
-    except Exception as e:
-        logging.error(e)
+    except Exception:
+        logging.error(traceback.format_exc())
         return func.HttpResponse(body="Internal Server Error", status_code=500)

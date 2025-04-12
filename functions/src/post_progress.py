@@ -2,6 +2,7 @@
 
 import json
 import logging
+import traceback
 from typing import List
 
 import azure.functions as func
@@ -223,8 +224,8 @@ def post_progress(req: func.HttpRequest) -> func.HttpResponse:
             body="OK",
             status_code=200,
         )
-    except Exception as e:
-        logging.error(e)
+    except Exception:
+        logging.error(traceback.format_exc())
         return func.HttpResponse(
             body="Internal Server Error",
             status_code=500,

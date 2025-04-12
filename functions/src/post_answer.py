@@ -3,6 +3,7 @@
 import json
 import logging
 import os
+import traceback
 from typing import Iterable
 
 import azure.functions as func
@@ -256,8 +257,8 @@ def generate_correct_answers(
                     correct_indexes=response.choices[0].message.parsed.correct_indexes,
                     explanations=response.choices[0].message.parsed.explanations,
                 )
-    except Exception as e:
-        logging.warning(e)
+    except Exception:
+        logging.warning(traceback.format_exc())
 
     return None
 
@@ -359,8 +360,8 @@ def post_answer(req: func.HttpRequest) -> func.HttpResponse:
             body=json.dumps(body),
             status_code=200,
         )
-    except Exception as e:
-        logging.error(e)
+    except Exception:
+        logging.error(traceback.format_exc())
         return func.HttpResponse(
             body="Internal Server Error",
             status_code=500,
