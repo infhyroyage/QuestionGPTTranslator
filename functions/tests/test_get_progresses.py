@@ -130,13 +130,14 @@ class TestGetProgresses(unittest.TestCase):
         )
         mock_container.query_items.assert_called_once_with(
             query=(
-                "SELECT * FROM c WHERE c.userTestId = @userTestId "
+                "SELECT * FROM c WHERE c.userId = @userId AND c.testId = @testId "
                 "ORDER BY c.questionNumber"
             ),
             parameters=[
-                {"name": "@userTestId", "value": "user-id-1_test-id-1"},
+                {"name": "@userId", "value": "user-id-1"},
+                {"name": "@testId", "value": "test-id-1"},
             ],
-            partition_key="user-id-1_test-id-1",
+            partition_key="test-id-1",
         )
         mock_logging.info.assert_has_calls(
             [
