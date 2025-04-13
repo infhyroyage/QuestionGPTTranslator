@@ -171,13 +171,12 @@ def post_progress(req: func.HttpRequest) -> func.HttpResponse:
             container.query_items(
                 query=(
                     "SELECT MAX(c.questionNumber) as maxQuestionNumber "
-                    "FROM c WHERE c.userId = @userId AND c.testId = @testId"
+                    "FROM c WHERE c.userTestId = @userTestId"
                 ),
                 parameters=[
-                    {"name": "@userId", "value": user_id},
-                    {"name": "@testId", "value": test_id},
+                    {"name": "@userTestId", "value": f"{user_id}_{test_id}"},
                 ],
-                partition_key=test_id,
+                partition_key=f"{user_id}_{test_id}",
             )
         )
         logging.info({"items": items})
@@ -200,8 +199,7 @@ def post_progress(req: func.HttpRequest) -> func.HttpResponse:
         container.upsert_item(
             {
                 "id": f"{user_id}_{test_id}_{question_number}",
-                "userId": user_id,
-                "testId": test_id,
+                "userTestId": f"{user_id}_{test_id}",
                 "questionNumber": question_number,
                 "isCorrect": req_body.get("isCorrect"),
                 "choiceSentences": req_body.get("choiceSentences"),

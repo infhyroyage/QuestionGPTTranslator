@@ -333,19 +333,17 @@ class TestPostProgress(unittest.TestCase):
         mock_container.query_items.assert_called_once_with(
             query=(
                 "SELECT MAX(c.questionNumber) as maxQuestionNumber "
-                "FROM c WHERE c.userId = @userId AND c.testId = @testId"
+                "FROM c WHERE c.userTestId = @userTestId"
             ),
             parameters=[
-                {"name": "@userId", "value": "user-id"},
-                {"name": "@testId", "value": "test-id"},
+                {"name": "@userTestId", "value": "user-id_test-id"},
             ],
-            partition_key="test-id",
+            partition_key="user-id_test-id",
         )
         mock_container.upsert_item.assert_called_once_with(
             {
                 "id": "user-id_test-id_3",
-                "userId": "user-id",
-                "testId": "test-id",
+                "userTestId": "user-id_test-id",
                 "questionNumber": 3,
                 "isCorrect": True,
                 "choiceSentences": ["選択肢1", "選択肢2"],
@@ -461,13 +459,12 @@ class TestPostProgress(unittest.TestCase):
         mock_container.query_items.assert_called_once_with(
             query=(
                 "SELECT MAX(c.questionNumber) as maxQuestionNumber "
-                "FROM c WHERE c.userId = @userId AND c.testId = @testId"
+                "FROM c WHERE c.userTestId = @userTestId"
             ),
             parameters=[
-                {"name": "@userId", "value": "user-id"},
-                {"name": "@testId", "value": "test-id"},
+                {"name": "@userTestId", "value": "user-id_test-id"},
             ],
-            partition_key="test-id",
+            partition_key="user-id_test-id",
         )
         mock_container.upsert_item.assert_not_called()
         mock_logging.info.assert_has_calls(
@@ -537,13 +534,12 @@ class TestPostProgress(unittest.TestCase):
         mock_container.query_items.assert_called_once_with(
             query=(
                 "SELECT MAX(c.questionNumber) as maxQuestionNumber "
-                "FROM c WHERE c.userId = @userId AND c.testId = @testId"
+                "FROM c WHERE c.userTestId = @userTestId"
             ),
             parameters=[
-                {"name": "@userId", "value": "user-id"},
-                {"name": "@testId", "value": "test-id"},
+                {"name": "@userTestId", "value": "user-id_test-id"},
             ],
-            partition_key="test-id",
+            partition_key="user-id_test-id",
         )
         mock_container.upsert_item.assert_not_called()
         mock_logging.info.assert_has_calls(

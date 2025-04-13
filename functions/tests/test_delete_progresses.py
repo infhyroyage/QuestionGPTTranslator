@@ -87,12 +87,11 @@ class TestDeleteProgresses(unittest.TestCase):
             database_name="Users", container_name="Progress"
         )
         mock_container.query_items.assert_called_once_with(
-            query="SELECT c.id FROM c WHERE c.userId = @userId AND c.testId = @testId",
+            query="SELECT c.id FROM c WHERE c.userTestId = @userTestId",
             parameters=[
-                {"name": "@userId", "value": "user-id-1"},
-                {"name": "@testId", "value": "test-id-1"},
+                {"name": "@userTestId", "value": "user-id-1_test-id-1"},
             ],
-            partition_key="test-id-1",
+            partition_key="user-id-1_test-id-1",
         )
 
         expected_batch_operations = [
@@ -100,7 +99,8 @@ class TestDeleteProgresses(unittest.TestCase):
             ("delete", ("user-id-1_test-id-1_2",), {}),
         ]
         mock_container.execute_item_batch.assert_called_once_with(
-            batch_operations=expected_batch_operations, partition_key="test-id-1"
+            batch_operations=expected_batch_operations,
+            partition_key="user-id-1_test-id-1",
         )
         mock_logging.info.assert_has_calls(
             [

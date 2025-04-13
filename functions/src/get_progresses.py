@@ -78,14 +78,13 @@ def get_progresses(req: func.HttpRequest) -> func.HttpResponse:
         items: List[CosmosProgress] = list(
             container.query_items(
                 query=(
-                    "SELECT * FROM c WHERE c.userId = @userId AND c.testId = @testId "
+                    "SELECT * FROM c WHERE c.userTestId = @userTestId "
                     "ORDER BY c.questionNumber"
                 ),
                 parameters=[
-                    {"name": "@userId", "value": user_id},
-                    {"name": "@testId", "value": test_id},
+                    {"name": "@userTestId", "value": f"{user_id}_{test_id}"},
                 ],
-                partition_key=test_id,
+                partition_key=f"{user_id}_{test_id}",
             )
         )
         logging.info({"items_count": len(items)})

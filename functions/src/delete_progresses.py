@@ -74,15 +74,11 @@ def delete_progresses(req: func.HttpRequest) -> func.HttpResponse:
         # 削除対象の回答履歴を全取得
         items: List[Progress] = list(
             container.query_items(
-                query=(
-                    "SELECT c.id "
-                    "FROM c WHERE c.userId = @userId AND c.testId = @testId"
-                ),
+                query=("SELECT c.id " "FROM c WHERE c.userTestId = @userTestId"),
                 parameters=[
-                    {"name": "@userId", "value": user_id},
-                    {"name": "@testId", "value": test_id},
+                    {"name": "@userTestId", "value": f"{user_id}_{test_id}"},
                 ],
-                partition_key=test_id,
+                partition_key=f"{user_id}_{test_id}",
             )
         )
         logging.info({"items": items})
@@ -99,7 +95,7 @@ def delete_progresses(req: func.HttpRequest) -> func.HttpResponse:
             ("delete", (item["id"],), {}) for item in items
         ]
         container.execute_item_batch(
-            batch_operations=batch_operations, partition_key=test_id
+            batch_operations=batch_operations, partition_key=f"{user_id}_{test_id}"
         )
 
         return func.HttpResponse(

@@ -22,8 +22,7 @@ class Progress(TypedDict):
     """
 
     id: str
-    userId: str
-    testId: str
+    userTestId: str
     questionNumber: int
     isCorrect: bool
     choiceSentences: List[str]
