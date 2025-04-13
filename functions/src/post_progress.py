@@ -181,10 +181,12 @@ def post_progress(req: func.HttpRequest) -> func.HttpResponse:
             )
         )
         logging.info({"items": items})
-        # 何も解答履歴を保存していない場合は、max_question_numberをNoneから0に変換
-        max_question_number: int | None = items[0].get("maxQuestionNumber")
-        if max_question_number is None:
-            max_question_number = 0
+        max_question_number: int = (
+            # 何も解答履歴を保存していない場合、最後に保存した解答履歴の問題番号は0とみなす
+            0
+            if items[0].get("maxQuestionNumber") is None
+            else int(items[0].get("maxQuestionNumber"))
+        )
         if question_number not in (max_question_number, max_question_number + 1):
             body = (
                 f"questionNumber must be {max_question_number} or {max_question_number + 1}"

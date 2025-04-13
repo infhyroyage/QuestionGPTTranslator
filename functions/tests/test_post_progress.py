@@ -302,7 +302,7 @@ class TestPostProgress(unittest.TestCase):
         mock_validate_body.return_value = []
         mock_container = MagicMock()
         mock_get_read_write_container.return_value = mock_container
-        mock_container.query_items.return_value = [{"maxQuestionNumber": 2}]
+        mock_container.query_items.return_value = [{"maxQuestionNumber": "2"}]
 
         request_body = {
             "isCorrect": True,
@@ -363,7 +363,7 @@ class TestPostProgress(unittest.TestCase):
                         "user_id": "user-id",
                     }
                 ),
-                call({"items": [{"maxQuestionNumber": 2}]}),
+                call({"items": [{"maxQuestionNumber": "2"}]}),
             ]
         )
         mock_logging.error.assert_not_called()
@@ -504,7 +504,7 @@ class TestPostProgress(unittest.TestCase):
         mock_validate_body.return_value = []
         mock_container = MagicMock()
         mock_get_read_write_container.return_value = mock_container
-        mock_container.query_items.return_value = [{"maxQuestionNumber": 1}]
+        mock_container.query_items.return_value = [{"maxQuestionNumber": "1"}]
 
         request_body = {
             "isCorrect": True,
@@ -555,7 +555,7 @@ class TestPostProgress(unittest.TestCase):
                         "user_id": "user-id",
                     }
                 ),
-                call({"items": [{"maxQuestionNumber": 1}]}),
+                call({"items": [{"maxQuestionNumber": "1"}]}),
             ]
         )
         mock_logging.error.assert_not_called()
