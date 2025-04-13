@@ -253,11 +253,7 @@ resource cosmosDBDatabaseUsersContainerProgress 'Microsoft.DocumentDb/databaseAc
           [
             {
               order: 'ascending'
-              path: '/userId'
-            }
-            {
-              order: 'ascending'
-              path: '/testId'
+              path: '/userTestId'
             }
             {
               order: 'ascending'
@@ -267,7 +263,7 @@ resource cosmosDBDatabaseUsersContainerProgress 'Microsoft.DocumentDb/databaseAc
         ]
       }
       partitionKey: {
-        paths: ['/testId']
+        paths: ['/userTestId']
       }
     }
   }
