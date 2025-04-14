@@ -248,24 +248,6 @@ resource cosmosDBDatabaseUsersContainerProgress 'Microsoft.DocumentDb/databaseAc
   properties: {
     resource: {
       id: cosmosDBContainerNames.progress
-      indexingPolicy: {
-        compositeIndexes: [
-          [
-            {
-              order: 'ascending'
-              path: '/userId'
-            }
-            {
-              order: 'ascending'
-              path: '/testId'
-            }
-            {
-              order: 'ascending'
-              path: '/questionNumber'
-            }
-          ]
-        ]
-      }
       partitionKey: {
         paths: ['/testId']
       }
