@@ -101,19 +101,7 @@ class TestCreateDatabasesAndContainers(unittest.TestCase):
                 ),
                 call(
                     id="Progress",
-                    partition_key=PartitionKey(path="/userId"),
-                    # Azure Cosmos DBでは複合インデックスのインデックスポリシーをサポートするが
-                    # 2024/11/24現在、Azure Cosmos DB Linux-based Emulator (preview)では未サポートのため
-                    # そのインデックスポリシーを定義しない
-                    # indexing_policy={
-                    #     "compositeIndexes": [
-                    #         [
-                    #             {"path": "/userId", "order": "ascending"},
-                    #             {"path": "/testId", "order": "ascending"},
-                    #             {"path": "/questionNumber", "order": "ascending"},
-                    #         ]
-                    #     ]
-                    # },
+                    partition_key=PartitionKey(path="/testId"),
                 ),
             ],
             any_order=True,
