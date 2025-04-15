@@ -65,10 +65,10 @@ def get_question(req: func.HttpRequest) -> func.HttpResponse:
             container_name="Question",
         )
         try:
-            result: Question = container.read_item(
+            item: Question = container.read_item(
                 item=f"{test_id}_{question_number}", partition_key=test_id
             )
-            logging.info({"item": result})
+            logging.info({"item": item})
         except CosmosResourceNotFoundError:
             return func.HttpResponse(body="Not Found Question", status_code=404)
 
@@ -78,34 +78,34 @@ def get_question(req: func.HttpRequest) -> func.HttpResponse:
                 {
                     "sentence": subject,
                     "isIndicatedImg": bool(
-                        result.get("indicateSubjectImgIdxes")
-                        and idx in result["indicateSubjectImgIdxes"]
+                        item.get("indicateSubjectImgIdxes")
+                        and idx in item["indicateSubjectImgIdxes"]
                     ),
                     "isEscapedTranslation": bool(
-                        result.get("escapeTranslatedIdxes")
-                        and result["escapeTranslatedIdxes"].get("subjects")
-                        and idx in result["escapeTranslatedIdxes"]["subjects"]
+                        item.get("escapeTranslatedIdxes")
+                        and item["escapeTranslatedIdxes"].get("subjects")
+                        and idx in item["escapeTranslatedIdxes"]["subjects"]
                     ),
                 }
-                for idx, subject in enumerate(result["subjects"])
+                for idx, subject in enumerate(item["subjects"])
             ],
             "choices": [
                 {
                     "sentence": choice,
                     "img": (
-                        result.get("indicateChoiceImgs")[idx]
-                        if result.get("indicateChoiceImgs")
+                        item.get("indicateChoiceImgs")[idx]
+                        if item.get("indicateChoiceImgs")
                         else None
                     ),
                     "isEscapedTranslation": bool(
-                        result.get("escapeTranslatedIdxes")
-                        and result["escapeTranslatedIdxes"].get("choices")
-                        and idx in result["escapeTranslatedIdxes"]["choices"]
+                        item.get("escapeTranslatedIdxes")
+                        and item["escapeTranslatedIdxes"].get("choices")
+                        and idx in item["escapeTranslatedIdxes"]["choices"]
                     ),
                 }
-                for idx, choice in enumerate(result["choices"])
+                for idx, choice in enumerate(item["choices"])
             ],
-            "isMultiplied": result["isMultiplied"],
+            "isMultiplied": item["isMultiplied"],
         }
         logging.info({"body": body})
 
