@@ -7,6 +7,7 @@ from typing import List
 
 import azure.functions as func
 from azure.cosmos import ContainerProxy
+from azure.cosmos.exceptions import CosmosResourceNotFoundError
 from type.cosmos import Progress, ProgressElement
 from type.request import PostProgressReq
 from util.cosmos import get_read_write_container
@@ -168,9 +169,17 @@ def post_progress(req: func.HttpRequest) -> func.HttpResponse:
         )
 
         # 指定した問題番号が、最後に保存した回答履歴の問題番号、またはその次の問題番号であるかのチェック
-        item: Progress = container.read_item(
-            item=f"{user_id}_{test_id}", partition_key=test_id
-        )
+        try:
+            item: Progress = container.read_item(
+                item=f"{user_id}_{test_id}", partition_key=test_id
+            )
+        except CosmosResourceNotFoundError:
+            item: Progress = {
+                "id": f"{user_id}_{test_id}",
+                "userId": user_id,
+                "testId": test_id,
+                "progresses": [],
+            }
         inserted_progress_num: int = len(item["progresses"])
         logging.info({"inserted_progress_num": inserted_progress_num})
         if question_number not in (inserted_progress_num, inserted_progress_num + 1):
