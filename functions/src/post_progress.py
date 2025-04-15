@@ -210,7 +210,7 @@ def post_progress(req: func.HttpRequest) -> func.HttpResponse:
         # Progressの項目をaupsert
         container.upsert_item(
             {
-                "id": f"{user_id}_{test_id}_{question_number}",
+                "id": f"{user_id}_{test_id}",
                 "userId": user_id,
                 "testId": test_id,
                 "progresses": updated_progresses,

@@ -350,7 +350,7 @@ class TestPostProgress(unittest.TestCase):
         )
         mock_container.upsert_item.assert_called_once_with(
             {
-                "id": "user-id_test-id_2",
+                "id": "user-id_test-id",
                 "userId": "user-id",
                 "testId": "test-id",
                 "progresses": [
@@ -390,7 +390,7 @@ class TestPostProgress(unittest.TestCase):
     @patch("src.post_progress.validate_body")
     @patch("src.post_progress.get_read_write_container")
     @patch("src.post_progress.logging")
-    def test_post_progress_with_same_question_number(
+    def test_post_progress_with_same_question_number(  # pylint: disable=too-many-arguments, too-many-positional-arguments
         self,
         mock_logging,
         mock_get_read_write_container,
@@ -442,7 +442,7 @@ class TestPostProgress(unittest.TestCase):
         self.assertEqual(res.get_body().decode("utf-8"), "OK")
         mock_container.upsert_item.assert_called_once_with(
             {
-                "id": "user-id_test-id_1",
+                "id": "user-id_test-id",
                 "userId": "user-id",
                 "testId": "test-id",
                 "progresses": [
@@ -468,6 +468,88 @@ class TestPostProgress(unittest.TestCase):
                 call({"inserted_progress_num": 1}),
             ]
         )
+
+    @patch("src.post_progress.validate_route_params")
+    @patch("src.post_progress.validate_headers")
+    @patch("src.post_progress.validate_body")
+    @patch("src.post_progress.get_read_write_container")
+    @patch("src.post_progress.logging")
+    def test_post_progress_with_new_user(  # pylint: disable=too-many-arguments, too-many-positional-arguments
+        self,
+        mock_logging,
+        mock_get_read_write_container,
+        mock_validate_body,
+        mock_validate_headers,
+        mock_validate_route_params,
+    ):
+        """何も回答履歴を保存していない場合に、レスポンスが正常であることのテスト"""
+
+        mock_validate_route_params.return_value = []
+        mock_validate_headers.return_value = []
+        mock_validate_body.return_value = []
+        mock_container = MagicMock()
+        mock_get_read_write_container.return_value = mock_container
+        mock_container.read_item.side_effect = CosmosResourceNotFoundError
+
+        request_body = {
+            "isCorrect": True,
+            "choiceSentences": ["選択肢1", "選択肢2"],
+            "choiceImgs": [None, "https://example.com/img.png"],
+            "selectedIdxes": [0],
+            "correctIdxes": [0],
+        }
+        request_body_encoded = json.dumps(request_body).encode("utf-8")
+        req = func.HttpRequest(
+            method="POST",
+            body=request_body_encoded,
+            url="/api/tests/test-id/progresses/1",
+            route_params={"testId": "test-id", "questionNumber": "1"},
+            headers={"X-User-Id": "user-id"},
+        )
+
+        res = post_progress(req)
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.get_body().decode("utf-8"), "OK")
+        mock_validate_route_params.assert_called_once_with(req.route_params)
+        mock_validate_headers.assert_called_once_with(req.headers)
+        mock_validate_body.assert_called_once_with(request_body_encoded)
+        mock_get_read_write_container.assert_called_once_with(
+            database_name="Users",
+            container_name="Progress",
+        )
+        mock_container.read_item.assert_called_once_with(
+            item="user-id_test-id", partition_key="test-id"
+        )
+        mock_container.upsert_item.assert_called_once_with(
+            {
+                "id": "user-id_test-id",
+                "userId": "user-id",
+                "testId": "test-id",
+                "progresses": [
+                    {
+                        "isCorrect": True,
+                        "choiceSentences": ["選択肢1", "選択肢2"],
+                        "choiceImgs": [None, "https://example.com/img.png"],
+                        "selectedIdxes": [0],
+                        "correctIdxes": [0],
+                    }
+                ],
+            }
+        )
+        mock_logging.info.assert_has_calls(
+            [
+                call(
+                    {
+                        "question_number": 1,
+                        "test_id": "test-id",
+                        "user_id": "user-id",
+                    }
+                ),
+                call({"inserted_progress_num": 0}),
+            ]
+        )
+        mock_logging.error.assert_not_called()
 
     @patch("src.post_progress.validate_route_params")
     @patch("src.post_progress.validate_headers")
@@ -662,89 +744,6 @@ class TestPostProgress(unittest.TestCase):
                     }
                 ),
                 call({"inserted_progress_num": 1}),
-            ]
-        )
-        mock_logging.error.assert_not_called()
-
-    @patch("src.post_progress.validate_route_params")
-    @patch("src.post_progress.validate_headers")
-    @patch("src.post_progress.validate_body")
-    @patch("src.post_progress.get_read_write_container")
-    @patch("src.post_progress.logging")
-    def test_post_progress_with_new_user(  # pylint: disable=too-many-arguments, too-many-positional-arguments
-        self,
-        mock_logging,
-        mock_get_read_write_container,
-        mock_validate_body,
-        mock_validate_headers,
-        mock_validate_route_params,
-    ):
-        """新規ユーザーの場合のテスト、CosmosResourceNotFoundErrorが発生するケース"""
-
-        mock_validate_route_params.return_value = []
-        mock_validate_headers.return_value = []
-        mock_validate_body.return_value = []
-        mock_container = MagicMock()
-        mock_get_read_write_container.return_value = mock_container
-        # リソースが見つからない例外をシミュレート
-        mock_container.read_item.side_effect = CosmosResourceNotFoundError
-
-        request_body = {
-            "isCorrect": True,
-            "choiceSentences": ["選択肢1", "選択肢2"],
-            "choiceImgs": [None, "https://example.com/img.png"],
-            "selectedIdxes": [0],
-            "correctIdxes": [0],
-        }
-        request_body_encoded = json.dumps(request_body).encode("utf-8")
-        req = func.HttpRequest(
-            method="POST",
-            body=request_body_encoded,
-            url="/api/tests/test-id/progresses/1",
-            route_params={"testId": "test-id", "questionNumber": "1"},
-            headers={"X-User-Id": "user-id"},
-        )
-
-        res = post_progress(req)
-
-        self.assertEqual(res.status_code, 200)
-        self.assertEqual(res.get_body().decode("utf-8"), "OK")
-        mock_validate_route_params.assert_called_once_with(req.route_params)
-        mock_validate_headers.assert_called_once_with(req.headers)
-        mock_validate_body.assert_called_once_with(request_body_encoded)
-        mock_get_read_write_container.assert_called_once_with(
-            database_name="Users",
-            container_name="Progress",
-        )
-        mock_container.read_item.assert_called_once_with(
-            item="user-id_test-id", partition_key="test-id"
-        )
-        mock_container.upsert_item.assert_called_once_with(
-            {
-                "id": "user-id_test-id_1",
-                "userId": "user-id",
-                "testId": "test-id",
-                "progresses": [
-                    {
-                        "isCorrect": True,
-                        "choiceSentences": ["選択肢1", "選択肢2"],
-                        "choiceImgs": [None, "https://example.com/img.png"],
-                        "selectedIdxes": [0],
-                        "correctIdxes": [0],
-                    }
-                ],
-            }
-        )
-        mock_logging.info.assert_has_calls(
-            [
-                call(
-                    {
-                        "question_number": 1,
-                        "test_id": "test-id",
-                        "user_id": "user-id",
-                    }
-                ),
-                call({"inserted_progress_num": 0}),
             ]
         )
         mock_logging.error.assert_not_called()
