@@ -287,7 +287,7 @@ class TestPostProgress(unittest.TestCase):
     @patch("src.post_progress.validate_body")
     @patch("src.post_progress.get_read_write_container")
     @patch("src.post_progress.logging")
-    def test_post_progress_success(  # pylint: disable=too-many-arguments, too-many-positional-arguments
+    def test_post_progress_success_with_next_question_number(  # pylint: disable=too-many-arguments, too-many-positional-arguments
         self,
         mock_logging,
         mock_get_read_write_container,
@@ -295,14 +295,27 @@ class TestPostProgress(unittest.TestCase):
         mock_validate_headers,
         mock_validate_route_params,
     ):
-        """レスポンスが正常であることのテスト"""
+        """指定した問題番号が最後に保存した問題番号の次の問題番号である場合にて、レスポンスが正常であることのテスト"""
 
         mock_validate_route_params.return_value = []
         mock_validate_headers.return_value = []
         mock_validate_body.return_value = []
         mock_container = MagicMock()
         mock_get_read_write_container.return_value = mock_container
-        mock_container.query_items.return_value = [{"maxQuestionNumber": "2"}]
+        mock_container.read_item.return_value = {
+            "id": "user-id_test-id",
+            "userId": "user-id",
+            "testId": "test-id",
+            "progresses": [
+                {
+                    "isCorrect": True,
+                    "choiceSentences": ["選択肢A", "選択肢B"],
+                    "choiceImgs": [None, None],
+                    "selectedIdxes": [0],
+                    "correctIdxes": [0],
+                }
+            ],
+        }
 
         request_body = {
             "isCorrect": True,
@@ -315,10 +328,11 @@ class TestPostProgress(unittest.TestCase):
         req = func.HttpRequest(
             method="POST",
             body=request_body_encoded,
-            url="/api/tests/test-id/progresses/3",
-            route_params={"testId": "test-id", "questionNumber": "3"},
+            url="/api/tests/test-id/progresses/2",
+            route_params={"testId": "test-id", "questionNumber": "2"},
             headers={"X-User-Id": "user-id"},
         )
+
         res = post_progress(req)
 
         self.assertEqual(res.status_code, 200)
@@ -330,43 +344,115 @@ class TestPostProgress(unittest.TestCase):
             database_name="Users",
             container_name="Progress",
         )
-        mock_container.query_items.assert_called_once_with(
-            query=(
-                "SELECT MAX(c.questionNumber) as maxQuestionNumber "
-                "FROM c WHERE c.userId = @userId AND c.testId = @testId"
-            ),
-            parameters=[
-                {"name": "@userId", "value": "user-id"},
-                {"name": "@testId", "value": "test-id"},
-            ],
-            partition_key="test-id",
+        mock_container.read_item.assert_called_once_with(
+            item="user-id_test-id", partition_key="test-id"
         )
         mock_container.upsert_item.assert_called_once_with(
             {
-                "id": "user-id_test-id_3",
+                "id": "user-id_test-id_2",
                 "userId": "user-id",
                 "testId": "test-id",
-                "questionNumber": 3,
-                "isCorrect": True,
-                "choiceSentences": ["選択肢1", "選択肢2"],
-                "choiceImgs": [None, "https://example.com/img.png"],
-                "selectedIdxes": [0],
-                "correctIdxes": [0],
+                "progresses": [
+                    {
+                        "isCorrect": True,
+                        "choiceSentences": ["選択肢A", "選択肢B"],
+                        "choiceImgs": [None, None],
+                        "selectedIdxes": [0],
+                        "correctIdxes": [0],
+                    },
+                    {
+                        "isCorrect": True,
+                        "choiceSentences": ["選択肢1", "選択肢2"],
+                        "choiceImgs": [None, "https://example.com/img.png"],
+                        "selectedIdxes": [0],
+                        "correctIdxes": [0],
+                    },
+                ],
             }
         )
         mock_logging.info.assert_has_calls(
             [
                 call(
                     {
-                        "question_number": 3,
+                        "question_number": 2,
                         "test_id": "test-id",
                         "user_id": "user-id",
                     }
                 ),
-                call({"items": [{"maxQuestionNumber": "2"}]}),
+                call({"inserted_progress_num": 1}),
             ]
         )
         mock_logging.error.assert_not_called()
+
+    @patch("src.post_progress.validate_route_params")
+    @patch("src.post_progress.validate_headers")
+    @patch("src.post_progress.validate_body")
+    @patch("src.post_progress.get_read_write_container")
+    def test_post_progress_with_same_question_number(
+        self,
+        mock_get_read_write_container,
+        mock_validate_body,
+        mock_validate_headers,
+        mock_validate_route_params,
+    ):
+        """指定した問題番号が最後に保存した問題番号と同じ場合にて、レスポンスが正常であることのテスト"""
+
+        mock_validate_route_params.return_value = []
+        mock_validate_headers.return_value = []
+        mock_validate_body.return_value = []
+        mock_container = MagicMock()
+        mock_get_read_write_container.return_value = mock_container
+        mock_container.read_item.return_value = {
+            "id": "user-id_test-id",
+            "userId": "user-id",
+            "testId": "test-id",
+            "progresses": [
+                {
+                    "isCorrect": True,
+                    "choiceSentences": ["選択肢A", "選択肢B"],
+                    "choiceImgs": [None, None],
+                    "selectedIdxes": [0],
+                    "correctIdxes": [0],
+                }
+            ],
+        }
+
+        request_body = {
+            "isCorrect": False,
+            "choiceSentences": ["選択肢1", "選択肢2"],
+            "choiceImgs": [None, "https://example.com/img.png"],
+            "selectedIdxes": [1],
+            "correctIdxes": [0],
+        }
+        request_body_encoded = json.dumps(request_body).encode("utf-8")
+        req = func.HttpRequest(
+            method="POST",
+            body=request_body_encoded,
+            url="/api/tests/test-id/progresses/1",
+            route_params={"testId": "test-id", "questionNumber": "1"},
+            headers={"X-User-Id": "user-id"},
+        )
+
+        res = post_progress(req)
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.get_body().decode("utf-8"), "OK")
+        mock_container.upsert_item.assert_called_once_with(
+            {
+                "id": "user-id_test-id_1",
+                "userId": "user-id",
+                "testId": "test-id",
+                "progresses": [
+                    {
+                        "isCorrect": False,
+                        "choiceSentences": ["選択肢1", "選択肢2"],
+                        "choiceImgs": [None, "https://example.com/img.png"],
+                        "selectedIdxes": [1],
+                        "correctIdxes": [0],
+                    }
+                ],
+            }
+        )
 
     @patch("src.post_progress.validate_route_params")
     @patch("src.post_progress.validate_headers")
@@ -400,6 +486,7 @@ class TestPostProgress(unittest.TestCase):
             route_params={"testId": "test-id", "questionNumber": "3"},
             headers={"X-User-Id": "user-id"},
         )
+
         res = post_progress(req)
 
         self.assertEqual(res.status_code, 400)
@@ -430,7 +517,12 @@ class TestPostProgress(unittest.TestCase):
         mock_validate_body.return_value = []
         mock_container = MagicMock()
         mock_get_read_write_container.return_value = mock_container
-        mock_container.query_items.return_value = [{"maxQuestionNumber": None}]
+        mock_container.read_item.return_value = {
+            "id": "user-id_test-id",
+            "userId": "user-id",
+            "testId": "test-id",
+            "progresses": [],
+        }
 
         request_body = {
             "isCorrect": True,
@@ -447,6 +539,7 @@ class TestPostProgress(unittest.TestCase):
             route_params={"testId": "test-id", "questionNumber": "3"},
             headers={"X-User-Id": "user-id"},
         )
+
         res = post_progress(req)
 
         self.assertEqual(res.status_code, 400)
@@ -458,16 +551,8 @@ class TestPostProgress(unittest.TestCase):
             database_name="Users",
             container_name="Progress",
         )
-        mock_container.query_items.assert_called_once_with(
-            query=(
-                "SELECT MAX(c.questionNumber) as maxQuestionNumber "
-                "FROM c WHERE c.userId = @userId AND c.testId = @testId"
-            ),
-            parameters=[
-                {"name": "@userId", "value": "user-id"},
-                {"name": "@testId", "value": "test-id"},
-            ],
-            partition_key="test-id",
+        mock_container.read_item.assert_called_once_with(
+            item="user-id_test-id", partition_key="test-id"
         )
         mock_container.upsert_item.assert_not_called()
         mock_logging.info.assert_has_calls(
@@ -479,7 +564,7 @@ class TestPostProgress(unittest.TestCase):
                         "user_id": "user-id",
                     }
                 ),
-                call({"items": [{"maxQuestionNumber": None}]}),
+                call({"inserted_progress_num": 0}),
             ]
         )
         mock_logging.error.assert_not_called()
@@ -504,7 +589,20 @@ class TestPostProgress(unittest.TestCase):
         mock_validate_body.return_value = []
         mock_container = MagicMock()
         mock_get_read_write_container.return_value = mock_container
-        mock_container.query_items.return_value = [{"maxQuestionNumber": "1"}]
+        mock_container.read_item.return_value = {
+            "id": "user-id_test-id",
+            "userId": "user-id",
+            "testId": "test-id",
+            "progresses": [
+                {
+                    "isCorrect": True,
+                    "choiceSentences": ["選択肢A", "選択肢B"],
+                    "choiceImgs": [None, None],
+                    "selectedIdxes": [0],
+                    "correctIdxes": [0],
+                }
+            ],
+        }
 
         request_body = {
             "isCorrect": True,
@@ -521,6 +619,7 @@ class TestPostProgress(unittest.TestCase):
             route_params={"testId": "test-id", "questionNumber": "3"},
             headers={"X-User-Id": "user-id"},
         )
+
         res = post_progress(req)
 
         self.assertEqual(res.status_code, 400)
@@ -534,16 +633,8 @@ class TestPostProgress(unittest.TestCase):
             database_name="Users",
             container_name="Progress",
         )
-        mock_container.query_items.assert_called_once_with(
-            query=(
-                "SELECT MAX(c.questionNumber) as maxQuestionNumber "
-                "FROM c WHERE c.userId = @userId AND c.testId = @testId"
-            ),
-            parameters=[
-                {"name": "@userId", "value": "user-id"},
-                {"name": "@testId", "value": "test-id"},
-            ],
-            partition_key="test-id",
+        mock_container.read_item.assert_called_once_with(
+            item="user-id_test-id", partition_key="test-id"
         )
         mock_container.upsert_item.assert_not_called()
         mock_logging.info.assert_has_calls(
@@ -555,7 +646,7 @@ class TestPostProgress(unittest.TestCase):
                         "user_id": "user-id",
                     }
                 ),
-                call({"items": [{"maxQuestionNumber": "1"}]}),
+                call({"inserted_progress_num": 1}),
             ]
         )
         mock_logging.error.assert_not_called()
@@ -595,6 +686,7 @@ class TestPostProgress(unittest.TestCase):
             route_params={"testId": "test-id", "questionNumber": "3"},
             headers={"X-User-Id": "user-id"},
         )
+
         res = post_progress(req)
 
         self.assertEqual(res.status_code, 500)

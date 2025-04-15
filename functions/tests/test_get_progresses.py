@@ -5,6 +5,7 @@ import unittest
 from unittest.mock import MagicMock, call, patch
 
 import azure.functions as func
+from azure.cosmos.exceptions import CosmosResourceNotFoundError
 from src.get_progresses import get_progresses, validate_request
 from type.response import GetProgressesRes
 
@@ -69,31 +70,28 @@ class TestGetProgresses(unittest.TestCase):
         mock_validate_request.return_value = None
         mock_container = MagicMock()
         mock_get_read_only_container.return_value = mock_container
-        items = [
-            {
-                "id": "user-id-1_test-id-1_1",
-                "userId": "user-id-1",
-                "testId": "test-id-1",
-                "questionNumber": 1,
-                "isCorrect": True,
-                "choiceSentences": ["選択肢1", "選択肢2"],
-                "choiceImgs": [None, "https://example.com/img.png"],
-                "selectedIdxes": [0],
-                "correctIdxes": [0],
-            },
-            {
-                "id": "user-id-1_test-id-1_2",
-                "userId": "user-id-1",
-                "testId": "test-id-1",
-                "questionNumber": 2,
-                "isCorrect": False,
-                "choiceSentences": ["選択肢A", "選択肢B"],
-                "choiceImgs": [None, None],
-                "selectedIdxes": [0],
-                "correctIdxes": [1],
-            },
-        ]
-        mock_container.query_items.return_value = items
+        mock_item = {
+            "id": "user-id-1_test-id-1",
+            "userId": "user-id-1",
+            "testId": "test-id-1",
+            "progresses": [
+                {
+                    "isCorrect": True,
+                    "choiceSentences": ["選択肢1", "選択肢2"],
+                    "choiceImgs": [None, "https://example.com/img.png"],
+                    "selectedIdxes": [0],
+                    "correctIdxes": [0],
+                },
+                {
+                    "isCorrect": False,
+                    "choiceSentences": ["選択肢A", "選択肢B"],
+                    "choiceImgs": [None, None],
+                    "selectedIdxes": [0],
+                    "correctIdxes": [1],
+                },
+            ],
+        }
+        mock_container.read_item.return_value = mock_item
 
         req = func.HttpRequest(
             method="GET",
@@ -128,21 +126,13 @@ class TestGetProgresses(unittest.TestCase):
         mock_get_read_only_container.assert_called_once_with(
             database_name="Users", container_name="Progress"
         )
-        mock_container.query_items.assert_called_once_with(
-            query=(
-                "SELECT * FROM c WHERE c.userId = @userId AND c.testId = @testId "
-                "ORDER BY c.questionNumber"
-            ),
-            parameters=[
-                {"name": "@userId", "value": "user-id-1"},
-                {"name": "@testId", "value": "test-id-1"},
-            ],
-            partition_key="test-id-1",
+        mock_container.read_item.assert_called_once_with(
+            item="user-id-1_test-id-1", partition_key="test-id-1"
         )
         mock_logging.info.assert_has_calls(
             [
                 call({"test_id": "test-id-1", "user_id": "user-id-1"}),
-                call({"items_count": 2}),
+                call({"item": mock_item}),
             ]
         )
         mock_logging.error.assert_not_called()
@@ -177,7 +167,7 @@ class TestGetProgresses(unittest.TestCase):
     @patch("src.get_progresses.validate_request")
     @patch("src.get_progresses.get_read_only_container")
     @patch("src.get_progresses.logging")
-    def test_get_progresses_empty_items(
+    def test_get_progresses_not_found(
         self,
         mock_logging,
         mock_get_read_only_container,
@@ -188,7 +178,7 @@ class TestGetProgresses(unittest.TestCase):
         mock_validate_request.return_value = None
         mock_container = MagicMock()
         mock_get_read_only_container.return_value = mock_container
-        mock_container.query_items.return_value = []
+        mock_container.read_item.side_effect = CosmosResourceNotFoundError
 
         req = func.HttpRequest(
             method="GET",
@@ -200,15 +190,13 @@ class TestGetProgresses(unittest.TestCase):
 
         resp = get_progresses(req)
 
-        self.assertEqual(resp.status_code, 200)
-        self.assertEqual(resp.mimetype, "application/json")
-        self.assertEqual(json.loads(resp.get_body()), [])
-        mock_container.query_items.assert_called_once()
-        mock_logging.info.assert_has_calls(
-            [
-                call({"test_id": "test-id-1", "user_id": "user-id-1"}),
-                call({"items_count": 0}),
-            ]
+        self.assertEqual(resp.status_code, 404)
+        self.assertEqual(resp.get_body(), b"Not Found Progress")
+        mock_container.read_item.assert_called_once_with(
+            item="user-id-1_test-id-1", partition_key="test-id-1"
+        )
+        mock_logging.info.assert_called_once_with(
+            {"test_id": "test-id-1", "user_id": "user-id-1"}
         )
         mock_logging.error.assert_not_called()
 
@@ -226,7 +214,7 @@ class TestGetProgresses(unittest.TestCase):
         mock_validate_request.return_value = None
         mock_container = MagicMock()
         mock_get_read_only_container.return_value = mock_container
-        mock_container.query_items.side_effect = Exception("Test Exception")
+        mock_container.read_item.side_effect = Exception("Test Exception")
 
         req = func.HttpRequest(
             method="GET",

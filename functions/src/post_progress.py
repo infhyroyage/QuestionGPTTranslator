@@ -7,6 +7,7 @@ from typing import List
 
 import azure.functions as func
 from azure.cosmos import ContainerProxy
+from type.cosmos import Progress, ProgressElement
 from type.request import PostProgressReq
 from util.cosmos import get_read_write_container
 
@@ -166,48 +167,44 @@ def post_progress(req: func.HttpRequest) -> func.HttpResponse:
             container_name="Progress",
         )
 
-        # テストID・ユーザーIDにおける、最後に保存した回答履歴の問題番号、または次の問題番号であるかのチェック
-        items: List[dict] = list(
-            container.query_items(
-                query=(
-                    "SELECT MAX(c.questionNumber) as maxQuestionNumber "
-                    "FROM c WHERE c.userId = @userId AND c.testId = @testId"
-                ),
-                parameters=[
-                    {"name": "@userId", "value": user_id},
-                    {"name": "@testId", "value": test_id},
-                ],
-                partition_key=test_id,
-            )
+        # 指定した問題番号が、最後に保存した回答履歴の問題番号、またはその次の問題番号であるかのチェック
+        item: Progress = container.read_item(
+            item=f"{user_id}_{test_id}", partition_key=test_id
         )
-        logging.info({"items": items})
-        max_question_number: int = (
-            # 何も解答履歴を保存していない場合、最後に保存した解答履歴の問題番号は0とみなす
-            0
-            if items[0].get("maxQuestionNumber") is None
-            else int(items[0].get("maxQuestionNumber"))
-        )
-        if question_number not in (max_question_number, max_question_number + 1):
+        inserted_progress_num: int = len(item["progresses"])
+        logging.info({"inserted_progress_num": inserted_progress_num})
+        if question_number not in (inserted_progress_num, inserted_progress_num + 1):
             body = (
-                f"questionNumber must be {max_question_number} or {max_question_number + 1}"
-                if max_question_number > 0
-                else f"questionNumber must be {max_question_number + 1}"
+                f"questionNumber must be {inserted_progress_num} or {inserted_progress_num + 1}"
+                if inserted_progress_num > 0
+                else f"questionNumber must be {inserted_progress_num + 1}"
             )
             return func.HttpResponse(body=body, status_code=400)
 
-        # Progressの項目を生成してupsert
         req_body: PostProgressReq = json.loads(req_body_encoded.decode("utf-8"))
+
+        # 指定した問題番号が、最後に保存した問題番号と同じ場合はupdate、
+        # その次の問題番号の場合はinsertするように、Progressコンテナーの項目を生成
+        updated_progress_element: ProgressElement = {
+            "isCorrect": req_body.get("isCorrect"),
+            "choiceSentences": req_body.get("choiceSentences"),
+            "choiceImgs": req_body.get("choiceImgs"),
+            "selectedIdxes": req_body.get("selectedIdxes"),
+            "correctIdxes": req_body.get("correctIdxes"),
+        }
+        updated_progresses: List[ProgressElement] = item["progresses"]
+        if question_number == inserted_progress_num:
+            updated_progresses[question_number - 1] = updated_progress_element
+        else:
+            updated_progresses.append(updated_progress_element)
+
+        # Progressの項目をaupsert
         container.upsert_item(
             {
                 "id": f"{user_id}_{test_id}_{question_number}",
                 "userId": user_id,
                 "testId": test_id,
-                "questionNumber": question_number,
-                "isCorrect": req_body.get("isCorrect"),
-                "choiceSentences": req_body.get("choiceSentences"),
-                "choiceImgs": req_body.get("choiceImgs"),
-                "selectedIdxes": req_body.get("selectedIdxes"),
-                "correctIdxes": req_body.get("correctIdxes"),
+                "progresses": updated_progresses,
             }
         )
 

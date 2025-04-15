@@ -2,11 +2,9 @@
 
 import logging
 import traceback
-from typing import Any, Dict, List, Tuple
 
 import azure.functions as func
 from azure.cosmos import ContainerProxy
-from type.cosmos import Progress
 from util.cosmos import get_read_write_container
 
 
@@ -65,42 +63,12 @@ def delete_progresses(req: func.HttpRequest) -> func.HttpResponse:
             }
         )
 
-        # Progressコンテナーのインスタンスを取得
+        # 削除対象の回答履歴を削除
         container: ContainerProxy = get_read_write_container(
             database_name="Users",
             container_name="Progress",
         )
-
-        # 削除対象の回答履歴を全取得
-        items: List[Progress] = list(
-            container.query_items(
-                query=(
-                    "SELECT c.id "
-                    "FROM c WHERE c.userId = @userId AND c.testId = @testId"
-                ),
-                parameters=[
-                    {"name": "@userId", "value": user_id},
-                    {"name": "@testId", "value": test_id},
-                ],
-                partition_key=test_id,
-            )
-        )
-        logging.info({"items": items})
-
-        # 削除対象の回答履歴が存在しない場合は、何もせず正常終了
-        if len(items) == 0:
-            return func.HttpResponse(
-                body="OK",
-                status_code=200,
-            )
-
-        # 削除対象の回答履歴を一括削除
-        batch_operations: List[Tuple[str, Tuple[str, ...], Dict[str, Any]]] = [
-            ("delete", (item["id"],), {}) for item in items
-        ]
-        container.execute_item_batch(
-            batch_operations=batch_operations, partition_key=test_id
-        )
+        container.delete_item(item=f"{user_id}_{test_id}", partition_key=test_id)
 
         return func.HttpResponse(
             body="OK",

@@ -3,13 +3,12 @@
 import json
 import logging
 import traceback
-from typing import List
 
 import azure.functions as func
 from azure.cosmos import ContainerProxy
-from type.cosmos import Progress as CosmosProgress
+from azure.cosmos.exceptions import CosmosResourceNotFoundError
+from type.cosmos import Progress
 from type.response import GetProgressesRes
-from type.response import Progress as ResponseProgress
 from util.cosmos import get_read_only_container
 
 
@@ -74,34 +73,27 @@ def get_progresses(req: func.HttpRequest) -> func.HttpResponse:
             container_name="Progress",
         )
 
-        # 指定されたテストIDとユーザーIDに関連する全ての進捗項目を取得
-        items: List[CosmosProgress] = list(
-            container.query_items(
-                query=(
-                    "SELECT * FROM c WHERE c.userId = @userId AND c.testId = @testId "
-                    "ORDER BY c.questionNumber"
-                ),
-                parameters=[
-                    {"name": "@userId", "value": user_id},
-                    {"name": "@testId", "value": test_id},
-                ],
-                partition_key=test_id,
+        # Progressコンテナーから項目取得
+        try:
+            item: Progress = container.read_item(
+                item=f"{user_id}_{test_id}", partition_key=test_id
             )
-        )
-        logging.info({"items_count": len(items)})
+        except CosmosResourceNotFoundError:
+            return func.HttpResponse(body="Not Found Progress", status_code=404)
+        logging.info({"item": item})
 
         # レスポンス整形
-        body: GetProgressesRes = []
-        for item in items:
-            progress: ResponseProgress = {
-                "isCorrect": item["isCorrect"],
-                "choiceSentences": item["choiceSentences"],
-                "choiceImgs": item["choiceImgs"],
-                "selectedIdxes": item["selectedIdxes"],
-                "correctIdxes": item["correctIdxes"],
+        body: GetProgressesRes = [
+            {
+                "isCorrect": progress["isCorrect"],
+                "choiceSentences": progress["choiceSentences"],
+                "choiceImgs": progress["choiceImgs"],
+                "selectedIdxes": progress["selectedIdxes"],
+                "correctIdxes": progress["correctIdxes"],
             }
-
-            body.append(progress)
+            for progress in item["progresses"]
+        ]
+        logging.info({"body": body})
 
         return func.HttpResponse(
             body=json.dumps(body),

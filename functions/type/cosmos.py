@@ -16,6 +16,18 @@ class Answer(TypedDict):
     testId: str
 
 
+class ProgressElement(TypedDict):
+    """
+    Progressコンテナーのprogressesフィールドの要素の型
+    """
+
+    isCorrect: bool
+    choiceSentences: List[str]
+    choiceImgs: List[Optional[str]]
+    selectedIdxes: List[int]
+    correctIdxes: List[int]
+
+
 class Progress(TypedDict):
     """
     Progressコンテナーの項目の型
@@ -24,12 +36,7 @@ class Progress(TypedDict):
     id: str
     userId: str
     testId: str
-    questionNumber: int
-    isCorrect: bool
-    choiceSentences: List[str]
-    choiceImgs: List[Optional[str]]
-    selectedIdxes: List[int]
-    correctIdxes: List[int]
+    progresses: List[ProgressElement]
 
 
 class EscapeTranslatedIdxes(TypedDict, total=False):
