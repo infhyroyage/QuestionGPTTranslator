@@ -24,6 +24,17 @@ class GetAnswerRes(TypedDict):
     """
 
 
+class GetFavoriteRes(TypedDict):
+    """
+    [GET] /tests/{testId}/favorites/{questionNumber} のレスポンスボディの型
+    """
+
+    isFavorite: bool
+    """
+    お気に入りの場合はtrue、そうでない場合はfalse
+    """
+
+
 class GetHealthcheckRes(TypedDict):
     """
     [GET] /healthcheck のレスポンスボディの型

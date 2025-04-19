@@ -248,6 +248,64 @@ paths:
             application/json:
               schema:
                 type: string
+    get:
+      summary: お気に入り情報取得API
+      description: 指定したテストID・問題番号・ユーザーIDでのお気に入り情報を取得します
+      operationId: get-favorite
+      parameters:
+        - name: testId
+          in: path
+          description: テストID
+          required: true
+          schema:
+            type: string
+        - name: questionNumber
+          in: path
+          description: 問題番号
+          required: true
+          schema:
+            type: integer
+        - name: X-Access-Token
+          in: header
+          description: Microsoft ID Platformから発行されたアクセストークン
+          required: true
+          schema:
+            type: string
+        - name: X-User-Id
+          in: header
+          description: ユーザーID
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: サーバー処理が正常終了しました
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  isFavorite:
+                    type: boolean
+                    description: お気に入りの場合はtrue、そうでない場合はfalse
+        "400":
+          description: リクエストパラメーターが不正です
+          content:
+            application/json:
+              schema:
+                type: string
+        "404":
+          description: 指定したお気に入り情報が存在しません
+          content:
+            application/json:
+              schema:
+                type: string
+        "500":
+          description: サーバー処理が異常終了しました
+          content:
+            application/json:
+              schema:
+                type: string
   /tests/{testId}/progresses:
     get:
       summary: 回答履歴一覧取得API
