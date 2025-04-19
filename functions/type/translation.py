@@ -9,7 +9,14 @@ class DeepLTranslation(TypedDict):
     """
 
     detected_source_language: str
+    """
+    DeepLが検出した言語コード
+    """
+
     text: str
+    """
+    DeepLで翻訳した文章
+    """
 
 
 class DeepLRes(TypedDict):
@@ -18,6 +25,9 @@ class DeepLRes(TypedDict):
     """
 
     translations: List[DeepLTranslation]
+    """
+    DeepLの翻訳結果
+    """
 
 
 class AzureTranslatorTranslationsItem(TypedDict):
@@ -26,7 +36,14 @@ class AzureTranslatorTranslationsItem(TypedDict):
     """
 
     text: str
+    """
+    Azure Translatorで翻訳した文章
+    """
+
     to: str
+    """
+    Azure Translatorが検出した言語コード
+    """
 
 
 class AzureTranslatorTranslations(TypedDict):
@@ -35,6 +52,9 @@ class AzureTranslatorTranslations(TypedDict):
     """
 
     translations: List[AzureTranslatorTranslationsItem]
+    """
+    Azure Translatorの翻訳結果
+    """
 
 
 class AzureTranslatorRes(TypedDict):
@@ -43,3 +63,6 @@ class AzureTranslatorRes(TypedDict):
     """
 
     __root__: List[AzureTranslatorTranslations]
+    """
+    Azure Translatorの翻訳結果
+    """

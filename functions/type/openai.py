@@ -11,4 +11,11 @@ class CorrectAnswers(TypedDict):
     """
 
     correct_indexes: list[int]
+    """
+    正解の選択肢のインデックス
+    """
+
     explanations: list[str]
+    """
+    各選択肢の正解/不正解の理由
+    """

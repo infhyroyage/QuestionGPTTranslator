@@ -9,9 +9,36 @@ class MessageAnswer(TypedDict):
     """
 
     testId: str
+    """
+    テストID
+    """
+
     questionNumber: int
+    """
+    問題番号
+    """
+
     subjects: List[str]
+    """
+    各問題文
+    """
+
     choices: List[str]
+    """
+    各選択肢の文
+    """
+
     correctIdxes: List[int]
+    """
+    正解の選択肢のインデックス
+    """
+
     explanations: List[str]
+    """
+    各選択肢の正解/不正解の理由
+    """
+
     communityVotes: List[str]
+    """
+    コミュニティ回答割合
+    """

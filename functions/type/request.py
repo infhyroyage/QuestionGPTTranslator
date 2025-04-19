@@ -9,6 +9,9 @@ class PutEn2JaReq(TypedDict):
     """
 
     __root__: List[str]
+    """
+    英語の各文章
+    """
 
 
 class PostProgressReq(TypedDict):
@@ -17,7 +20,26 @@ class PostProgressReq(TypedDict):
     """
 
     isCorrect: bool
+    """
+    正解の場合はtrue、不正解の場合はfalse
+    """
+
     choiceSentences: List[str]
+    """
+    選択肢の文
+    """
+
     choiceImgs: List[Optional[str]]
+    """
+    選択肢の文に続く画像URL(画像がない場合はNone)
+    """
+
     selectedIdxes: List[int]
+    """
+    選択した選択肢のインデックス
+    """
+
     correctIdxes: List[int]
+    """
+    正解の選択肢のインデックス
+    """
