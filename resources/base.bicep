@@ -212,13 +212,10 @@ resource cosmosDBDatabaseUsersContainerFavorite 'Microsoft.DocumentDb/databaseAc
     resource: {
       id: cosmosDBContainerNames.favorite
       indexingPolicy: {
-        compositeIndexes: [
-          [
-            {
-              order: 'ascending'
-              path: '/questionNumber'
-            }
-          ]
+        includedPaths: [
+          {
+            path: '/questionNumber/?'
+          }
         ]
       }
       partitionKey: {
