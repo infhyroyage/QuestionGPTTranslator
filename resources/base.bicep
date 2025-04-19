@@ -26,6 +26,7 @@ var apimNamedValuesNames = {
 
 var cosmosDBContainerNames = {
   answer: 'Answer'
+  favorite: 'Favorite'
   progress: 'Progress'
   question: 'Question'
   test: 'Test'
@@ -192,6 +193,54 @@ resource cosmosDBDatabaseUsers 'Microsoft.DocumentDb/databaseAccounts/sqlDatabas
     }
   }
 }
+resource cosmosDBDatabaseUsersContainerAnswer 'Microsoft.DocumentDb/databaseAccounts/sqlDatabases/containers@2023-04-15' = {
+  parent: cosmosDBDatabaseUsers
+  name: cosmosDBContainerNames.answer
+  properties: {
+    resource: {
+      id: cosmosDBContainerNames.answer
+      partitionKey: {
+        paths: ['/testId']
+      }
+    }
+  }
+}
+resource cosmosDBDatabaseUsersContainerFavorite 'Microsoft.DocumentDb/databaseAccounts/sqlDatabases/containers@2023-04-15' = {
+  parent: cosmosDBDatabaseUsers
+  name: cosmosDBContainerNames.favorite
+  properties: {
+    resource: {
+      id: cosmosDBContainerNames.favorite
+      partitionKey: {
+        paths: ['/testId']
+      }
+    }
+  }
+}
+resource cosmosDBDatabaseUsersContainerProgress 'Microsoft.DocumentDb/databaseAccounts/sqlDatabases/containers@2023-04-15' = {
+  parent: cosmosDBDatabaseUsers
+  name: cosmosDBContainerNames.progress
+  properties: {
+    resource: {
+      id: cosmosDBContainerNames.progress
+      partitionKey: {
+        paths: ['/testId']
+      }
+    }
+  }
+}
+resource cosmosDBDatabaseUsersContainerQuestion 'Microsoft.DocumentDb/databaseAccounts/sqlDatabases/containers@2023-04-15' = {
+  parent: cosmosDBDatabaseUsers
+  name: cosmosDBContainerNames.question
+  properties: {
+    resource: {
+      id: cosmosDBContainerNames.question
+      partitionKey: {
+        paths: ['/testId']
+      }
+    }
+  }
+}
 resource cosmosDBDatabaseUsersContainerTest 'Microsoft.DocumentDb/databaseAccounts/sqlDatabases/containers@2023-04-15' = {
   parent: cosmosDBDatabaseUsers
   name: cosmosDBContainerNames.test
@@ -214,42 +263,6 @@ resource cosmosDBDatabaseUsersContainerTest 'Microsoft.DocumentDb/databaseAccoun
       }
       partitionKey: {
         paths: ['/courseName']
-      }
-    }
-  }
-}
-resource cosmosDBDatabaseUsersContainerQuestion 'Microsoft.DocumentDb/databaseAccounts/sqlDatabases/containers@2023-04-15' = {
-  parent: cosmosDBDatabaseUsers
-  name: cosmosDBContainerNames.question
-  properties: {
-    resource: {
-      id: cosmosDBContainerNames.question
-      partitionKey: {
-        paths: ['/testId']
-      }
-    }
-  }
-}
-resource cosmosDBDatabaseUsersContainerAnswer 'Microsoft.DocumentDb/databaseAccounts/sqlDatabases/containers@2023-04-15' = {
-  parent: cosmosDBDatabaseUsers
-  name: cosmosDBContainerNames.answer
-  properties: {
-    resource: {
-      id: cosmosDBContainerNames.answer
-      partitionKey: {
-        paths: ['/testId']
-      }
-    }
-  }
-}
-resource cosmosDBDatabaseUsersContainerProgress 'Microsoft.DocumentDb/databaseAccounts/sqlDatabases/containers@2023-04-15' = {
-  parent: cosmosDBDatabaseUsers
-  name: cosmosDBContainerNames.progress
-  properties: {
-    resource: {
-      id: cosmosDBContainerNames.progress
-      partitionKey: {
-        paths: ['/testId']
       }
     }
   }
