@@ -1,4 +1,4 @@
-"""post_progress関数のテスト"""
+"""[POST] /tests/{testId}/progresses/{questionNumber} のテスト"""
 
 import json
 import unittest

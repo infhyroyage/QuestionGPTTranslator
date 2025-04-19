@@ -43,6 +43,28 @@ def create_databases_and_containers() -> None:
     # Usersデータベース
     database_res = client.create_database_if_not_exists(id="Users")
 
+    # Answerコンテナー
+    database_res.create_container_if_not_exists(
+        id="Answer", partition_key=PartitionKey(path="/testId")
+    )
+
+    # Favoriteコンテナー
+    database_res.create_container_if_not_exists(
+        id="Favorite",
+        partition_key=PartitionKey(path="/testId"),
+    )
+
+    # Progressコンテナー
+    database_res.create_container_if_not_exists(
+        id="Progress",
+        partition_key=PartitionKey(path="/testId"),
+    )
+
+    # Questionコンテナー
+    database_res.create_container_if_not_exists(
+        id="Question", partition_key=PartitionKey(path="/testId")
+    )
+
     # Testコンテナー
     database_res.create_container_if_not_exists(
         id="Test",
@@ -58,22 +80,6 @@ def create_databases_and_containers() -> None:
         #         ]
         #     ]
         # },
-    )
-
-    # Questionコンテナー
-    database_res.create_container_if_not_exists(
-        id="Question", partition_key=PartitionKey(path="/testId")
-    )
-
-    # Answerコンテナー
-    database_res.create_container_if_not_exists(
-        id="Answer", partition_key=PartitionKey(path="/testId")
-    )
-
-    # Progressコンテナー
-    database_res.create_container_if_not_exists(
-        id="Progress",
-        partition_key=PartitionKey(path="/testId"),
     )
 
 

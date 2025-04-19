@@ -39,6 +39,37 @@ class Answer(TypedDict):
     """
 
 
+class Favorite(TypedDict):
+    """
+    Favoriteコンテナーの項目の型
+    """
+
+    id: str
+    """
+    ドキュメントID
+    """
+
+    userId: str
+    """
+    ユーザーID
+    """
+
+    testId: str
+    """
+    テストID
+    """
+
+    questionNumber: int
+    """
+    問題番号
+    """
+
+    isFavorite: bool
+    """
+    お気に入りの場合はtrue、そうでない場合はfalse
+    """
+
+
 class ProgressElement(TypedDict):
     """
     Progressコンテナーのprogressesフィールドの要素の型

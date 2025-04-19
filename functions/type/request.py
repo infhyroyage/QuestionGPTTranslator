@@ -14,6 +14,17 @@ class PutEn2JaReq(TypedDict):
     """
 
 
+class PostFavoriteReq(TypedDict):
+    """
+    [POST] /tests/{testId}/favorites/{questionNumber} のリクエストボディの型
+    """
+
+    isFavorite: bool
+    """
+    お気に入りの場合はtrue、そうでない場合はfalse
+    """
+
+
 class PostProgressReq(TypedDict):
     """
     [POST] /tests/{testId}/progresses/{questionNumber} のリクエストボディの型

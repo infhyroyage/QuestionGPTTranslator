@@ -48,87 +48,6 @@ paths:
             application/json:
               schema:
                 type: string
-  /tests/{testId}/questions/{questionNumber}:
-    get:
-      summary: 問題・選択肢取得API
-      description: 指定したテストID・問題番号での問題・選択肢を取得します
-      operationId: tests-testid-questions-questionnumber
-      parameters:
-        - name: testId
-          in: path
-          description: testId
-          required: true
-          schema:
-            type: string
-        - name: questionNumber
-          in: path
-          description: questionNumber
-          required: true
-          schema:
-            type: integer
-        - name: X-Access-Token
-          in: header
-          description: Microsoft ID Platformから発行されたアクセストークン
-          required: true
-          schema:
-            type: string
-      responses:
-        "200":
-          description: サーバー処理が正常終了しました
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  subjects:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        sentence:
-                          type: string
-                        isIndicatedImg:
-                          type: boolean
-                        isEscapedTranslation:
-                          type: boolean
-                  choices:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        sentence:
-                          type: string
-                        img:
-                          type: string
-                          nullable: true
-                        isEscapedTranslation:
-                          type: boolean
-                  isMultiplied:
-                    type: boolean
-        "400":
-          description: リクエストパラメーターが不正です
-          content:
-            application/json:
-              schema:
-                type: string
-        "401":
-          description: アクセスが拒否されました
-          content:
-            application/json:
-              schema:
-                type: string
-        "404":
-          description: 指定した問題・選択肢が存在しません
-          content:
-            application/json:
-              schema:
-                type: string
-        "500":
-          description: サーバー処理が異常終了しました
-          content:
-            application/json:
-              schema:
-                type: string
   /tests/{testId}/answers/{questionNumber}:
     post:
       summary: 回答生成API
@@ -257,6 +176,68 @@ paths:
                 type: string
         "404":
           description: 指定した回答が存在しません
+          content:
+            application/json:
+              schema:
+                type: string
+        "500":
+          description: サーバー処理が異常終了しました
+          content:
+            application/json:
+              schema:
+                type: string
+  /tests/{testId}/favorites/{questionNumber}:
+    post:
+      summary: お気に入り情報保存API
+      description: 指定したテストID・問題番号・ユーザーIDでのお気に入り情報を保存します
+      operationId: post-favorite
+      parameters:
+        - name: testId
+          in: path
+          description: テストID
+          required: true
+          schema:
+            type: string
+        - name: questionNumber
+          in: path
+          description: 問題番号
+          required: true
+          schema:
+            type: integer
+        - name: X-Access-Token
+          in: header
+          description: Microsoft ID Platformから発行されたアクセストークン
+          required: true
+          schema:
+            type: string
+        - name: X-User-Id
+          in: header
+          description: ユーザーID
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: 保存するお気に入りの情報
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - isFavorite
+              properties:
+                isFavorite:
+                  type: boolean
+                  description: お気に入りの場合はtrue、そうでない場合はfalse
+        required: true
+      responses:
+        "200":
+          description: サーバー処理が正常終了しました
+          content:
+            application/json:
+              schema:
+                type: string
+        "400":
+          description: リクエストパラメーターが不正です
           content:
             application/json:
               schema:
@@ -465,6 +446,87 @@ paths:
                 type: string
         "400":
           description: リクエストパラメーターが不正です
+          content:
+            application/json:
+              schema:
+                type: string
+        "500":
+          description: サーバー処理が異常終了しました
+          content:
+            application/json:
+              schema:
+                type: string
+  /tests/{testId}/questions/{questionNumber}:
+    get:
+      summary: 問題・選択肢取得API
+      description: 指定したテストID・問題番号での問題・選択肢を取得します
+      operationId: tests-testid-questions-questionnumber
+      parameters:
+        - name: testId
+          in: path
+          description: testId
+          required: true
+          schema:
+            type: string
+        - name: questionNumber
+          in: path
+          description: questionNumber
+          required: true
+          schema:
+            type: integer
+        - name: X-Access-Token
+          in: header
+          description: Microsoft ID Platformから発行されたアクセストークン
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: サーバー処理が正常終了しました
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  subjects:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        sentence:
+                          type: string
+                        isIndicatedImg:
+                          type: boolean
+                        isEscapedTranslation:
+                          type: boolean
+                  choices:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        sentence:
+                          type: string
+                        img:
+                          type: string
+                          nullable: true
+                        isEscapedTranslation:
+                          type: boolean
+                  isMultiplied:
+                    type: boolean
+        "400":
+          description: リクエストパラメーターが不正です
+          content:
+            application/json:
+              schema:
+                type: string
+        "401":
+          description: アクセスが拒否されました
+          content:
+            application/json:
+              schema:
+                type: string
+        "404":
+          description: 指定した問題・選択肢が存在しません
           content:
             application/json:
               schema:
