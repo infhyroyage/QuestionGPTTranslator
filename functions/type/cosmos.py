@@ -10,7 +10,7 @@ class Answer(TypedDict):
 
     id: str
     """
-    ドキュメントID
+    ドキュメントID (= "{テストID}_{問題番号}")
     """
 
     questionNumber: int
@@ -46,7 +46,7 @@ class Favorite(TypedDict):
 
     id: str
     """
-    ドキュメントID
+    ドキュメントID (= "{ユーザーID}_{テストID}_{問題番号}")
     """
 
     userId: str
@@ -108,7 +108,7 @@ class Progress(TypedDict):
 
     id: str
     """
-    ドキュメントID
+    ドキュメントID (= "{テストID}_{ユーザーID}")
     """
 
     userId: str
@@ -150,7 +150,7 @@ class Question(TypedDict):
 
     id: str
     """
-    ドキュメントID
+    ドキュメントID (= "{テストID}_{問題番号}")
     """
 
     number: int
@@ -206,7 +206,7 @@ class Test(TypedDict):
 
     id: str
     """
-    ドキュメントID
+    テストID
     """
 
     courseName: str
