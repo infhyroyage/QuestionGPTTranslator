@@ -211,6 +211,16 @@ resource cosmosDBDatabaseUsersContainerFavorite 'Microsoft.DocumentDb/databaseAc
   properties: {
     resource: {
       id: cosmosDBContainerNames.favorite
+      indexingPolicy: {
+        compositeIndexes: [
+          [
+            {
+              order: 'ascending'
+              path: '/questionNumber'
+            }
+          ]
+        ]
+      }
       partitionKey: {
         paths: ['/testId']
       }
