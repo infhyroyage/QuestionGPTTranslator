@@ -342,7 +342,7 @@ def post_answer(req: func.HttpRequest) -> func.HttpResponse:
         queue_message_answer(
             {
                 "testId": test_id,
-                "questionNumber": question_number,
+                "questionNumber": int(question_number),
                 "subjects": item.get("subjects"),
                 "choices": item.get("choices"),
                 "correctIdxes": correct_answers["correct_indexes"],

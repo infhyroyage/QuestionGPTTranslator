@@ -581,7 +581,7 @@ class TestPostAnswer(unittest.TestCase):
         mock_queue_message_answer.assert_called_once_with(
             MessageAnswer(
                 testId="1",
-                questionNumber="1",
+                questionNumber=1,
                 subjects=["What is 2 + 2?"],
                 choices=["3", "4", "5"],
                 correctIdxes=[1],
