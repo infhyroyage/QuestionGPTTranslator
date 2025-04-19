@@ -56,7 +56,7 @@ class ProgressElement(TypedDict):
 
     choiceImgs: List[Optional[str]]
     """
-    選択肢の文に続く画像URL(画像がない場合はnull)
+    選択肢の文に続く画像URL(画像がない場合はNone)
     """
 
     selectedIdxes: List[int]
