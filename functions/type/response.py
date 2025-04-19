@@ -35,6 +35,33 @@ class GetFavoriteRes(TypedDict):
     """
 
 
+class Favorite(TypedDict):
+    """
+    [GET] /tests/{testId}/favorites のレスポンスボディの各要素の型
+    """
+
+    questionNumber: int
+    """
+    問題番号
+    """
+
+    isFavorite: bool
+    """
+    お気に入りの場合はtrue、そうでない場合はfalse
+    """
+
+
+class GetFavoritesRes(TypedDict):
+    """
+    [GET] /tests/{testId}/favorites のレスポンスボディの型
+    """
+
+    __root__: List[Favorite]
+    """
+    お気に入りの場合はtrue、そうでない場合はfalse(問題番号の昇順)
+    """
+
+
 class GetHealthcheckRes(TypedDict):
     """
     [GET] /healthcheck のレスポンスボディの型

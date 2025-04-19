@@ -5,6 +5,7 @@ from src.blob_triggered_import import bp_blob_triggered_import
 from src.delete_progresses import bp_delete_progresses
 from src.get_answer import bp_get_answer
 from src.get_favorite import bp_get_favorite
+from src.get_favorites import bp_get_favorites
 from src.get_healthcheck import bp_get_healthcheck
 from src.get_progresses import bp_get_progresses
 from src.get_question import bp_get_question
@@ -21,6 +22,7 @@ app.register_blueprint(bp_blob_triggered_import)
 app.register_blueprint(bp_delete_progresses)
 app.register_blueprint(bp_get_answer)
 app.register_blueprint(bp_get_favorite)
+app.register_blueprint(bp_get_favorites)
 app.register_blueprint(bp_get_healthcheck)
 app.register_blueprint(bp_get_progresses)
 app.register_blueprint(bp_get_question)
