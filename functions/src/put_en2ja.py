@@ -81,9 +81,10 @@ def translate_by_azure_translator(texts: list[str]) -> Optional[list[str]]:
         response.raise_for_status()
         data: AzureTranslatorRes = response.json()
         return [item["translations"][0]["text"] for item in data]
-    except requests.exceptions.RequestException as e:
+    except requests.exceptions.HTTPError as e:
+        logging.error(traceback.format_exc())
         # Azure Translatorの無料枠を使い切った場合は403エラーとなる
-        if response.status_code == 403:
+        if e.response.status_code == 403:
             return None
         raise e
 
@@ -122,9 +123,10 @@ def translate_by_deep_l(texts: list[str]) -> Optional[list[str]]:
         response.raise_for_status()
         data: DeepLRes = response.json()
         return [translation["text"] for translation in data["translations"]]
-    except requests.exceptions.RequestException as e:
+    except requests.exceptions.HTTPError as e:
+        logging.error(traceback.format_exc())
         # DeepLの無料枠を使い切った場合は456エラーとなる
-        if response.status_code == 456:
+        if e.response.status_code == 456:
             return None
         raise e
 

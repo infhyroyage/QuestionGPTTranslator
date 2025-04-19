@@ -6,7 +6,7 @@ import unittest
 from unittest.mock import MagicMock, call, patch
 
 import azure.functions as func
-from requests.exceptions import RequestException
+from requests.exceptions import HTTPError
 from src.put_en2ja import (
     put_en2ja,
     translate_by_azure_translator,
@@ -75,8 +75,9 @@ class TestTranslateByAzureTranslator(unittest.TestCase):
     """translate_by_azure_translator関数のテストケース"""
 
     @patch("src.put_en2ja.requests.post")
+    @patch("src.put_en2ja.logging")
     @patch.dict(os.environ, {"TRANSLATOR_KEY": "fake-key"})
-    def test_translate_by_azure_translator_success(self, mock_post):
+    def test_translate_by_azure_translator_success(self, mock_logging, mock_post):
         """Azure Translatorでの翻訳が成功する場合のテスト"""
 
         mock_response = MagicMock()
@@ -103,28 +104,38 @@ class TestTranslateByAzureTranslator(unittest.TestCase):
             timeout=10,
         )
         self.assertEqual(result, ["こんにちは"])
+        mock_logging.error.assert_not_called()
 
-    def test_translate_by_azure_translator_empty_texts(self):
+    @patch("src.put_en2ja.logging")
+    def test_translate_by_azure_translator_empty_texts(self, mock_logging):
         """Azure Translatorでの翻訳で空の英語の文字列群を指定した場合のテスト"""
 
         result = translate_by_azure_translator([])
         self.assertEqual(result, [])
+        mock_logging.error.assert_not_called()
 
-    def test_translate_by_azure_translator_unset_key(self):
+    @patch("src.put_en2ja.logging")
+    def test_translate_by_azure_translator_unset_key(self, mock_logging):
         """Azure Translatorでの翻訳で環境変数TRANSLATOR_KEYが未設定の場合のテスト"""
 
         with self.assertRaises(ValueError) as context:
             translate_by_azure_translator(["Hello"])
         self.assertEqual(str(context.exception), "Unset TRANSLATOR_KEY")
+        mock_logging.error.assert_not_called()
 
     @patch("src.put_en2ja.requests.post")
+    @patch("src.put_en2ja.logging")
     @patch.dict(os.environ, {"TRANSLATOR_KEY": "fake-key"})
-    def test_translate_by_azure_translator_free_tier_used_up(self, mock_post):
+    def test_translate_by_azure_translator_free_tier_used_up(
+        self, mock_logging, mock_post
+    ):
         """Azure Translatorの無料枠を使い切った場合のテスト"""
 
         mock_response = MagicMock()
-        mock_response.raise_for_status.side_effect = RequestException()
-        mock_response.status_code = 403
+        mock_http_error = HTTPError()
+        mock_http_error.response = MagicMock()
+        mock_http_error.response.status_code = 403
+        mock_response.raise_for_status.side_effect = mock_http_error
         mock_post.return_value = mock_response
 
         result = translate_by_azure_translator(["Hello"])
@@ -144,27 +155,33 @@ class TestTranslateByAzureTranslator(unittest.TestCase):
             timeout=10,
         )
         self.assertIsNone(result)
+        mock_logging.error.assert_called_once()
 
     @patch("src.put_en2ja.requests.post")
+    @patch("src.put_en2ja.logging")
     @patch.dict(os.environ, {"TRANSLATOR_KEY": "fake-key"})
-    def test_translate_by_azure_translator_exception(self, mock_post):
+    def test_translate_by_azure_translator_exception(self, mock_logging, mock_post):
         """Azure Translatorでの翻訳で例外が発生する場合のテスト"""
 
         mock_response = MagicMock()
-        mock_response.raise_for_status.side_effect = RequestException()
-        mock_response.status_code = 500
+        mock_http_error = HTTPError()
+        mock_http_error.response = MagicMock()
+        mock_http_error.response.status_code = 500
+        mock_response.raise_for_status.side_effect = mock_http_error
         mock_post.return_value = mock_response
 
-        with self.assertRaises(RequestException):
+        with self.assertRaises(HTTPError):
             translate_by_azure_translator(["Hello"])
+        mock_logging.error.assert_called_once()
 
 
 class TestTranslateByDeepL(unittest.TestCase):
     """translate_by_deep_l関数のテストケース"""
 
     @patch("src.put_en2ja.requests.get")
+    @patch("src.put_en2ja.logging")
     @patch.dict(os.environ, {"DEEPL_AUTH_KEY": "fake-key"})
-    def test_translate_by_deep_l_success(self, mock_get):
+    def test_translate_by_deep_l_success(self, mock_logging, mock_get):
         """DeepLでの翻訳が成功する場合のテスト"""
 
         mock_response = MagicMock()
@@ -187,27 +204,35 @@ class TestTranslateByDeepL(unittest.TestCase):
             timeout=10,
         )
         self.assertEqual(result, ["こんにちは"])
+        mock_logging.error.assert_not_called()
 
-    def test_translate_by_deep_l_empty_texts(self):
+    @patch("src.put_en2ja.logging")
+    def test_translate_by_deep_l_empty_texts(self, mock_logging):
         """DeepLでの翻訳で空の英語の文字列群を指定した場合のテスト"""
 
         result = translate_by_deep_l([])
         self.assertEqual(result, [])
+        mock_logging.error.assert_not_called()
 
-    def test_translate_by_deep_l_unset_key(self):
+    @patch("src.put_en2ja.logging")
+    def test_translate_by_deep_l_unset_key(self, mock_logging):
         """DeepLでの翻訳で環境変数DEEPL_AUTH_KEYが未設定の場合のテスト"""
         with self.assertRaises(ValueError) as context:
             translate_by_deep_l(["Hello"])
         self.assertEqual(str(context.exception), "Unset DEEPL_AUTH_KEY")
+        mock_logging.error.assert_not_called()
 
     @patch("src.put_en2ja.requests.get")
+    @patch("src.put_en2ja.logging")
     @patch.dict(os.environ, {"DEEPL_AUTH_KEY": "fake-key"})
-    def test_translate_by_deep_l_free_tier_used_up(self, mock_get):
+    def test_translate_by_deep_l_free_tier_used_up(self, mock_logging, mock_get):
         """DeepLの無料枠を使い切った場合のテスト"""
 
         mock_response = MagicMock()
-        mock_response.raise_for_status.side_effect = RequestException()
-        mock_response.status_code = 456
+        mock_http_error = HTTPError()
+        mock_http_error.response = MagicMock()
+        mock_http_error.response.status_code = 456
+        mock_response.raise_for_status.side_effect = mock_http_error
         mock_get.return_value = mock_response
 
         result = translate_by_deep_l(["Hello"])
@@ -223,19 +248,24 @@ class TestTranslateByDeepL(unittest.TestCase):
             timeout=10,
         )
         self.assertIsNone(result)
+        mock_logging.error.assert_called_once()
 
     @patch("src.put_en2ja.requests.get")
+    @patch("src.put_en2ja.logging")
     @patch.dict(os.environ, {"DEEPL_AUTH_KEY": "fake-key"})
-    def test_translate_by_deep_l_exception(self, mock_get):
+    def test_translate_by_deep_l_exception(self, mock_logging, mock_get):
         """DeepLでの翻訳で例外が発生する場合のテスト"""
 
         mock_response = MagicMock()
-        mock_response.raise_for_status.side_effect = RequestException()
-        mock_response.status_code = 500
+        mock_http_error = HTTPError()
+        mock_http_error.response = MagicMock()
+        mock_http_error.response.status_code = 500
+        mock_response.raise_for_status.side_effect = mock_http_error
         mock_get.return_value = mock_response
 
-        with self.assertRaises(RequestException):
+        with self.assertRaises(HTTPError):
             translate_by_deep_l(["Hello"])
+        mock_logging.error.assert_called_once()
 
 
 class TestPutEn2Ja(unittest.TestCase):
