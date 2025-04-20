@@ -78,20 +78,17 @@ def get_favorite(req: func.HttpRequest) -> func.HttpResponse:
             container_name="Favorite",
         )
 
-        # Favoriteコンテナーから項目取得
+        # Favoriteコンテナーから項目取得してレスポンス整形
+        # 項目が見つからない場合は、isFavoriteをfalseとみなす
         try:
             item = container.read_item(
                 item=f"{user_id}_{test_id}_{question_number}", partition_key=test_id
             )
+            logging.info({"item": item})
+            body: GetFavoriteRes = {"isFavorite": item["isFavorite"]}
         except CosmosResourceNotFoundError:
-            return func.HttpResponse(
-                body="Not Found Favorite",
-                status_code=404,
-            )
-        logging.info({"item": item})
+            body: GetFavoriteRes = {"isFavorite": False}
 
-        # レスポンス整形
-        body: GetFavoriteRes = {"isFavorite": item["isFavorite"]}
         logging.info({"body": body})
 
         return func.HttpResponse(

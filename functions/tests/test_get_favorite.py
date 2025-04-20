@@ -199,8 +199,9 @@ class TestGetFavorite(unittest.TestCase):
 
         res = get_favorite(req)
 
-        self.assertEqual(res.status_code, 404)
-        self.assertEqual(res.get_body().decode("utf-8"), "Not Found Favorite")
+        self.assertEqual(res.status_code, 200)
+        response_body = json.loads(res.get_body().decode("utf-8"))
+        self.assertEqual(response_body, {"isFavorite": False})
         mock_validate_request.assert_called_once_with(req)
         mock_get_read_only_container.assert_called_once_with(
             database_name="Users",
@@ -209,12 +210,13 @@ class TestGetFavorite(unittest.TestCase):
         mock_container.read_item.assert_called_once_with(
             item="user-id_test-id_1", partition_key="test-id"
         )
-        mock_logging.info.assert_called_once_with(
-            {
-                "question_number": 1,
-                "test_id": "test-id",
-                "user_id": "user-id",
-            }
+        mock_logging.info.assert_has_calls(
+            [
+                call(
+                    {"question_number": 1, "test_id": "test-id", "user_id": "user-id"}
+                ),
+                call({"body": {"isFavorite": False}}),
+            ]
         )
         mock_logging.error.assert_not_called()
 

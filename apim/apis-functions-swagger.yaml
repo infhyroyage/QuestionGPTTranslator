@@ -346,12 +346,6 @@ paths:
             application/json:
               schema:
                 type: string
-        "404":
-          description: 指定したお気に入り情報が存在しません
-          content:
-            application/json:
-              schema:
-                type: string
         "500":
           description: サーバー処理が異常終了しました
           content:
