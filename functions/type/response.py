@@ -8,17 +8,17 @@ class GetAnswerRes(TypedDict):
     [GET] /tests/{testId}/answers/{questionNumber} のレスポンスボディの型
     """
 
-    correctIdxes: List[int]
+    correctIdxes: Optional[List[int]]
     """
     正解の選択肢のインデックス
     """
 
-    explanations: List[str]
+    explanations: Optional[List[str]]
     """
     各選択肢の正解/不正解の理由
     """
 
-    communityVotes: List[str]
+    communityVotes: Optional[List[str]]
     """
     コミュニティ回答割合
     """

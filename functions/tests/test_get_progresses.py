@@ -190,8 +190,8 @@ class TestGetProgresses(unittest.TestCase):
 
         resp = get_progresses(req)
 
-        self.assertEqual(resp.status_code, 404)
-        self.assertEqual(resp.get_body(), b"Not Found Progress")
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(json.loads(resp.get_body().decode()), [])
         mock_container.read_item.assert_called_once_with(
             item="user-id-1_test-id-1", partition_key="test-id-1"
         )

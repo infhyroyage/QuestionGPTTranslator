@@ -59,32 +59,39 @@ def get_answer(req: func.HttpRequest) -> func.HttpResponse:
         test_id = req.route_params.get("testId")
         question_number = req.route_params.get("questionNumber")
 
-        # Answerコンテナーから項目取得
+        # Answerコンテナーの読み取り専用インスタンスを取得
         container: ContainerProxy = get_read_only_container(
             database_name="Users",
             container_name="Answer",
         )
+
         try:
+            # Answerコンテナーから項目取得
             item: Answer = container.read_item(
                 item=f"{test_id}_{question_number}", partition_key=test_id
             )
+            logging.info({"item": item})
+
+            # レスポンス整形
+            body: GetAnswerRes = {
+                "correctIdxes": item["correctIdxes"],
+                "explanations": item["explanations"],
+                "communityVotes": item["communityVotes"],
+            }
+            logging.info({"body": body})
+
+            return func.HttpResponse(
+                body=json.dumps(body),
+                status_code=200,
+                mimetype="application/json",
+            )
         except CosmosResourceNotFoundError:
-            return func.HttpResponse(body="Not Found Answer", status_code=404)
-        logging.info({"item": item})
-
-        # レスポンス整形
-        body: GetAnswerRes = {
-            "correctIdxes": item["correctIdxes"],
-            "explanations": item["explanations"],
-            "communityVotes": item["communityVotes"],
-        }
-        logging.info({"body": body})
-
-        return func.HttpResponse(
-            body=json.dumps(body),
-            status_code=200,
-            mimetype="application/json",
-        )
+            # Answerコンテナーから項目を取得できない場合は空の正解の選択肢・正解/不正解の理由をレスポンス
+            return func.HttpResponse(
+                body=json.dumps({}),
+                status_code=200,
+                mimetype="application/json",
+            )
     except Exception:
         logging.error(traceback.format_exc())
         return func.HttpResponse(

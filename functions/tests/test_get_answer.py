@@ -132,8 +132,8 @@ class TestGetAnswer(TestCase):
 
         response = get_answer(req)
 
-        self.assertEqual(response.status_code, 404)
-        self.assertEqual(response.get_body().decode(), "Not Found Answer")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(json.loads(response.get_body().decode()), {})
         mock_validate_request.assert_called_once_with(req)
         mock_get_read_only_container.assert_called_once_with(
             database_name="Users",

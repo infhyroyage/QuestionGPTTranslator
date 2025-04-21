@@ -73,33 +73,38 @@ def get_progresses(req: func.HttpRequest) -> func.HttpResponse:
             container_name="Progress",
         )
 
-        # Progressコンテナーから項目取得
         try:
+            # Progressコンテナーから項目取得
             item: Progress = container.read_item(
                 item=f"{user_id}_{test_id}", partition_key=test_id
             )
+            logging.info({"item": item})
+
+            # レスポンス整形
+            body: GetProgressesRes = [
+                {
+                    "isCorrect": progress["isCorrect"],
+                    "choiceSentences": progress["choiceSentences"],
+                    "choiceImgs": progress["choiceImgs"],
+                    "selectedIdxes": progress["selectedIdxes"],
+                    "correctIdxes": progress["correctIdxes"],
+                }
+                for progress in item["progresses"]
+            ]
+            logging.info({"body": body})
+
+            return func.HttpResponse(
+                body=json.dumps(body),
+                status_code=200,
+                mimetype="application/json",
+            )
         except CosmosResourceNotFoundError:
-            return func.HttpResponse(body="Not Found Progress", status_code=404)
-        logging.info({"item": item})
-
-        # レスポンス整形
-        body: GetProgressesRes = [
-            {
-                "isCorrect": progress["isCorrect"],
-                "choiceSentences": progress["choiceSentences"],
-                "choiceImgs": progress["choiceImgs"],
-                "selectedIdxes": progress["selectedIdxes"],
-                "correctIdxes": progress["correctIdxes"],
-            }
-            for progress in item["progresses"]
-        ]
-        logging.info({"body": body})
-
-        return func.HttpResponse(
-            body=json.dumps(body),
-            status_code=200,
-            mimetype="application/json",
-        )
+            # Progressコンテナーから項目を取得できない場合は空の進捗項目をレスポンス
+            return func.HttpResponse(
+                body=json.dumps([]),
+                status_code=200,
+                mimetype="application/json",
+            )
     except Exception:
         logging.error(traceback.format_exc())
         return func.HttpResponse(
