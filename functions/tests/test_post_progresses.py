@@ -261,7 +261,7 @@ class TestPostProgresses(unittest.TestCase):
     @patch("src.post_progresses.validate_headers")
     @patch("src.post_progresses.get_read_write_container")
     @patch("src.post_progresses.logging")
-    def test_post_progresses_exception(
+    def test_post_progresses_exception(  # pylint: disable=too-many-arguments, too-many-positional-arguments
         self,
         mock_logging,
         mock_get_read_write_container,

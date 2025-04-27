@@ -5,6 +5,7 @@ import unittest
 from unittest.mock import MagicMock, call, patch
 
 import azure.functions as func
+from azure.cosmos.exceptions import CosmosResourceNotFoundError
 from src.post_progress import (
     post_progress,
     validate_body,
@@ -187,7 +188,7 @@ class TestPostProgress(unittest.TestCase):
     @patch("src.post_progress.validate_body")
     @patch("src.post_progress.get_read_write_container")
     @patch("src.post_progress.logging")
-    def test_post_progress_success_with_next_question_number(  # pylint: disable=too-many-arguments, too-many-positional-arguments
+    def test_post_progress_with_next_progress(  # pylint: disable=too-many-arguments, too-many-positional-arguments
         self,
         mock_logging,
         mock_get_read_write_container,
@@ -195,7 +196,7 @@ class TestPostProgress(unittest.TestCase):
         mock_validate_headers,
         mock_validate_route_params,
     ):
-        """指定した問題番号が最後に保存した問題番号の次の問題番号である場合にて、レスポンスが正常であることのテスト"""
+        """ç指定した問題番号が、テストを解く問題番号の順番における、最後に保存した解答履歴の次の問題番号である場合にて、レスポンスが正常であることのテスト"""
 
         mock_validate_route_params.return_value = []
         mock_validate_headers.return_value = []
@@ -283,7 +284,7 @@ class TestPostProgress(unittest.TestCase):
     @patch("src.post_progress.validate_body")
     @patch("src.post_progress.get_read_write_container")
     @patch("src.post_progress.logging")
-    def test_post_progress_with_same_question_number(  # pylint: disable=too-many-arguments, too-many-positional-arguments
+    def test_post_progress_with_same_progress(  # pylint: disable=too-many-arguments, too-many-positional-arguments
         self,
         mock_logging,
         mock_get_read_write_container,
@@ -291,7 +292,7 @@ class TestPostProgress(unittest.TestCase):
         mock_validate_headers,
         mock_validate_route_params,
     ):
-        """指定した問題番号が最後に保存した問題番号と同じ場合にて、レスポンスが正常であることのテスト"""
+        """指定した問題番号が、テストを解く問題番号の順番における、最後に保存した解答履歴の問題番号と同じ場合にて、レスポンスが正常であることのテスト"""
 
         mock_validate_route_params.return_value = []
         mock_validate_headers.return_value = []
@@ -361,6 +362,62 @@ class TestPostProgress(unittest.TestCase):
     @patch("src.post_progress.validate_route_params")
     @patch("src.post_progress.validate_headers")
     @patch("src.post_progress.validate_body")
+    @patch("src.post_progress.get_read_write_container")
+    @patch("src.post_progress.logging")
+    def test_post_progress_with_initial_progress(  # pylint: disable=too-many-arguments, too-many-positional-arguments
+        self,
+        mock_logging,
+        mock_get_read_write_container,
+        mock_validate_body,
+        mock_validate_headers,
+        mock_validate_route_params,
+    ):
+        """最初の解答履歴の問題番号の場合にて、レスポンスが正常であることのテスト"""
+
+        mock_validate_route_params.return_value = []
+        mock_validate_headers.return_value = []
+        mock_validate_body.return_value = []
+        mock_container = MagicMock()
+        mock_get_read_write_container.return_value = mock_container
+        mock_container.read_item.side_effect = CosmosResourceNotFoundError
+
+        request_body = {
+            "isCorrect": True,
+            "selectedIdxes": [0],
+            "correctIdxes": [0],
+        }
+        request_body_encoded = json.dumps(request_body).encode("utf-8")
+        req = func.HttpRequest(
+            method="POST",
+            body=request_body_encoded,
+            url="/api/tests/test-id/progresses/3",
+            route_params={"testId": "test-id", "questionNumber": "3"},
+            headers={"X-User-Id": "user-id"},
+        )
+
+        res = post_progress(req)
+
+        self.assertEqual(res.status_code, 400)
+        self.assertEqual(res.get_body().decode("utf-8"), "Progress Not exists")
+        mock_validate_route_params.assert_called_once_with(req.route_params)
+        mock_validate_headers.assert_called_once_with(req.headers)
+        mock_validate_body.assert_called_once_with(request_body_encoded)
+        mock_get_read_write_container.assert_called_once_with(
+            database_name="Users",
+            container_name="Progress",
+        )
+        mock_container.read_item.assert_called_once_with(
+            item="user-id_test-id", partition_key="test-id"
+        )
+        mock_container.upsert_item.assert_not_called()
+        mock_logging.info.assert_called_once_with(
+            {"question_number": 3, "test_id": "test-id", "user_id": "user-id"}
+        )
+        mock_logging.error.assert_not_called()
+
+    @patch("src.post_progress.validate_route_params")
+    @patch("src.post_progress.validate_headers")
+    @patch("src.post_progress.validate_body")
     @patch("src.post_progress.logging")
     def test_post_progress_validation_error(
         self,
@@ -404,7 +461,7 @@ class TestPostProgress(unittest.TestCase):
     @patch("src.post_progress.validate_body")
     @patch("src.post_progress.get_read_write_container")
     @patch("src.post_progress.logging")
-    def test_post_progress_invalid_question_number_without_saved_progress(  # pylint: disable=too-many-arguments, too-many-positional-arguments
+    def test_post_progress_invalid_question_number_with_empty_progress(  # pylint: disable=too-many-arguments, too-many-positional-arguments
         self,
         mock_logging,
         mock_get_read_write_container,
@@ -483,7 +540,86 @@ class TestPostProgress(unittest.TestCase):
         mock_validate_headers,
         mock_validate_route_params,
     ):
-        """最後まで回答履歴を保存した場合に、誤った問題番号を指定した場合のテスト"""
+        """途中まで回答履歴を保存した場合に、誤った問題番号を指定した場合のテスト"""
+
+        mock_validate_route_params.return_value = []
+        mock_validate_headers.return_value = []
+        mock_validate_body.return_value = []
+        mock_container = MagicMock()
+        mock_get_read_write_container.return_value = mock_container
+        mock_container.read_item.return_value = {
+            "id": "user-id_test-id",
+            "userId": "user-id",
+            "testId": "test-id",
+            "order": [3, 5, 1, 2, 4],
+            "progresses": [
+                {
+                    "isCorrect": True,
+                    "selectedIdxes": [0],
+                    "correctIdxes": [0],
+                },
+            ],
+        }
+
+        request_body = {
+            "isCorrect": True,
+            "selectedIdxes": [0],
+            "correctIdxes": [0],
+        }
+        request_body_encoded = json.dumps(request_body).encode("utf-8")
+        req = func.HttpRequest(
+            method="POST",
+            body=request_body_encoded,
+            url="/api/tests/test-id/progresses/1",
+            route_params={"testId": "test-id", "questionNumber": "1"},
+            headers={"X-User-Id": "user-id"},
+        )
+
+        res = post_progress(req)
+
+        self.assertEqual(res.status_code, 400)
+        self.assertEqual(
+            res.get_body().decode("utf-8"), "questionNumber must be 3 or 5"
+        )
+        mock_validate_route_params.assert_called_once_with(req.route_params)
+        mock_validate_headers.assert_called_once_with(req.headers)
+        mock_validate_body.assert_called_once_with(request_body_encoded)
+        mock_get_read_write_container.assert_called_once_with(
+            database_name="Users",
+            container_name="Progress",
+        )
+        mock_container.read_item.assert_called_once_with(
+            item="user-id_test-id", partition_key="test-id"
+        )
+        mock_container.upsert_item.assert_not_called()
+        mock_logging.info.assert_has_calls(
+            [
+                call(
+                    {
+                        "question_number": 1,
+                        "test_id": "test-id",
+                        "user_id": "user-id",
+                    }
+                ),
+                call({"current_question_number": 3, "next_question_number": 5}),
+            ]
+        )
+        mock_logging.error.assert_not_called()
+
+    @patch("src.post_progress.validate_route_params")
+    @patch("src.post_progress.validate_headers")
+    @patch("src.post_progress.validate_body")
+    @patch("src.post_progress.get_read_write_container")
+    @patch("src.post_progress.logging")
+    def test_post_progress_invalid_question_number_with_all_progresses(  # pylint: disable=too-many-arguments, too-many-positional-arguments
+        self,
+        mock_logging,
+        mock_get_read_write_container,
+        mock_validate_body,
+        mock_validate_headers,
+        mock_validate_route_params,
+    ):
+        """最後まですべて回答履歴を保存した場合に、誤った問題番号を指定した場合のテスト"""
 
         mock_validate_route_params.return_value = []
         mock_validate_headers.return_value = []
