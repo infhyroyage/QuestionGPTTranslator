@@ -215,9 +215,14 @@ class GetProgressesRes(TypedDict):
     [GET] /tests/{testId}/progresses のレスポンスボディの型
     """
 
-    __root__: List[Progress]
+    order: List[int]
     """
-    全進捗項目
+    テストを解く問題番号の順番
+    """
+
+    progresses: List[Progress]
+    """
+    問題番号の順番に対応する進捗項目
     """
 
 

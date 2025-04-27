@@ -48,7 +48,7 @@ bp_get_progresses = func.Blueprint()
 )
 def get_progresses(req: func.HttpRequest) -> func.HttpResponse:
     """
-    指定したテストID・ユーザーIDに対する、すべての問題番号での進捗項目を取得します
+    指定したテストID・ユーザーIDに対する、テストを解く問題番号の順番に対応する進捗項目を取得します
     """
 
     try:
@@ -81,14 +81,17 @@ def get_progresses(req: func.HttpRequest) -> func.HttpResponse:
             logging.info({"item": item})
 
             # レスポンス整形
-            body: GetProgressesRes = [
-                {
-                    "isCorrect": progress["isCorrect"],
-                    "selectedIdxes": progress["selectedIdxes"],
-                    "correctIdxes": progress["correctIdxes"],
-                }
-                for progress in item["progresses"]
-            ]
+            body: GetProgressesRes = {
+                "order": item["order"],
+                "progresses": [
+                    {
+                        "isCorrect": progress["isCorrect"],
+                        "selectedIdxes": progress["selectedIdxes"],
+                        "correctIdxes": progress["correctIdxes"],
+                    }
+                    for progress in item["progresses"]
+                ],
+            }
             logging.info({"body": body})
 
             return func.HttpResponse(
@@ -97,9 +100,14 @@ def get_progresses(req: func.HttpRequest) -> func.HttpResponse:
                 mimetype="application/json",
             )
         except CosmosResourceNotFoundError:
-            # Progressコンテナーから項目を取得できない場合は空の進捗項目をレスポンス
+            # Progressコンテナーから項目を取得できない場合は空の問題番号の順番・進捗項目をレスポンス
             return func.HttpResponse(
-                body=json.dumps([]),
+                body=json.dumps(
+                    {
+                        "order": [],
+                        "progresses": [],
+                    }
+                ),
                 status_code=200,
                 mimetype="application/json",
             )

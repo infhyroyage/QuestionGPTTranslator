@@ -111,9 +111,14 @@ class Progress(TypedDict):
     テストID
     """
 
+    order: List[int]
+    """
+    テストを解く問題番号の順番
+    """
+
     progresses: List[ProgressElement]
     """
-    全進捗項目
+    問題番号の順番に対応する進捗項目
     """
 
 

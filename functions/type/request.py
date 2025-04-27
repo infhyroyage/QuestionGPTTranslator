@@ -25,6 +25,17 @@ class PostFavoriteReq(TypedDict):
     """
 
 
+class PostProgressesReq(TypedDict):
+    """
+    [POST] /tests/{testId}/progresses のリクエストボディの型
+    """
+
+    order: List[int]
+    """
+    テストを解く問題番号の順番
+    """
+
+
 class PostProgressReq(TypedDict):
     """
     [POST] /tests/{testId}/progresses/{questionNumber} のリクエストボディの型

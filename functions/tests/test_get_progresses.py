@@ -74,6 +74,7 @@ class TestGetProgresses(unittest.TestCase):
             "id": "user-id-1_test-id-1",
             "userId": "user-id-1",
             "testId": "test-id-1",
+            "order": [3, 5, 1, 2, 4],
             "progresses": [
                 {
                     "isCorrect": True,
@@ -101,18 +102,21 @@ class TestGetProgresses(unittest.TestCase):
 
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp.mimetype, "application/json")
-        expect_body: GetProgressesRes = [
-            {
-                "isCorrect": True,
-                "selectedIdxes": [0],
-                "correctIdxes": [0],
-            },
-            {
-                "isCorrect": False,
-                "selectedIdxes": [0],
-                "correctIdxes": [1],
-            },
-        ]
+        expect_body: GetProgressesRes = {
+            "order": [3, 5, 1, 2, 4],
+            "progresses": [
+                {
+                    "isCorrect": True,
+                    "selectedIdxes": [0],
+                    "correctIdxes": [0],
+                },
+                {
+                    "isCorrect": False,
+                    "selectedIdxes": [0],
+                    "correctIdxes": [1],
+                },
+            ],
+        }
         self.assertEqual(json.loads(resp.get_body().decode()), expect_body)
         mock_validate_request.assert_called_once_with(req)
         mock_get_read_only_container.assert_called_once_with(
@@ -125,6 +129,7 @@ class TestGetProgresses(unittest.TestCase):
             [
                 call({"test_id": "test-id-1", "user_id": "user-id-1"}),
                 call({"item": mock_item}),
+                call({"body": expect_body}),
             ]
         )
         mock_logging.error.assert_not_called()
@@ -183,7 +188,13 @@ class TestGetProgresses(unittest.TestCase):
         resp = get_progresses(req)
 
         self.assertEqual(resp.status_code, 200)
-        self.assertEqual(json.loads(resp.get_body().decode()), [])
+        self.assertEqual(
+            json.loads(resp.get_body().decode()),
+            {
+                "order": [],
+                "progresses": [],
+            },
+        )
         mock_container.read_item.assert_called_once_with(
             item="user-id-1_test-id-1", partition_key="test-id-1"
         )

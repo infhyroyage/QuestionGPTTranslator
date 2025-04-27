@@ -3,7 +3,7 @@
 import json
 import logging
 import traceback
-from typing import List
+from typing import List, Optional
 
 import azure.functions as func
 from azure.cosmos import ContainerProxy
@@ -163,42 +163,61 @@ def post_progress(req: func.HttpRequest) -> func.HttpResponse:
             container_name="Progress",
         )
 
-        # 指定した問題番号が、最後に保存した回答履歴の問題番号、またはその次の問題番号であるかのチェック
+        # テストを解く問題番号の順番を保存しているかのチェック
         try:
             item: Progress = container.read_item(
                 item=f"{user_id}_{test_id}", partition_key=test_id
             )
         except CosmosResourceNotFoundError:
-            item: Progress = {
-                "id": f"{user_id}_{test_id}",
-                "userId": user_id,
-                "testId": test_id,
-                "progresses": [],
+            return func.HttpResponse(body="Progress Not exists", status_code=400)
+
+        # 指定した問題番号が、テストを解く問題番号の順番における、
+        # 最後に保存した回答履歴の問題番号、またはその次の問題番号であるかのチェック
+        current_question_number: Optional[int] = (
+            item["order"][len(item["progresses"]) - 1]
+            if len(item["progresses"]) > 0
+            else None
+        )
+        next_question_number: Optional[int] = (
+            item["order"][len(item["progresses"])]
+            if len(item["progresses"]) < len(item["order"])
+            else None
+        )
+        logging.info(
+            {
+                "current_question_number": current_question_number,
+                "next_question_number": next_question_number,
             }
-        inserted_progress_num: int = len(item["progresses"])
-        logging.info({"inserted_progress_num": inserted_progress_num})
-        if question_number not in (inserted_progress_num, inserted_progress_num + 1):
-            body = (
-                f"questionNumber must be {inserted_progress_num} or {inserted_progress_num + 1}"
-                if inserted_progress_num > 0
-                else f"questionNumber must be {inserted_progress_num + 1}"
-            )
-            return func.HttpResponse(body=body, status_code=400)
+        )
+        if question_number not in (current_question_number, next_question_number):
+            msg: str = "questionNumber must be "
+            if len(item["progresses"]) == 0:
+                msg += f"{next_question_number}"
+            elif next_question_number is None:
+                msg += f"{current_question_number}"
+            else:
+                msg += f"{current_question_number} or {next_question_number}"
+            return func.HttpResponse(body=msg, status_code=400)
 
         req_body: PostProgressReq = json.loads(req_body_encoded.decode("utf-8"))
 
         # 指定した問題番号が、最後に保存した問題番号と同じ場合はupdate、
         # その次の問題番号の場合はinsertするように、Progressコンテナーの項目を生成
-        updated_progress_element: ProgressElement = {
-            "isCorrect": req_body.get("isCorrect"),
-            "selectedIdxes": req_body.get("selectedIdxes"),
-            "correctIdxes": req_body.get("correctIdxes"),
-        }
         updated_progresses: List[ProgressElement] = item["progresses"]
-        if question_number == inserted_progress_num:
-            updated_progresses[question_number - 1] = updated_progress_element
+        if question_number == current_question_number:
+            updated_progresses[len(item["progresses"]) - 1] = {
+                "isCorrect": req_body.get("isCorrect"),
+                "selectedIdxes": req_body.get("selectedIdxes"),
+                "correctIdxes": req_body.get("correctIdxes"),
+            }
         else:
-            updated_progresses.append(updated_progress_element)
+            updated_progresses.append(
+                {
+                    "isCorrect": req_body.get("isCorrect"),
+                    "selectedIdxes": req_body.get("selectedIdxes"),
+                    "correctIdxes": req_body.get("correctIdxes"),
+                }
+            )
 
         # Progressの項目をaupsert
         container.upsert_item(
@@ -206,6 +225,7 @@ def post_progress(req: func.HttpRequest) -> func.HttpResponse:
                 "id": f"{user_id}_{test_id}",
                 "userId": user_id,
                 "testId": test_id,
+                "order": item["order"],
                 "progresses": updated_progresses,
             }
         )
