@@ -77,15 +77,11 @@ class TestGetProgresses(unittest.TestCase):
             "progresses": [
                 {
                     "isCorrect": True,
-                    "choiceSentences": ["選択肢1", "選択肢2"],
-                    "choiceImgs": [None, "https://example.com/img.png"],
                     "selectedIdxes": [0],
                     "correctIdxes": [0],
                 },
                 {
                     "isCorrect": False,
-                    "choiceSentences": ["選択肢A", "選択肢B"],
-                    "choiceImgs": [None, None],
                     "selectedIdxes": [0],
                     "correctIdxes": [1],
                 },
@@ -108,15 +104,11 @@ class TestGetProgresses(unittest.TestCase):
         expect_body: GetProgressesRes = [
             {
                 "isCorrect": True,
-                "choiceSentences": ["選択肢1", "選択肢2"],
-                "choiceImgs": [None, "https://example.com/img.png"],
                 "selectedIdxes": [0],
                 "correctIdxes": [0],
             },
             {
                 "isCorrect": False,
-                "choiceSentences": ["選択肢A", "選択肢B"],
-                "choiceImgs": [None, None],
                 "selectedIdxes": [0],
                 "correctIdxes": [1],
             },

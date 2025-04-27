@@ -80,16 +80,6 @@ class ProgressElement(TypedDict):
     正解の場合はtrue、不正解の場合はfalse
     """
 
-    choiceSentences: List[str]
-    """
-    選択肢の文
-    """
-
-    choiceImgs: List[Optional[str]]
-    """
-    選択肢の文に続く画像URL(画像がない場合はNone)
-    """
-
     selectedIdxes: List[int]
     """
     選択した選択肢のインデックス

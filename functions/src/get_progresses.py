@@ -84,8 +84,6 @@ def get_progresses(req: func.HttpRequest) -> func.HttpResponse:
             body: GetProgressesRes = [
                 {
                     "isCorrect": progress["isCorrect"],
-                    "choiceSentences": progress["choiceSentences"],
-                    "choiceImgs": progress["choiceImgs"],
                     "selectedIdxes": progress["selectedIdxes"],
                     "correctIdxes": progress["correctIdxes"],
                 }

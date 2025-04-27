@@ -22,8 +22,6 @@ class TestValidateBody(unittest.TestCase):
 
         req_body = {
             "isCorrect": True,
-            "choiceSentences": ["選択肢1", "選択肢2"],
-            "choiceImgs": [None, "https://example.com/img.png"],
             "selectedIdxes": [0],
             "correctIdxes": [0],
         }
@@ -42,8 +40,6 @@ class TestValidateBody(unittest.TestCase):
         """リクエストボディにisCorrectが存在しない場合のテスト"""
 
         req_body = {
-            "choiceSentences": ["選択肢1", "選択肢2"],
-            "choiceImgs": [None, "https://example.com/img.png"],
             "selectedIdxes": [0],
             "correctIdxes": [0],
         }
@@ -56,8 +52,6 @@ class TestValidateBody(unittest.TestCase):
 
         req_body = {
             "isCorrect": "true",
-            "choiceSentences": ["選択肢1", "選択肢2"],
-            "choiceImgs": [None, "https://example.com/img.png"],
             "selectedIdxes": [0],
             "correctIdxes": [0],
         }
@@ -65,95 +59,11 @@ class TestValidateBody(unittest.TestCase):
         errors = validate_body(req_body_encoded)
         self.assertEqual(errors, ["Invalid isCorrect: true"])
 
-    def test_validate_body_missing_choice_sentences(self):
-        """リクエストボディにchoiceSentencesが存在しない場合のテスト"""
-
-        req_body = {
-            "isCorrect": True,
-            "choiceImgs": [None, "https://example.com/img.png"],
-            "selectedIdxes": [0],
-            "correctIdxes": [0],
-        }
-        req_body_encoded = json.dumps(req_body).encode("utf-8")
-        errors = validate_body(req_body_encoded)
-        self.assertEqual(errors, ["choiceSentences is required"])
-
-    def test_validate_body_invalid_choice_sentences(self):
-        """choiceSentencesがlistでない場合のテスト"""
-
-        req_body = {
-            "isCorrect": True,
-            "choiceSentences": "選択肢1",
-            "choiceImgs": [None, "https://example.com/img.png"],
-            "selectedIdxes": [0],
-            "correctIdxes": [0],
-        }
-        req_body_encoded = json.dumps(req_body).encode("utf-8")
-        errors = validate_body(req_body_encoded)
-        self.assertEqual(errors, ["Invalid choiceSentences: 選択肢1"])
-
-    def test_validate_body_invalid_choice_sentence_item(self):
-        """choiceSentencesの要素が文字列でない場合のテスト"""
-
-        req_body = {
-            "isCorrect": True,
-            "choiceSentences": ["選択肢1", 2],
-            "choiceImgs": [None, "https://example.com/img.png"],
-            "selectedIdxes": [0],
-            "correctIdxes": [0],
-        }
-        req_body_encoded = json.dumps(req_body).encode("utf-8")
-        errors = validate_body(req_body_encoded)
-        self.assertEqual(errors, ["Invalid choiceSentences[1]: 2"])
-
-    def test_validate_body_missing_choice_imgs(self):
-        """リクエストボディにchoiceImgsが存在しない場合のテスト"""
-
-        req_body = {
-            "isCorrect": True,
-            "choiceSentences": ["選択肢1", "選択肢2"],
-            "selectedIdxes": [0],
-            "correctIdxes": [0],
-        }
-        req_body_encoded = json.dumps(req_body).encode("utf-8")
-        errors = validate_body(req_body_encoded)
-        self.assertEqual(errors, ["choiceImgs is required"])
-
-    def test_validate_body_invalid_choice_imgs(self):
-        """choiceImgsがlistでない場合のテスト"""
-
-        req_body = {
-            "isCorrect": True,
-            "choiceSentences": ["選択肢1", "選択肢2"],
-            "choiceImgs": "https://example.com/img.png",
-            "selectedIdxes": [0],
-            "correctIdxes": [0],
-        }
-        req_body_encoded = json.dumps(req_body).encode("utf-8")
-        errors = validate_body(req_body_encoded)
-        self.assertEqual(errors, ["Invalid choiceImgs: https://example.com/img.png"])
-
-    def test_validate_body_invalid_choice_img_item(self):
-        """choiceImgsの要素が文字列でない場合のテスト"""
-
-        req_body = {
-            "isCorrect": True,
-            "choiceSentences": ["選択肢1", "選択肢2"],
-            "choiceImgs": [None, 2],
-            "selectedIdxes": [0],
-            "correctIdxes": [0],
-        }
-        req_body_encoded = json.dumps(req_body).encode("utf-8")
-        errors = validate_body(req_body_encoded)
-        self.assertEqual(errors, ["Invalid choiceImgs[1]: 2"])
-
     def test_validate_body_missing_selected_idxes(self):
         """リクエストボディにselectedIdxesが存在しない場合のテスト"""
 
         req_body = {
             "isCorrect": True,
-            "choiceSentences": ["選択肢1", "選択肢2"],
-            "choiceImgs": [None, "https://example.com/img.png"],
             "correctIdxes": [0],
         }
         req_body_encoded = json.dumps(req_body).encode("utf-8")
@@ -165,8 +75,6 @@ class TestValidateBody(unittest.TestCase):
 
         req_body = {
             "isCorrect": True,
-            "choiceSentences": ["選択肢1", "選択肢2"],
-            "choiceImgs": [None, "https://example.com/img.png"],
             "selectedIdxes": 0,
             "correctIdxes": [0],
         }
@@ -179,8 +87,6 @@ class TestValidateBody(unittest.TestCase):
 
         req_body = {
             "isCorrect": True,
-            "choiceSentences": ["選択肢1", "選択肢2"],
-            "choiceImgs": [None, "https://example.com/img.png"],
             "selectedIdxes": [0, "1"],
             "correctIdxes": [0],
         }
@@ -193,8 +99,6 @@ class TestValidateBody(unittest.TestCase):
 
         req_body = {
             "isCorrect": True,
-            "choiceSentences": ["選択肢1", "選択肢2"],
-            "choiceImgs": [None, "https://example.com/img.png"],
             "selectedIdxes": [0],
         }
         req_body_encoded = json.dumps(req_body).encode("utf-8")
@@ -206,8 +110,6 @@ class TestValidateBody(unittest.TestCase):
 
         req_body = {
             "isCorrect": True,
-            "choiceSentences": ["選択肢1", "選択肢2"],
-            "choiceImgs": [None, "https://example.com/img.png"],
             "selectedIdxes": [0],
             "correctIdxes": 0,
         }
@@ -220,8 +122,6 @@ class TestValidateBody(unittest.TestCase):
 
         req_body = {
             "isCorrect": True,
-            "choiceSentences": ["選択肢1", "選択肢2"],
-            "choiceImgs": [None, "https://example.com/img.png"],
             "selectedIdxes": [0],
             "correctIdxes": [0, "1"],
         }
@@ -320,8 +220,6 @@ class TestPostProgress(unittest.TestCase):
 
         request_body = {
             "isCorrect": True,
-            "choiceSentences": ["選択肢1", "選択肢2"],
-            "choiceImgs": [None, "https://example.com/img.png"],
             "selectedIdxes": [0],
             "correctIdxes": [0],
         }
@@ -363,8 +261,6 @@ class TestPostProgress(unittest.TestCase):
                     },
                     {
                         "isCorrect": True,
-                        "choiceSentences": ["選択肢1", "選択肢2"],
-                        "choiceImgs": [None, "https://example.com/img.png"],
                         "selectedIdxes": [0],
                         "correctIdxes": [0],
                     },
@@ -422,8 +318,6 @@ class TestPostProgress(unittest.TestCase):
 
         request_body = {
             "isCorrect": False,
-            "choiceSentences": ["選択肢1", "選択肢2"],
-            "choiceImgs": [None, "https://example.com/img.png"],
             "selectedIdxes": [1],
             "correctIdxes": [0],
         }
@@ -448,8 +342,6 @@ class TestPostProgress(unittest.TestCase):
                 "progresses": [
                     {
                         "isCorrect": False,
-                        "choiceSentences": ["選択肢1", "選択肢2"],
-                        "choiceImgs": [None, "https://example.com/img.png"],
                         "selectedIdxes": [1],
                         "correctIdxes": [0],
                     }
@@ -493,8 +385,6 @@ class TestPostProgress(unittest.TestCase):
 
         request_body = {
             "isCorrect": True,
-            "choiceSentences": ["選択肢1", "選択肢2"],
-            "choiceImgs": [None, "https://example.com/img.png"],
             "selectedIdxes": [0],
             "correctIdxes": [0],
         }
@@ -529,8 +419,6 @@ class TestPostProgress(unittest.TestCase):
                 "progresses": [
                     {
                         "isCorrect": True,
-                        "choiceSentences": ["選択肢1", "選択肢2"],
-                        "choiceImgs": [None, "https://example.com/img.png"],
                         "selectedIdxes": [0],
                         "correctIdxes": [0],
                     }
@@ -570,8 +458,6 @@ class TestPostProgress(unittest.TestCase):
 
         request_body = {
             "isCorrect": True,
-            "choiceSentences": ["選択肢1", "選択肢2"],
-            "choiceImgs": [None, "https://example.com/img.png"],
             "selectedIdxes": [0],
             "correctIdxes": [0],
         }
@@ -623,8 +509,6 @@ class TestPostProgress(unittest.TestCase):
 
         request_body = {
             "isCorrect": True,
-            "choiceSentences": ["選択肢1", "選択肢2"],
-            "choiceImgs": [None, "https://example.com/img.png"],
             "selectedIdxes": [0],
             "correctIdxes": [0],
         }
@@ -703,8 +587,6 @@ class TestPostProgress(unittest.TestCase):
 
         request_body = {
             "isCorrect": True,
-            "choiceSentences": ["選択肢1", "選択肢2"],
-            "choiceImgs": [None, "https://example.com/img.png"],
             "selectedIdxes": [0],
             "correctIdxes": [0],
         }
@@ -770,8 +652,6 @@ class TestPostProgress(unittest.TestCase):
 
         request_body = {
             "isCorrect": True,
-            "choiceSentences": ["選択肢1", "選択肢2"],
-            "choiceImgs": [None, "https://example.com/img.png"],
             "selectedIdxes": [0],
             "correctIdxes": [0],
         }

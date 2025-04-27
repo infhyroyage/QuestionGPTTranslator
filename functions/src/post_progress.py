@@ -61,8 +61,6 @@ def validate_body(req_body_encoded: bytes) -> list:
             errors.append(f"Invalid isCorrect: {req_body['isCorrect']}")
 
         list_fields = {
-            "choiceSentences": str,
-            "choiceImgs": None,
             "selectedIdxes": int,
             "correctIdxes": int,
         }
@@ -70,12 +68,9 @@ def validate_body(req_body_encoded: bytes) -> list:
             if field not in req_body:
                 errors.append(f"{field} is required")
             else:
-                if expected_type:
-                    errors.extend(
-                        _validate_list_field(field, req_body[field], expected_type)
-                    )
-                elif field == "choiceImgs":
-                    errors.extend(_validate_list_field(field, req_body[field], str))
+                errors.extend(
+                    _validate_list_field(field, req_body[field], expected_type)
+                )
 
     return errors
 
@@ -196,8 +191,6 @@ def post_progress(req: func.HttpRequest) -> func.HttpResponse:
         # その次の問題番号の場合はinsertするように、Progressコンテナーの項目を生成
         updated_progress_element: ProgressElement = {
             "isCorrect": req_body.get("isCorrect"),
-            "choiceSentences": req_body.get("choiceSentences"),
-            "choiceImgs": req_body.get("choiceImgs"),
             "selectedIdxes": req_body.get("selectedIdxes"),
             "correctIdxes": req_body.get("correctIdxes"),
         }
