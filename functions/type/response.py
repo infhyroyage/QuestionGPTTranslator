@@ -226,6 +226,17 @@ class GetProgressesRes(TypedDict):
     """
 
 
+class PostProgressRes(TypedDict):
+    """
+    [POST] /tests/{testId}/progresses/{questionNumber} のレスポンスボディの型
+    """
+
+    __root__: List[Progress]
+    """
+    保存後の問題番号の順番に対応する進捗項目
+    """
+
+
 class PutEn2JaRes(TypedDict):
     """
     [PUT] /en2ja のレスポンスボディの型

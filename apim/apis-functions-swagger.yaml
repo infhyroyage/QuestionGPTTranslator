@@ -546,25 +546,12 @@ paths:
               type: object
               required:
                 - isCorrect
-                - choiceSentences
-                - choiceImgs
                 - selectedIdxes
                 - correctIdxes
               properties:
                 isCorrect:
                   type: boolean
                   description: 正解の場合はtrue、不正解の場合はfalse
-                choiceSentences:
-                  type: array
-                  description: 選択肢の文
-                  items:
-                    type: string
-                choiceImgs:
-                  type: array
-                  description: 選択肢の文に続く画像URL(画像がない場合はnull)
-                  items:
-                    type: string
-                    nullable: true
                 selectedIdxes:
                   type: array
                   description: 選択した選択肢のインデックス
@@ -582,7 +569,20 @@ paths:
           content:
             application/json:
               schema:
-                type: string
+                type: array
+                items:
+                  type: object
+                  properties:
+                    isCorrect:
+                      type: boolean
+                    selectedIdxes:
+                      type: array
+                      items:
+                        type: integer
+                    correctIdxes:
+                      type: array
+                      items:
+                        type: integer
         "400":
           description: リクエストパラメーターが不正です
           content:

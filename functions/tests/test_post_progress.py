@@ -234,7 +234,21 @@ class TestPostProgress(unittest.TestCase):
         res = post_progress(req)
 
         self.assertEqual(res.status_code, 200)
-        self.assertEqual(res.get_body().decode("utf-8"), "OK")
+        self.assertEqual(
+            json.loads(res.get_body().decode("utf-8")),
+            [
+                {
+                    "isCorrect": True,
+                    "selectedIdxes": [0],
+                    "correctIdxes": [0],
+                },
+                {
+                    "isCorrect": False,
+                    "selectedIdxes": [1],
+                    "correctIdxes": [0],
+                },
+            ],
+        )
         mock_validate_route_params.assert_called_once_with(req.route_params)
         mock_validate_headers.assert_called_once_with(req.headers)
         mock_validate_body.assert_called_once_with(request_body_encoded)
@@ -330,7 +344,16 @@ class TestPostProgress(unittest.TestCase):
         res = post_progress(req)
 
         self.assertEqual(res.status_code, 200)
-        self.assertEqual(res.get_body().decode("utf-8"), "OK")
+        self.assertEqual(
+            json.loads(res.get_body().decode("utf-8")),
+            [
+                {
+                    "isCorrect": False,
+                    "selectedIdxes": [1],
+                    "correctIdxes": [0],
+                }
+            ],
+        )
         mock_container.upsert_item.assert_called_once_with(
             {
                 "id": "user-id_test-id",

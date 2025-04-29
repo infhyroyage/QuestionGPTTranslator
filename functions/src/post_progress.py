@@ -10,6 +10,7 @@ from azure.cosmos import ContainerProxy
 from azure.cosmos.exceptions import CosmosResourceNotFoundError
 from type.cosmos import Progress, ProgressElement
 from type.request import PostProgressReq
+from type.response import PostProgressRes
 from util.cosmos import get_read_write_container
 
 
@@ -230,9 +231,19 @@ def post_progress(req: func.HttpRequest) -> func.HttpResponse:
             }
         )
 
+        # レスポンス整形
+        res_body: PostProgressRes = [
+            {
+                "isCorrect": progress["isCorrect"],
+                "selectedIdxes": progress["selectedIdxes"],
+                "correctIdxes": progress["correctIdxes"],
+            }
+            for progress in updated_progresses
+        ]
         return func.HttpResponse(
-            body="OK",
+            body=json.dumps(res_body),
             status_code=200,
+            mimetype="application/json",
         )
     except Exception:
         logging.error(traceback.format_exc())
