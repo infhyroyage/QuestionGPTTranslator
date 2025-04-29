@@ -13,6 +13,7 @@ from src.get_tests import bp_get_tests
 from src.post_answer import bp_post_answer
 from src.post_favorite import bp_post_favorite
 from src.post_progress import bp_post_progress
+from src.post_progresses import bp_post_progresses
 from src.put_en2ja import bp_put_en2ja
 from src.queue_triggered_answer import bp_queue_triggered_answer
 
@@ -30,5 +31,6 @@ app.register_blueprint(bp_get_tests)
 app.register_blueprint(bp_post_answer)
 app.register_blueprint(bp_post_favorite)
 app.register_blueprint(bp_post_progress)
+app.register_blueprint(bp_post_progresses)
 app.register_blueprint(bp_put_en2ja)
 app.register_blueprint(bp_queue_triggered_answer)
