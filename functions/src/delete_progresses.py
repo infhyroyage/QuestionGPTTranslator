@@ -5,6 +5,7 @@ import traceback
 
 import azure.functions as func
 from azure.cosmos import ContainerProxy
+from azure.cosmos.exceptions import CosmosResourceNotFoundError
 from util.cosmos import get_read_write_container
 
 
@@ -68,7 +69,11 @@ def delete_progresses(req: func.HttpRequest) -> func.HttpResponse:
             database_name="Users",
             container_name="Progress",
         )
-        container.delete_item(item=f"{user_id}_{test_id}", partition_key=test_id)
+        try:
+            container.delete_item(item=f"{user_id}_{test_id}", partition_key=test_id)
+        except CosmosResourceNotFoundError:
+            # 削除対象が存在しない場合でも200をレスポンスする
+            pass
 
         return func.HttpResponse(
             body="OK",
