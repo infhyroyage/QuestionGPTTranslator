@@ -16,7 +16,7 @@ class TestGetTests(TestCase):
 
     @patch("src.get_tests.get_read_only_container")
     @patch("src.get_tests.logging")
-    @patch.dict(os.environ, {"COSMOSDB_URI": "https://localhost:8081"})
+    @patch.dict(os.environ, {"COSMOSDB_URI": "http://localhost:8081"})
     def test_get_tests_success_local(self, mock_logging, mock_get_read_only_container):
         """ローカル環境でレスポンスが正常であることのテスト"""
 
@@ -48,6 +48,7 @@ class TestGetTests(TestCase):
             container_name="Test",
         )
         mock_container.read_all_items.assert_called_once()
+        mock_container.query_items.assert_not_called()
         mock_logging.info.assert_has_calls(
             [call({"items": mock_items}), call({"body": expected_body})]
         )
@@ -56,7 +57,8 @@ class TestGetTests(TestCase):
     @patch("src.get_tests.get_read_only_container")
     @patch("src.get_tests.logging")
     @patch.dict(
-        os.environ, {"COSMOSDB_URI": "https://test-cosmosdb.documents.azure.com:443"}
+        os.environ,
+        {"COSMOSDB_URI": "https://test-cosmosdb.documents.azure.com:443"},
     )
     def test_get_tests_success_azure(self, mock_logging, mock_get_read_only_container):
         """Azure環境でレスポンスが正常であることのテスト"""
@@ -67,7 +69,7 @@ class TestGetTests(TestCase):
             {"id": "2", "courseName": "Math", "testName": "Geometry", "length": 20},
             {"id": "3", "courseName": "Science", "testName": "Physics", "length": 30},
         ]
-        mock_container.read_all_items.return_value = mock_items
+        mock_container.query_items.return_value = mock_items
         mock_get_read_only_container.return_value = mock_container
 
         req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
@@ -88,7 +90,11 @@ class TestGetTests(TestCase):
             database_name="Users",
             container_name="Test",
         )
-        mock_container.read_all_items.assert_called_once()
+        mock_container.read_all_items.assert_not_called()
+        mock_container.query_items.assert_called_once_with(
+            query="SELECT * FROM c ORDER BY c.courseName ASC, c.testName ASC",
+            enable_cross_partition_query=True,
+        )
         mock_logging.info.assert_has_calls(
             [call({"items": mock_items}), call({"body": expected_body})]
         )
