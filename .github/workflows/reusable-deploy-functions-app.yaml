@@ -52,7 +52,7 @@ jobs:
           creds: '{"clientId":"${{ inputs.AZURE_AD_SP_CONTRIBUTOR_CLIENT_ID }}","clientSecret":"${{ secrets.AZURE_AD_SP_CONTRIBUTOR_CLIENT_SECRET }}","subscriptionId":"${{ inputs.AZURE_SUBSCRIPTION_ID }}","tenantId":"${{ inputs.AZURE_TENANT_ID }}"}'
 
       - name: Deploy Azure Functions Application
-        uses: Azure/functions-action@v1.5.2
+        uses: Azure/functions-action@v1.5.3
         with:
           app-name: ${{ inputs.FUNCTIONS_NAME }}
           package: functions/
