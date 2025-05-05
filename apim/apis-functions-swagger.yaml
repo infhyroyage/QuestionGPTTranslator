@@ -645,6 +645,7 @@ paths:
                       properties:
                         sentence:
                           type: string
+                          nullable: true
                         img:
                           type: string
                           nullable: true
