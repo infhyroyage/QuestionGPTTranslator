@@ -99,9 +99,9 @@ class Choice(TypedDict):
     [GET] /tests/{testId}/questions/{questionNumber} のレスポンスボディのchoicesフィールドの各要素の型
     """
 
-    sentence: str
+    sentence: Optional[str]
     """
-    選択肢の文
+    選択肢の文(画像URLのみの場合はNone)
     """
 
     img: Optional[str]

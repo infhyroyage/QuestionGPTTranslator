@@ -158,9 +158,9 @@ class Question(TypedDict):
     問題文
     """
 
-    choices: List[str]
+    choices: List[str | None]
     """
-    選択肢
+    選択肢(画像URLのみの場合はNone)
     """
 
     isMultiplied: bool

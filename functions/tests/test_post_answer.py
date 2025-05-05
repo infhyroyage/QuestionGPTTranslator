@@ -134,7 +134,7 @@ class TestCreateChatCompletionsMessages(unittest.TestCase):
     USER_CONTENT_TEXT_FOOTER = "---"
 
     def test_create_chat_completions_messages_no_images(self):
-        """すべての問題文・選択肢に画像URLが含まれない場合のテスト"""
+        """問題文・選択肢に画像URLが含まれない場合のテスト"""
 
         subjects = ["What is 2 + 2?"]
         choices = ["3", "4", "5"]
@@ -218,8 +218,8 @@ class TestCreateChatCompletionsMessages(unittest.TestCase):
             ],
         )
 
-    def test_create_chat_completions_messages_choice_images(self):
-        """選択肢に画像URLが含まれる場合のテスト"""
+    def test_create_chat_completions_messages_choice_sentences_and_images(self):
+        """選択肢の文章の後に画像URLが続く場合のテスト"""
 
         subjects = ["What is 2 + 2?"]
         choices = ["3", "4", "5"]
@@ -260,6 +260,74 @@ class TestCreateChatCompletionsMessages(unittest.TestCase):
                         {
                             "type": "text",
                             "text": "1. 4\n" + "2. 5\n",
+                        },
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": "https://example.com/image3.jpg",
+                            },
+                        },
+                        {
+                            "type": "text",
+                            "text": self.USER_CONTENT_TEXT_FOOTER,
+                        },
+                    ],
+                },
+            ],
+        )
+
+    def test_create_chat_completions_messages_choice_images(self):
+        """選択肢が画像URLのみの場合のテスト"""
+
+        subjects = ["What is 2 + 2?"]
+        choices = [None, None, None]
+        indicate_subject_img_idxes = None
+        indicate_choice_imgs = [
+            "https://example.com/image1.jpg",
+            "https://example.com/image2.jpg",
+            "https://example.com/image3.jpg",
+        ]
+        messages = create_chat_completions_messages(
+            subjects, choices, indicate_subject_img_idxes, indicate_choice_imgs
+        )
+
+        self.assertEqual(
+            messages,
+            [
+                {
+                    "role": "developer",
+                    "content": SYSTEM_PROMPT,
+                },
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": (
+                                self.USER_CONTENT_TEXT_HEADER
+                                + "What is 2 + 2?\n\n"
+                                + "0. \n"
+                            ),
+                        },
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": "https://example.com/image1.jpg",
+                            },
+                        },
+                        {
+                            "type": "text",
+                            "text": "1. \n",
+                        },
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": "https://example.com/image2.jpg",
+                            },
+                        },
+                        {
+                            "type": "text",
+                            "text": "2. \n",
                         },
                         {
                             "type": "image_url",

@@ -132,7 +132,7 @@ Azure Cosmos DB に格納するデータであるインポートデータファ�
 | キー名                    | 説明                                         | 必須指定 |
 | ------------------------- | -------------------------------------------- | :------: |
 | `subjects`                | 問題文/画像 URL                              |    o     |
-| `choices`                 | 選択肢                                       |    o     |
+| `choices`                 | 選択肢(画像 URL のみの場合は null)           |    o     |
 | `communityVotes`          | コミュニティ回答割合                         |    o     |
 | `indicateSubjectImgIdxes` | `subjects`で指定した画像 URL のインデックス  |          |
 | `indicateChoiceImgs`      | `choices`の文章の後に続ける画像 URL          |          |

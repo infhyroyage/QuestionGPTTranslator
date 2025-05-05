@@ -23,9 +23,9 @@ class MessageAnswer(TypedDict):
     各問題文
     """
 
-    choices: List[str]
+    choices: List[str | None]
     """
-    各選択肢の文
+    各選択肢の文(画像URLのみの場合はNone)
     """
 
     correctIdxes: List[int]

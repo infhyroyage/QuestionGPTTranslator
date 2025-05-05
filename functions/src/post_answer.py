@@ -57,7 +57,7 @@ def validate_request(req: func.HttpRequest) -> str | None:
 
 def create_chat_completions_messages(
     subjects: list[str],
-    choices: list[str],
+    choices: list[str | None],
     indicate_subject_img_idxes: list[int] | None,
     indicate_choice_imgs: list[str | None] | None,
 ) -> Iterable[ChatCompletionMessageParam]:
@@ -66,7 +66,7 @@ def create_chat_completions_messages(
 
     Args:
         subjects (list[str]): 問題文/画像URLのリスト
-        choices (list[str]): 選択肢のリスト
+        choices (list[str | None]): 選択肢のリスト(画像URLのみの場合はNone)
         indicate_subject_img_idxes (list[int] | None): subjectsで指定した画像URLのインデックスのリスト
         indicate_choice_imgs (list[str | None] | None): choicesの後に続ける画像URLのリスト(画像URLを続けない場合はNone)
 
@@ -171,7 +171,11 @@ For the question and choices below, generate the JSON format with `correct_index
 
     # 各選択肢をユーザープロンプトに追記
     for idx, choice in enumerate(choices):
-        user_content_text += f"{idx}. {choice}\n"
+        if choice is not None:
+            user_content_text += f"{idx}. {choice}\n"
+        else:
+            user_content_text += f"{idx}. \n"
+
         if indicate_choice_imgs is not None and indicate_choice_imgs[idx] is not None:
             # 選択肢の後に画像URLを続ける場合は、テキスト(text)と画像URL(image_url)を区別してユーザープロンプトに追記
             user_content.append(
@@ -211,7 +215,7 @@ For the question and choices below, generate the JSON format with `correct_index
 
 def generate_correct_answers(
     subjects: list[str],
-    choices: list[str],
+    choices: list[str | None],
     indicate_subject_img_idxes: list[int] | None,
     indicate_choice_imgs: list[str | None] | None,
 ) -> CorrectAnswers | None:
@@ -220,7 +224,7 @@ def generate_correct_answers(
 
     Args:
         subjects (list[str]): 問題文/画像URLのリスト
-        choices (list[str]): 選択肢のリスト
+        choices (list[str | None]): 選択肢のリスト(画像URLのみの場合はNone)
         indicate_subject_img_idxes (list[int] | None): subjectsで指定した画像URLのインデックスのリスト
         indicate_choice_imgs (list[str | None] | None): choicesの後に続ける画像URLのリスト(画像URLを続けない場合はNone)
 
