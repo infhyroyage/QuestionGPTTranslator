@@ -142,6 +142,7 @@ class TestUpsertQuestionItems(TestCase):
                 subjects=["Q1"],
                 choices=["A"],
                 communityVotes=["A (100%)"],
+                answerNum=1,
             ),
             ImportItem(
                 subjects=["Q2-1", "Q2-2", "Q2-3"],
@@ -150,6 +151,7 @@ class TestUpsertQuestionItems(TestCase):
                 indicateSubjectImgIdxes=[0, 2],
                 indicateChoiceImgs=["img1", "img2"],
                 escapeTranslatedIdxes={"subjects": [0, 2], "choices": [1, 3]},
+                answerNum=2,
             ),
         ]
 
@@ -162,7 +164,7 @@ class TestUpsertQuestionItems(TestCase):
             "id": "test-id_1",
             "number": 1,
             "testId": "test-id",
-            "isMultiplied": False,
+            "answerNum": 1,
         }
         expected_question_item_2nd = {
             "subjects": ["Q2-1", "Q2-2", "Q2-3"],
@@ -174,7 +176,7 @@ class TestUpsertQuestionItems(TestCase):
             "id": "test-id_2",
             "number": 2,
             "testId": "test-id",
-            "isMultiplied": True,
+            "answerNum": 2,
         }
         mock_container.upsert_item.assert_has_calls(
             [call(expected_question_item_1st), call(expected_question_item_2nd)]
@@ -206,21 +208,21 @@ class TestUpsertQuestionItems(TestCase):
                 number=2,
                 subjects=["Q2-1", "Q2-2", "Q2-3"],
                 choices=["B", "C"],
-                isMultiplied=True,
                 communityVotes=["BC (70%)", "BD (30%)"],
                 indicateSubjectImgIdxes=[0, 2],
                 indicateChoiceImgs=["img1", "img2"],
                 escapeTranslatedIdxes={"subjects": [0, 2], "choices": [1, 3]},
                 testId="test-id",
+                answerNum=2,
             ),
             Question(
                 id="test-id_3",
                 number=3,
                 subjects=["Q3-1", "Q3-2"],
                 choices=["D"],
-                isMultiplied=False,
                 communityVotes=["D (95%)", "B (5%)"],
                 testId="test-id",
+                answerNum=1,
             ),
         ]
         test_id = "test-id"
@@ -230,6 +232,7 @@ class TestUpsertQuestionItems(TestCase):
                 subjects=["Q1"],
                 choices=["A"],
                 communityVotes=["A (100%)"],
+                answerNum=1,
             ),
             ImportItem(
                 subjects=["Q2-1", "Q2-2", "Q2-3"],
@@ -238,6 +241,7 @@ class TestUpsertQuestionItems(TestCase):
                 indicateSubjectImgIdxes=[0, 2],
                 indicateChoiceImgs=["img1", "img2"],
                 escapeTranslatedIdxes={"subjects": [0, 2], "choices": [1, 3]},
+                answerNum=2,
             ),
         ]
 
@@ -250,7 +254,7 @@ class TestUpsertQuestionItems(TestCase):
             "id": "test-id_1",
             "number": 1,
             "testId": "test-id",
-            "isMultiplied": False,
+            "answerNum": 1,
         }
         mock_container.upsert_item.assert_called_once_with(expected_question_item)
         mock_logging.info.assert_has_calls(
@@ -268,11 +272,13 @@ class TestUpsertQuestionItems(TestCase):
                                     "subjects": [0, 2],
                                     "choices": [1, 3],
                                 },
+                                "answerNum": 2,
                             },
                             {
                                 "subjects": ["Q3-1", "Q3-2"],
                                 "choices": ["D"],
                                 "communityVotes": ["D (95%)", "B (5%)"],
+                                "answerNum": 1,
                             },
                         ]
                     }
@@ -296,7 +302,14 @@ class TestBlobTriggeredImport(TestCase):
         mock_upsert_test_item.return_value = ("test-id", False)
 
         blob_data = json.dumps(
-            [{"subjects": ["Q1"], "choices": ["A"], "communityVotes": ["A (100%)"]}]
+            [
+                {
+                    "subjects": ["Q1"],
+                    "choices": ["A"],
+                    "communityVotes": ["A (100%)"],
+                    "answerNum": 1,
+                }
+            ]
         ).encode("utf-8")
 
         mock_blob = MagicMock()
@@ -309,14 +322,24 @@ class TestBlobTriggeredImport(TestCase):
             course_name="Math",
             test_name="Algebra",
             json_data=[
-                {"subjects": ["Q1"], "choices": ["A"], "communityVotes": ["A (100%)"]}
+                {
+                    "subjects": ["Q1"],
+                    "choices": ["A"],
+                    "communityVotes": ["A (100%)"],
+                    "answerNum": 1,
+                }
             ],
         )
         mock_upsert_question_items.assert_called_once_with(
             test_id="test-id",
             is_existed_test=False,
             json_data=[
-                {"subjects": ["Q1"], "choices": ["A"], "communityVotes": ["A (100%)"]}
+                {
+                    "subjects": ["Q1"],
+                    "choices": ["A"],
+                    "communityVotes": ["A (100%)"],
+                    "answerNum": 1,
+                }
             ],
         )
         mock_logging.info.assert_called_once_with(

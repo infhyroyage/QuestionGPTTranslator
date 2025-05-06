@@ -163,12 +163,12 @@ class Question(TypedDict):
     選択肢(画像URLのみの場合はNone)
     """
 
-    isMultiplied: bool
+    answerNum: int
     """
-    回答が複数個の場合はtrue、回答が1個の場合はfalse
+    回答の選択肢の個数
     """
 
-    communityVotes: List[str]
+    communityVotes: Optional[List[str]]
     """
     コミュニティ回答割合
     """

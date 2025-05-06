@@ -1,6 +1,6 @@
 """キューストレージのメッセージの型定義"""
 
-from typing import List, TypedDict
+from typing import List, Optional, TypedDict
 
 
 class MessageAnswer(TypedDict):
@@ -28,6 +28,11 @@ class MessageAnswer(TypedDict):
     各選択肢の文(画像URLのみの場合はNone)
     """
 
+    answerNum: int
+    """
+    回答の選択肢の個数
+    """
+
     correctIdxes: List[int]
     """
     正解の選択肢のインデックス
@@ -38,7 +43,7 @@ class MessageAnswer(TypedDict):
     各選択肢の正解/不正解の理由
     """
 
-    communityVotes: List[str]
+    communityVotes: Optional[List[str]]
     """
     コミュニティ回答割合
     """

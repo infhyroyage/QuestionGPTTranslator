@@ -343,23 +343,25 @@ def post_answer(req: func.HttpRequest) -> func.HttpResponse:
             raise ValueError("Failed to generate correct answers")
 
         # キューストレージにメッセージを格納
-        queue_message_answer(
-            {
-                "testId": test_id,
-                "questionNumber": int(question_number),
-                "subjects": item.get("subjects"),
-                "choices": item.get("choices"),
-                "correctIdxes": correct_answers["correct_indexes"],
-                "explanations": correct_answers["explanations"],
-                "communityVotes": item.get("communityVotes"),
-            }
-        )
+        message_answer: MessageAnswer = {
+            "testId": test_id,
+            "questionNumber": int(question_number),
+            "subjects": item.get("subjects"),
+            "choices": item.get("choices"),
+            "answerNum": item.get("answerNum"),
+            "correctIdxes": correct_answers["correct_indexes"],
+            "explanations": correct_answers["explanations"],
+        }
+        if item.get("communityVotes") is not None:
+            message_answer["communityVotes"] = item.get("communityVotes")
+        queue_message_answer(message_answer)
 
         body: PostAnswerRes = {
             "correctIdxes": correct_answers["correct_indexes"],
             "explanations": correct_answers["explanations"],
-            "communityVotes": item.get("communityVotes"),
         }
+        if item.get("communityVotes") is not None:
+            body["communityVotes"] = item.get("communityVotes")
         return func.HttpResponse(
             body=json.dumps(body),
             status_code=200,

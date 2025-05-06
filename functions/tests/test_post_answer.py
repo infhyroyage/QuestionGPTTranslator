@@ -548,8 +548,10 @@ class TestQueueMessageAnswer(unittest.TestCase):
             questionNumber=1,
             subjects=["What is 2 + 2?"],
             choices=["3", "4", "5"],
+            answerNum=1,
             correctIdxes=[1],
             explanations=["Option 2 is correct because 2 + 2 equals 4."],
+            communityVotes=["A (100%)"],
         )
 
         queue_message_answer(message_answer)
@@ -573,6 +575,7 @@ class TestQueueMessageAnswer(unittest.TestCase):
             questionNumber=1,
             subjects=["What is 2 + 2?"],
             choices=["3", "4", "5"],
+            answerNum=1,
             correctIdxes=[1],
             explanations=["Option 2 is correct because 2 + 2 equals 4."],
         )
@@ -609,6 +612,7 @@ class TestPostAnswer(unittest.TestCase):
             subjects=["What is 2 + 2?"],
             choices=["3", "4", "5"],
             communityVotes=["BC (70%)", "BD (30%)"],
+            answerNum=1,
         )
         mock_container.read_item.return_value = mock_item
         mock_get_read_only_container.return_value = mock_container
@@ -652,6 +656,7 @@ class TestPostAnswer(unittest.TestCase):
                 questionNumber=1,
                 subjects=["What is 2 + 2?"],
                 choices=["3", "4", "5"],
+                answerNum=1,
                 correctIdxes=[1],
                 explanations=["Option 2 is correct because 2 + 2 equals 4."],
                 communityVotes=["BC (70%)", "BD (30%)"],
@@ -741,6 +746,7 @@ class TestPostAnswer(unittest.TestCase):
             subjects=["What is 2 + 2?"],
             choices=["3", "4", "5"],
             communityVotes=["BC (70%)", "BD (30%)"],
+            answerNum=1,
         )
         mock_container.read_item.return_value = mock_item
         mock_get_read_only_container.return_value = mock_container

@@ -103,6 +103,10 @@ class TestCreateDatabasesAndContainers(unittest.TestCase):
                     id="Progress",
                     partition_key=PartitionKey(path="/testId"),
                 ),
+                call(
+                    id="Favorite",
+                    partition_key=PartitionKey(path="/testId"),
+                ),
             ],
             any_order=True,
         )
@@ -125,7 +129,7 @@ class TestCreateImportData(unittest.TestCase):
     @patch(
         "builtins.open",
         new_callable=mock_open,
-        read_data='[{"question": "Q1"}]',
+        read_data='[{"subjects": ["Q1"], "choices": ["A", "B"], "communityVotes": ["A (100%)"], "answerNum": 1}]',  # pylint: disable=C0301
     )
     @patch("util.local.os.path.exists")
     @patch("util.local.os.listdir")
@@ -164,12 +168,40 @@ class TestCreateImportData(unittest.TestCase):
 
         expected_data = {
             "Math": {
-                "Algebra": [{"question": "Q1"}],
-                "Geometry": [{"question": "Q1"}],
+                "Algebra": [
+                    {
+                        "subjects": ["Q1"],
+                        "choices": ["A", "B"],
+                        "communityVotes": ["A (100%)"],
+                        "answerNum": 1,
+                    }
+                ],
+                "Geometry": [
+                    {
+                        "subjects": ["Q1"],
+                        "choices": ["A", "B"],
+                        "communityVotes": ["A (100%)"],
+                        "answerNum": 1,
+                    }
+                ],
             },
             "Science": {
-                "Algebra": [{"question": "Q1"}],
-                "Geometry": [{"question": "Q1"}],
+                "Algebra": [
+                    {
+                        "subjects": ["Q1"],
+                        "choices": ["A", "B"],
+                        "communityVotes": ["A (100%)"],
+                        "answerNum": 1,
+                    }
+                ],
+                "Geometry": [
+                    {
+                        "subjects": ["Q1"],
+                        "choices": ["A", "B"],
+                        "communityVotes": ["A (100%)"],
+                        "answerNum": 1,
+                    }
+                ],
             },
         }
         self.assertEqual(import_data, expected_data)
@@ -191,8 +223,22 @@ class TestGenerateTestItems(unittest.TestCase):
 
         import_data: ImportData = {
             "Math": {
-                "Algebra": [{"question": "Q1"}],
-                "Geometry": [{"question": "Q2"}],
+                "Algebra": [
+                    {
+                        "subjects": ["Q1"],
+                        "choices": ["A", "B"],
+                        "communityVotes": ["A (100%)"],
+                        "answerNum": 1,
+                    }
+                ],
+                "Geometry": [
+                    {
+                        "subjects": ["Q2"],
+                        "choices": ["A", "B"],
+                        "communityVotes": ["A (100%)"],
+                        "answerNum": 1,
+                    }
+                ],
             }
         }
         test_items = generate_test_items(import_data)
@@ -221,8 +267,22 @@ class TestGenerateTestItems(unittest.TestCase):
 
         import_data: ImportData = {
             "Math": {
-                "Algebra": [{"question": "Q1"}],
-                "Geometry": [{"question": "Q2"}],
+                "Algebra": [
+                    {
+                        "subjects": ["Q1"],
+                        "choices": ["A", "B"],
+                        "communityVotes": ["A (100%)"],
+                        "answerNum": 1,
+                    }
+                ],
+                "Geometry": [
+                    {
+                        "subjects": ["Q2"],
+                        "choices": ["A", "B"],
+                        "communityVotes": ["A (100%)"],
+                        "answerNum": 1,
+                    }
+                ],
             }
         }
         test_items = generate_test_items(import_data)
@@ -270,7 +330,14 @@ class TestGenerateQuestionItems(unittest.TestCase):
 
         import_data: ImportData = {
             "Math": {
-                "Algebra": [{"question": "Q1", "communityVotes": ["AB (100%)"]}],
+                "Algebra": [
+                    {
+                        "subjects": ["Q1"],
+                        "choices": ["A", "B"],
+                        "communityVotes": ["AB (100%)"],
+                        "answerNum": 2,
+                    }
+                ],
             }
         }
         test_items: list[Test] = [
@@ -280,12 +347,13 @@ class TestGenerateQuestionItems(unittest.TestCase):
 
         expected_items = [
             {
-                "question": "Q1",
+                "subjects": ["Q1"],
+                "choices": ["A", "B"],
                 "communityVotes": ["AB (100%)"],
+                "answerNum": 2,
                 "id": "1_1",
                 "number": 1,
                 "testId": "1",
-                "isMultiplied": True,
             }
         ]
         self.assertEqual(question_items, expected_items)
@@ -301,7 +369,14 @@ class TestGenerateQuestionItems(unittest.TestCase):
 
         import_data: ImportData = {
             "Math": {
-                "Algebra": [{"question": "Q1", "communityVotes": ["AB (100%)"]}],
+                "Algebra": [
+                    {
+                        "subjects": ["Q1"],
+                        "choices": ["A", "B"],
+                        "communityVotes": ["AB (100%)"],
+                        "answerNum": 2,
+                    }
+                ],
             }
         }
         test_items: list[Test] = [
@@ -329,20 +404,22 @@ class TestImportQuestionItems(unittest.TestCase):
 
         question_items: list[Question] = [
             {
-                "question": "Q1",
+                "subjects": ["Q1"],
+                "choices": ["A", "B"],
                 "communityVotes": ["AB (100%)"],
+                "answerNum": 2,
                 "id": "1_1",
                 "number": 1,
                 "testId": "1",
-                "isMultiplied": True,
             },
             {
-                "question": "Q2",
+                "subjects": ["Q2"],
+                "choices": ["C"],
                 "communityVotes": ["C (100%)"],
+                "answerNum": 1,
                 "id": "1_2",
                 "number": 2,
                 "testId": "1",
-                "isMultiplied": True,
             },
         ]
         import_question_items(question_items)

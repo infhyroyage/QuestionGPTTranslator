@@ -62,7 +62,7 @@ class TestGetAnswer(TestCase):
     def test_get_answer_success(
         self, mock_logging, mock_get_read_only_container, mock_validate_request
     ):
-        """レスポンスが正常であることのテスト"""
+        """ommunityVotesが存在する場合のレスポンスが正常であることのテスト"""
 
         mock_validate_request.return_value = None
         mock_container = MagicMock()
@@ -93,6 +93,48 @@ class TestGetAnswer(TestCase):
             "correctIdxes": [1],
             "explanations": ["Option 1 is correct because..."],
             "communityVotes": ["BC (70%)", "BD (30%)"],
+        }
+        self.assertEqual(json.loads(response.get_body().decode()), expected_body)
+        mock_logging.info.assert_has_calls(
+            [call({"item": mock_item}), call({"body": expected_body})]
+        )
+        mock_logging.error.assert_not_called()
+
+    @patch("src.get_answer.validate_request")
+    @patch("src.get_answer.get_read_only_container")
+    @patch("src.get_answer.logging")
+    def test_get_answer_success_without_community_votes(
+        self, mock_logging, mock_get_read_only_container, mock_validate_request
+    ):
+        """communityVotesが存在しない場合のレスポンスが正常であることのテスト"""
+
+        mock_validate_request.return_value = None
+        mock_container = MagicMock()
+        mock_item = {
+            "correctIdxes": [1],
+            "explanations": ["Option 1 is correct because..."],
+        }
+        mock_container.read_item.return_value = mock_item
+        mock_get_read_only_container.return_value = mock_container
+
+        req = MagicMock(spec=func.HttpRequest)
+        req.route_params = {"testId": "1", "questionNumber": "1"}
+
+        response = get_answer(req)
+
+        self.assertEqual(response.status_code, 200)
+        mock_validate_request.assert_called_once_with(req)
+        mock_get_read_only_container.assert_called_once_with(
+            database_name="Users",
+            container_name="Answer",
+        )
+        mock_container.read_item.assert_called_once_with(
+            item="1_1",
+            partition_key="1",
+        )
+        expected_body = {
+            "correctIdxes": [1],
+            "explanations": ["Option 1 is correct because..."],
         }
         self.assertEqual(json.loads(response.get_body().decode()), expected_body)
         mock_logging.info.assert_has_calls(

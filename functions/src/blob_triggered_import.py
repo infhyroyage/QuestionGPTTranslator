@@ -2,7 +2,6 @@
 
 import json
 import logging
-import re
 import time
 from uuid import uuid4
 
@@ -107,8 +106,12 @@ def upsert_question_items(
         inserted_import_item: ImportItem = {
             "subjects": inserted_question_item["subjects"],
             "choices": inserted_question_item["choices"],
-            "communityVotes": inserted_question_item["communityVotes"],
+            "answerNum": inserted_question_item["answerNum"],
         }
+        if "communityVotes" in inserted_question_item:
+            inserted_import_item["communityVotes"] = inserted_question_item[
+                "communityVotes"
+            ]
         if "indicateSubjectImgIdxes" in inserted_question_item:
             inserted_import_item["indicateSubjectImgIdxes"] = inserted_question_item[
                 "indicateSubjectImgIdxes"
@@ -136,17 +139,11 @@ def upsert_question_items(
     # https://docs.microsoft.com/ja-jp/azure/cosmos-db/sql/troubleshoot-request-rate-too-large
     for idx, json_import_item in enumerate(json_data):
         if json_import_item not in inserted_import_items:
-            # communityVotesの最初の要素が「AB (100%)」のような形式の場合は回答が複数個、
-            # 「A (100%)」のような形式の場合は回答が1個のみ存在すると判定
-            is_multiplied: bool = bool(
-                re.match(r"^[A-Z]{2,} \(\d+%\)$", json_import_item["communityVotes"][0])
-            )
             question_item: Question = {
                 **json_import_item,
                 "id": f"{test_id}_{idx + 1}",
                 "number": idx + 1,
                 "testId": test_id,
-                "isMultiplied": is_multiplied,
             }
             logging.info({"question_item": question_item})
             container.upsert_item(question_item)

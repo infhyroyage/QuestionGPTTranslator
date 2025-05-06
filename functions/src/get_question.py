@@ -105,7 +105,7 @@ def get_question(req: func.HttpRequest) -> func.HttpResponse:
                 }
                 for idx, choice in enumerate(item["choices"])
             ],
-            "isMultiplied": item["isMultiplied"],
+            "isMultiplied": item["answerNum"] > 1,
         }
         logging.info({"body": body})
 

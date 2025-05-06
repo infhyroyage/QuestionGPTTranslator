@@ -38,13 +38,13 @@ def queue_triggered_answer(msg: func.QueueMessage):
     )
     logging.info({"item": item})
 
-    # 取得した項目とメッセージとのsubjects/choices/communityVotesが
-    # すべて一致する場合のみ、Answerコンテナーの項目をupsertする
+    # 取得したQuestionコンテナーの項目の必須項目(subjects/choices/answerNum)が、
+    # メッセージとすべて一致する場合のみ、Answerコンテナーの項目をupsertする
     # 上記以外の場合は不正なメッセージとみなし、その場で正常終了する
     if (
         item["subjects"] == message_answer["subjects"]
         and item["choices"] == message_answer["choices"]
-        and item["communityVotes"] == message_answer["communityVotes"]
+        and item["answerNum"] == message_answer["answerNum"]
     ):
         container_answer: ContainerProxy = get_read_write_container(
             database_name="Users",

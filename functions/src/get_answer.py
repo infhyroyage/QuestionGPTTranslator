@@ -76,8 +76,9 @@ def get_answer(req: func.HttpRequest) -> func.HttpResponse:
             body: GetAnswerRes = {
                 "correctIdxes": item["correctIdxes"],
                 "explanations": item["explanations"],
-                "communityVotes": item["communityVotes"],
             }
+            if item.get("communityVotes") is not None:
+                body["communityVotes"] = item["communityVotes"]
             logging.info({"body": body})
 
             return func.HttpResponse(
