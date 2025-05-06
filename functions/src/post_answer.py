@@ -58,6 +58,7 @@ def validate_request(req: func.HttpRequest) -> str | None:
 def create_chat_completions_messages(
     subjects: list[str],
     choices: list[str | None],
+    answer_num: int,
     indicate_subject_img_idxes: list[int] | None,
     indicate_choice_imgs: list[str | None] | None,
 ) -> Iterable[ChatCompletionMessageParam]:
@@ -67,6 +68,7 @@ def create_chat_completions_messages(
     Args:
         subjects (list[str]): 問題文/画像URLのリスト
         choices (list[str | None]): 選択肢のリスト(画像URLのみの場合はNone)
+        answer_num (int): 正解の選択肢の数
         indicate_subject_img_idxes (list[int] | None): subjectsで指定した画像URLのインデックスのリスト
         indicate_choice_imgs (list[str | None] | None): choicesの後に続ける画像URLのリスト(画像URLを続けない場合はNone)
 
@@ -78,8 +80,8 @@ def create_chat_completions_messages(
 
     # ユーザープロンプトのヘッダーを生成
     # pylint: disable=line-too-long
-    user_content_text: str = """For a given question and the choices, you must generate the correct option/options followed by sentences explaining why each option is correct/incorrect.
-Unless there is an instruction such as "Select THREE" in the question, there is basically only one correct option.
+    user_content_text: str = f"""For a given question and the choices, you must generate exactly {answer_num} correct option(s) followed by sentences explaining why each option is correct/incorrect.
+You should select exactly {answer_num} option(s) as correct, regardless of any instructions in the question.
 For reference, here are two examples.
 
 # First example
@@ -95,9 +97,9 @@ Which solution will meet these requirements?
 ---
 For the question and choices in this first example, generate the JSON format with `correct_indexes` and `explanations`.
 `correct_indexes` shows an array of indexes of correct options and `explanations` shows an array of explanations of why each option is correct/incorrect.
-Since there is no instructions such as "Select THREE" in the question, the number of `correct_indexes` is only one, as follows:
+Since there is only one correct answer required for this example, the number of `correct_indexes` is only one, as follows:
 ---
-{
+{{
     "correct_indexes": [2],
     "explanations": [
         "This option is incorrect because the requirements state that the only inbound port that should be open is 443.",
@@ -105,7 +107,7 @@ Since there is no instructions such as "Select THREE" in the question, the numbe
         "This option is correct because AWS Systems Manager Run Command requires no inbound ports to be open. Run Command operates entirely over outbound HTTPS, which is open by default for security groups.",
         "This option is incorrect because AWS Trusted Advisor does not perform this management function."
     ]
-}
+}}
 ---
 
 # Second Example
@@ -126,9 +128,9 @@ Which combination of actions should the solutions architect take to meet these r
 ---
 For the question and choices in this second example, generate the JSON format with `correct_indexes` and `explanations`.
 `correct_indexes` shows an array of indexes of correct options and `explanations` shows an array of explanations of why each option is correct/incorrect.
-Since there is an instruction such as "Select TWO" in the question, the number of `correct_indexes` is two, as follows:
+For this example, since two correct answers are required, the number of `correct_indexes` is two, as follows:
 ---
-{
+{{
     "correct_indexes": [1, 2],
     "explanations": [
         "This option is incorrect because additional EC2 instances will not minimize operational overhead. A managed service would be a better option.",
@@ -137,11 +139,12 @@ Since there is an instruction such as "Select TWO" in the question, the number o
         "This option is incorrect because the application includes Windows instances, which are not available for Graviton2.",
         "This option is incorrect because a company-managed load balancer will not minimize operational overhead."
     ]
-}
+}}
 ---
 
 # Main Topic
 For the question and choices below, generate the JSON format with `correct_indexes` and `explanations`.
+Remember to select exactly {answer_num} correct option(s) in your response.
 ---
 """
 
@@ -216,6 +219,7 @@ For the question and choices below, generate the JSON format with `correct_index
 def generate_correct_answers(
     subjects: list[str],
     choices: list[str | None],
+    answer_num: int,
     indicate_subject_img_idxes: list[int] | None,
     indicate_choice_imgs: list[str | None] | None,
 ) -> CorrectAnswers | None:
@@ -225,6 +229,7 @@ def generate_correct_answers(
     Args:
         subjects (list[str]): 問題文/画像URLのリスト
         choices (list[str | None]): 選択肢のリスト(画像URLのみの場合はNone)
+        answer_num (int): 正解の選択肢の数
         indicate_subject_img_idxes (list[int] | None): subjectsで指定した画像URLのインデックスのリスト
         indicate_choice_imgs (list[str | None] | None): choicesの後に続ける画像URLのリスト(画像URLを続けない場合はNone)
 
@@ -234,7 +239,7 @@ def generate_correct_answers(
 
     # Azure OpenAIのチャット補完に設定するmessagesを作成
     messages: Iterable[ChatCompletionMessageParam] = create_chat_completions_messages(
-        subjects, choices, indicate_subject_img_idxes, indicate_choice_imgs
+        subjects, choices, answer_num, indicate_subject_img_idxes, indicate_choice_imgs
     )
 
     try:
@@ -336,6 +341,7 @@ def post_answer(req: func.HttpRequest) -> func.HttpResponse:
         correct_answers = generate_correct_answers(
             item.get("subjects"),
             item.get("choices"),
+            item.get("answerNum"),
             item.get("indicateSubjectImgIdxes"),
             item.get("indicateChoiceImgs"),
         )

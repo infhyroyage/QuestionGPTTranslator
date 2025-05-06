@@ -70,8 +70,8 @@ class TestCreateChatCompletionsMessages(unittest.TestCase):
 
     # pylint: disable=line-too-long
     USER_CONTENT_TEXT_HEADER = (
-        "For a given question and the choices, you must generate the correct option/options followed by sentences explaining why each option is correct/incorrect.\n"
-        'Unless there is an instruction such as "Select THREE" in the question, there is basically only one correct option.\n'
+        "For a given question and the choices, you must generate exactly {answer_num} correct option(s) followed by sentences explaining why each option is correct/incorrect.\n"
+        "You should select exactly {answer_num} option(s) as correct, regardless of any instructions in the question.\n"
         "For reference, here are two examples.\n\n"
         "# First example\n"
         "Assume that the following question and choices are given:\n"
@@ -85,9 +85,9 @@ class TestCreateChatCompletionsMessages(unittest.TestCase):
         "---\n"
         "For the question and choices in this first example, generate the JSON format with `correct_indexes` and `explanations`.\n"
         "`correct_indexes` shows an array of indexes of correct options and `explanations` shows an array of explanations of why each option is correct/incorrect.\n"
-        'Since there is no instructions such as "Select THREE" in the question, the number of `correct_indexes` is only one, as follows:\n'
+        "Since there is only one correct answer required for this example, the number of `correct_indexes` is only one, as follows:\n"
         "---\n"
-        "{\n"
+        "{{\n"
         '    "correct_indexes": [2],\n'
         '    "explanations": [\n'
         '        "This option is incorrect because the requirements state that the only inbound port that should be open is 443.",\n'
@@ -95,7 +95,7 @@ class TestCreateChatCompletionsMessages(unittest.TestCase):
         '        "This option is correct because AWS Systems Manager Run Command requires no inbound ports to be open. Run Command operates entirely over outbound HTTPS, which is open by default for security groups.",\n'
         '        "This option is incorrect because AWS Trusted Advisor does not perform this management function."\n'
         "    ]\n"
-        "}\n"
+        "}}\n"
         "---\n\n"
         "# Second Example\n"
         "Assume that the following question and choices are given:\n"
@@ -114,9 +114,9 @@ class TestCreateChatCompletionsMessages(unittest.TestCase):
         "---\n"
         "For the question and choices in this second example, generate the JSON format with `correct_indexes` and `explanations`.\n"
         "`correct_indexes` shows an array of indexes of correct options and `explanations` shows an array of explanations of why each option is correct/incorrect.\n"
-        'Since there is an instruction such as "Select TWO" in the question, the number of `correct_indexes` is two, as follows:\n'
+        "For this example, since two correct answers are required, the number of `correct_indexes` is two, as follows:\n"
         "---\n"
-        "{\n"
+        "{{\n"
         '    "correct_indexes": [1, 2],\n'
         '    "explanations": [\n'
         '        "This option is incorrect because additional EC2 instances will not minimize operational overhead. A managed service would be a better option.",\n'
@@ -125,10 +125,11 @@ class TestCreateChatCompletionsMessages(unittest.TestCase):
         '        "This option is incorrect because the application includes Windows instances, which are not available for Graviton2.",\n'
         '        "This option is incorrect because a company-managed load balancer will not minimize operational overhead."\n'
         "    ]\n"
-        "}\n"
+        "}}\n"
         "---\n\n"
         "# Main Topic\n"
         "For the question and choices below, generate the JSON format with `correct_indexes` and `explanations`.\n"
+        "Remember to select exactly {answer_num} correct option(s) in your response.\n"
         "---\n"
     )
     USER_CONTENT_TEXT_FOOTER = "---"
@@ -138,10 +139,15 @@ class TestCreateChatCompletionsMessages(unittest.TestCase):
 
         subjects = ["What is 2 + 2?"]
         choices = ["3", "4", "5"]
+        answer_num = 1
         indicate_subject_img_idxes = None
         indicate_choice_imgs = None
         messages = create_chat_completions_messages(
-            subjects, choices, indicate_subject_img_idxes, indicate_choice_imgs
+            subjects,
+            choices,
+            answer_num,
+            indicate_subject_img_idxes,
+            indicate_choice_imgs,
         )
 
         self.assertEqual(
@@ -157,7 +163,9 @@ class TestCreateChatCompletionsMessages(unittest.TestCase):
                         {
                             "type": "text",
                             "text": (
-                                self.USER_CONTENT_TEXT_HEADER
+                                self.USER_CONTENT_TEXT_HEADER.format(
+                                    answer_num=answer_num
+                                )
                                 + "What is 2 + 2?\n\n"
                                 + "0. 3\n"
                                 + "1. 4\n"
@@ -178,10 +186,15 @@ class TestCreateChatCompletionsMessages(unittest.TestCase):
             "https://example.com/image1.jpg",
         ]
         choices = ["3", "4", "5"]
+        answer_num = 1
         indicate_subject_img_idxes = [1]
         indicate_choice_imgs = None
         messages = create_chat_completions_messages(
-            subjects, choices, indicate_subject_img_idxes, indicate_choice_imgs
+            subjects,
+            choices,
+            answer_num,
+            indicate_subject_img_idxes,
+            indicate_choice_imgs,
         )
 
         self.assertEqual(
@@ -197,7 +210,10 @@ class TestCreateChatCompletionsMessages(unittest.TestCase):
                         {
                             "type": "text",
                             "text": (
-                                self.USER_CONTENT_TEXT_HEADER + "What is 2 + 2?\n"
+                                self.USER_CONTENT_TEXT_HEADER.format(
+                                    answer_num=answer_num
+                                )
+                                + "What is 2 + 2?\n"
                             ),
                         },
                         {
@@ -223,6 +239,7 @@ class TestCreateChatCompletionsMessages(unittest.TestCase):
 
         subjects = ["What is 2 + 2?"]
         choices = ["3", "4", "5"]
+        answer_num = 1
         indicate_subject_img_idxes = None
         indicate_choice_imgs = [
             "https://example.com/image1.jpg",
@@ -230,7 +247,11 @@ class TestCreateChatCompletionsMessages(unittest.TestCase):
             "https://example.com/image3.jpg",
         ]
         messages = create_chat_completions_messages(
-            subjects, choices, indicate_subject_img_idxes, indicate_choice_imgs
+            subjects,
+            choices,
+            answer_num,
+            indicate_subject_img_idxes,
+            indicate_choice_imgs,
         )
 
         self.assertEqual(
@@ -246,7 +267,9 @@ class TestCreateChatCompletionsMessages(unittest.TestCase):
                         {
                             "type": "text",
                             "text": (
-                                self.USER_CONTENT_TEXT_HEADER
+                                self.USER_CONTENT_TEXT_HEADER.format(
+                                    answer_num=answer_num
+                                )
                                 + "What is 2 + 2?\n\n"
                                 + "0. 3\n"
                             ),
@@ -281,6 +304,7 @@ class TestCreateChatCompletionsMessages(unittest.TestCase):
 
         subjects = ["What is 2 + 2?"]
         choices = [None, None, None]
+        answer_num = 1
         indicate_subject_img_idxes = None
         indicate_choice_imgs = [
             "https://example.com/image1.jpg",
@@ -288,7 +312,11 @@ class TestCreateChatCompletionsMessages(unittest.TestCase):
             "https://example.com/image3.jpg",
         ]
         messages = create_chat_completions_messages(
-            subjects, choices, indicate_subject_img_idxes, indicate_choice_imgs
+            subjects,
+            choices,
+            answer_num,
+            indicate_subject_img_idxes,
+            indicate_choice_imgs,
         )
 
         self.assertEqual(
@@ -304,7 +332,9 @@ class TestCreateChatCompletionsMessages(unittest.TestCase):
                         {
                             "type": "text",
                             "text": (
-                                self.USER_CONTENT_TEXT_HEADER
+                                self.USER_CONTENT_TEXT_HEADER.format(
+                                    answer_num=answer_num
+                                )
                                 + "What is 2 + 2?\n\n"
                                 + "0. \n"
                             ),
@@ -394,7 +424,7 @@ class TestGenerateCorrectAnswers(unittest.TestCase):
         subjects = ["What is 2 + 2?"]
         choices = ["3", "4", "5"]
 
-        correct_answers = generate_correct_answers(subjects, choices, None, None)
+        correct_answers = generate_correct_answers(subjects, choices, 1, None, None)
 
         self.assertEqual(correct_answers["correct_indexes"], [2])
         self.assertEqual(
@@ -402,7 +432,7 @@ class TestGenerateCorrectAnswers(unittest.TestCase):
             ["Option 2 is correct because 2 + 2 equals 4."],
         )
         mock_create_chat_completions_messages.assert_called_once_with(
-            subjects, choices, None, None
+            subjects, choices, 1, None, None
         )
         mock_azure_openai.assert_called_once_with(
             api_key="test_api_key",
@@ -466,11 +496,11 @@ class TestGenerateCorrectAnswers(unittest.TestCase):
         subjects = ["What is 2 + 2?"]
         choices = ["3", "4", "5"]
 
-        correct_answers = generate_correct_answers(subjects, choices, None, None)
+        correct_answers = generate_correct_answers(subjects, choices, 1, None, None)
 
         self.assertIsNone(correct_answers)
         mock_create_chat_completions_messages.assert_called_once_with(
-            subjects, choices, None, None
+            subjects, choices, 1, None, None
         )
         mock_logging.info.assert_has_calls(
             [
@@ -521,11 +551,11 @@ class TestGenerateCorrectAnswers(unittest.TestCase):
         subjects = ["What is 2 + 2?"]
         choices = ["3", "4", "5"]
 
-        correct_answers = generate_correct_answers(subjects, choices, None, None)
+        correct_answers = generate_correct_answers(subjects, choices, 1, None, None)
 
         self.assertIsNone(correct_answers)
         mock_create_chat_completions_messages.assert_called_once_with(
-            subjects, choices, None, None
+            subjects, choices, 1, None, None
         )
         mock_logging.info.assert_called_once_with({"retry_number": 0})
         mock_logging.warning.assert_called_once()
@@ -644,12 +674,13 @@ class TestPostAnswer(unittest.TestCase):
             item="1_1",
             partition_key="1",
         )
-        mock_generate_correct_answers.assert_called_once()
-        called_args, _ = mock_generate_correct_answers.call_args
-        self.assertEqual(called_args[0], ["What is 2 + 2?"])
-        self.assertEqual(called_args[1], ["3", "4", "5"])
-        self.assertEqual(called_args[2], None)
-        self.assertEqual(called_args[3], None)
+        mock_generate_correct_answers.assert_called_once_with(
+            ["What is 2 + 2?"],
+            ["3", "4", "5"],
+            1,
+            None,
+            None,
+        )
         mock_queue_message_answer.assert_called_once_with(
             MessageAnswer(
                 testId="1",
@@ -771,6 +802,7 @@ class TestPostAnswer(unittest.TestCase):
         mock_generate_correct_answers.assert_called_once_with(
             ["What is 2 + 2?"],
             ["3", "4", "5"],
+            1,
             None,
             None,
         )
