@@ -34,7 +34,12 @@ class ImportItem(TypedDict):
     選択肢(画像URLのみの場合はNone)
     """
 
-    communityVotes: List[str]
+    answerNum: int
+    """
+    回答の選択肢の個数
+    """
+
+    communityVotes: Optional[List[str]]
     """
     コミュニティ回答割合
     """
