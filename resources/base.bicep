@@ -377,8 +377,8 @@ resource functionsPlan 'Microsoft.Web/serverfarms@2022-09-01' = {
   location: location
   kind: 'linux'
   sku: {
-    name: 'Y1'
-    tier: 'Dynamic'
+    name: 'FL0'
+    tier: 'FlexConsumption'
   }
   properties: {
     reserved: true
