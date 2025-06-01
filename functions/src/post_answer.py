@@ -90,10 +90,10 @@ Assume that the following question and choices are given:
 A company is launching a new web service on an Amazon Elastic Container Service (Amazon ECS) cluster. The cluster consists of 100 Amazon EC2 instances. Company policy requires the security group on the cluster instances to block all inbound traffic except HTTPS (port 443).
 Which solution will meet these requirements?
 
-0. Change the SSH port to 2222 on the cluster instances by using a user data script. Log in to each instance by using SSH over port 2222.
-1. Change the SSH port to 2222 on the cluster instances by using a user data script. Use AWS Trusted Advisor to remotely manage the cluster instances over port 2222.
-2. Launch the cluster instances with no SSH key pairs. Use AWS Systems Manager Run Command to remotely manage the cluster instances.
-3. Launch the cluster instances with no SSH key pairs. Use AWS Trusted Advisor to remotely manage the cluster instances.
+A. Change the SSH port to 2222 on the cluster instances by using a user data script. Log in to each instance by using SSH over port 2222.
+B. Change the SSH port to 2222 on the cluster instances by using a user data script. Use AWS Trusted Advisor to remotely manage the cluster instances over port 2222.
+C. Launch the cluster instances with no SSH key pairs. Use AWS Systems Manager Run Command to remotely manage the cluster instances.
+D. Launch the cluster instances with no SSH key pairs. Use AWS Trusted Advisor to remotely manage the cluster instances.
 ---
 For the question and choices in this first example, generate the JSON format with `correct_indexes` and `explanations`.
 `correct_indexes` shows an array of indexes of correct options and `explanations` shows an array of explanations of why each option is correct/incorrect.
@@ -102,10 +102,10 @@ Since there is only one correct answer required for this example, the number of 
 {{
     "correct_indexes": [2],
     "explanations": [
-        "This option is incorrect because the requirements state that the only inbound port that should be open is 443.",
-        "This option is incorrect because the requirements state that the only inbound port that should be open is 443.",
-        "This option is correct because AWS Systems Manager Run Command requires no inbound ports to be open. Run Command operates entirely over outbound HTTPS, which is open by default for security groups.",
-        "This option is incorrect because AWS Trusted Advisor does not perform this management function."
+        "Option A is incorrect because the requirements state that the only inbound port that should be open is 443.",
+        "Option B is incorrect because the requirements state that the only inbound port that should be open is 443.",
+        "Option C is correct because AWS Systems Manager Run Command requires no inbound ports to be open. Run Command operates entirely over outbound HTTPS, which is open by default for security groups.",
+        "Option D is incorrect because AWS Trusted Advisor does not perform this management function."
     ]
 }}
 ---
@@ -120,11 +120,11 @@ A company has deployed a multi-tier web application in the AWS Cloud. The applic
 All the EC2 instances are using Intel-based x86 CPUs. A solutions architect needs to modernize the infrastructure to achieve better performance. The solution must minimize the operational overhead of the application.
 Which combination of actions should the solutions architect take to meet these requirements? (Select TWO.)
 
-0. Run the MySQL database on multiple EC2 instances.
-1. Place the web tier instances behind an ALB.
-2. Migrate the MySQL database to Amazon Aurora Serxverless.
-3. Migrate all EC2 instance types to Graviton2.
-4. Replace the ALB for the application tier instances with a company-managed load balancer.
+A. Run the MySQL database on multiple EC2 instances.
+B. Place the web tier instances behind an ALB.
+C. Migrate the MySQL database to Amazon Aurora Serxverless.
+D. Migrate all EC2 instance types to Graviton2.
+E. Replace the ALB for the application tier instances with a company-managed load balancer.
 ---
 For the question and choices in this second example, generate the JSON format with `correct_indexes` and `explanations`.
 `correct_indexes` shows an array of indexes of correct options and `explanations` shows an array of explanations of why each option is correct/incorrect.
@@ -133,11 +133,11 @@ For this example, since two correct answers are required, the number of `correct
 {{
     "correct_indexes": [1, 2],
     "explanations": [
-        "This option is incorrect because additional EC2 instances will not minimize operational overhead. A managed service would be a better option.",
-        "This option is correct because you can improve availability and scalability of the web tier by placing the web tier behind an Application Load Balancer (ALB). The ALB serves as the single point of contact for clients and distributes incoming application traffic to the Amazon EC2 instances.",
-        "This option is correct because Amazon Aurora Serverless provides high performance and high availability with reduced operational complexity.",
-        "This option is incorrect because the application includes Windows instances, which are not available for Graviton2.",
-        "This option is incorrect because a company-managed load balancer will not minimize operational overhead."
+        "Option A is incorrect because additional EC2 instances will not minimize operational overhead. A managed service would be a better option.",
+        "Option B is correct because you can improve availability and scalability of the web tier by placing the web tier behind an Application Load Balancer (ALB). The ALB serves as the single point of contact for clients and distributes incoming application traffic to the Amazon EC2 instances.",
+        "Option C is correct because Amazon Aurora Serverless provides high performance and high availability with reduced operational complexity.",
+        "Option D is incorrect because the application includes Windows instances, which are not available for Graviton2.",
+        "Option E is incorrect because a company-managed load balancer will not minimize operational overhead."
     ]
 }}
 ---
@@ -174,10 +174,11 @@ Remember to select exactly {answer_num} correct option(s) in your response.
 
     # 各選択肢をユーザープロンプトに追記
     for idx, choice in enumerate(choices):
+        choice_label = chr(ord("A") + idx)  # 0->A, 1->B, 2->C, ...
         if choice is not None:
-            user_content_text += f"{idx}. {choice}\n"
+            user_content_text += f"{choice_label}. {choice}\n"
         else:
-            user_content_text += f"{idx}. \n"
+            user_content_text += f"{choice_label}. \n"
 
         if indicate_choice_imgs is not None and indicate_choice_imgs[idx] is not None:
             # 選択肢の後に画像URLを続ける場合は、テキスト(text)と画像URL(image_url)を区別してユーザープロンプトに追記

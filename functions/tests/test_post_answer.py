@@ -78,10 +78,10 @@ class TestCreateChatCompletionsMessages(unittest.TestCase):
         "---\n"
         "A company is launching a new web service on an Amazon Elastic Container Service (Amazon ECS) cluster. The cluster consists of 100 Amazon EC2 instances. Company policy requires the security group on the cluster instances to block all inbound traffic except HTTPS (port 443).\n"
         "Which solution will meet these requirements?\n\n"
-        "0. Change the SSH port to 2222 on the cluster instances by using a user data script. Log in to each instance by using SSH over port 2222.\n"
-        "1. Change the SSH port to 2222 on the cluster instances by using a user data script. Use AWS Trusted Advisor to remotely manage the cluster instances over port 2222.\n"
-        "2. Launch the cluster instances with no SSH key pairs. Use AWS Systems Manager Run Command to remotely manage the cluster instances.\n"
-        "3. Launch the cluster instances with no SSH key pairs. Use AWS Trusted Advisor to remotely manage the cluster instances.\n"
+        "A. Change the SSH port to 2222 on the cluster instances by using a user data script. Log in to each instance by using SSH over port 2222.\n"
+        "B. Change the SSH port to 2222 on the cluster instances by using a user data script. Use AWS Trusted Advisor to remotely manage the cluster instances over port 2222.\n"
+        "C. Launch the cluster instances with no SSH key pairs. Use AWS Systems Manager Run Command to remotely manage the cluster instances.\n"
+        "D. Launch the cluster instances with no SSH key pairs. Use AWS Trusted Advisor to remotely manage the cluster instances.\n"
         "---\n"
         "For the question and choices in this first example, generate the JSON format with `correct_indexes` and `explanations`.\n"
         "`correct_indexes` shows an array of indexes of correct options and `explanations` shows an array of explanations of why each option is correct/incorrect.\n"
@@ -90,10 +90,10 @@ class TestCreateChatCompletionsMessages(unittest.TestCase):
         "{{\n"
         '    "correct_indexes": [2],\n'
         '    "explanations": [\n'
-        '        "This option is incorrect because the requirements state that the only inbound port that should be open is 443.",\n'
-        '        "This option is incorrect because the requirements state that the only inbound port that should be open is 443.",\n'
-        '        "This option is correct because AWS Systems Manager Run Command requires no inbound ports to be open. Run Command operates entirely over outbound HTTPS, which is open by default for security groups.",\n'
-        '        "This option is incorrect because AWS Trusted Advisor does not perform this management function."\n'
+        '        "Option A is incorrect because the requirements state that the only inbound port that should be open is 443.",\n'
+        '        "Option B is incorrect because the requirements state that the only inbound port that should be open is 443.",\n'
+        '        "Option C is correct because AWS Systems Manager Run Command requires no inbound ports to be open. Run Command operates entirely over outbound HTTPS, which is open by default for security groups.",\n'
+        '        "Option D is incorrect because AWS Trusted Advisor does not perform this management function."\n'
         "    ]\n"
         "}}\n"
         "---\n\n"
@@ -106,11 +106,11 @@ class TestCreateChatCompletionsMessages(unittest.TestCase):
         "* A MySQL database that runs on a Linux EC2 instance\n"
         "All the EC2 instances are using Intel-based x86 CPUs. A solutions architect needs to modernize the infrastructure to achieve better performance. The solution must minimize the operational overhead of the application.\n"
         "Which combination of actions should the solutions architect take to meet these requirements? (Select TWO.)\n\n"
-        "0. Run the MySQL database on multiple EC2 instances.\n"
-        "1. Place the web tier instances behind an ALB.\n"
-        "2. Migrate the MySQL database to Amazon Aurora Serxverless.\n"
-        "3. Migrate all EC2 instance types to Graviton2.\n"
-        "4. Replace the ALB for the application tier instances with a company-managed load balancer.\n"
+        "A. Run the MySQL database on multiple EC2 instances.\n"
+        "B. Place the web tier instances behind an ALB.\n"
+        "C. Migrate the MySQL database to Amazon Aurora Serxverless.\n"
+        "D. Migrate all EC2 instance types to Graviton2.\n"
+        "E. Replace the ALB for the application tier instances with a company-managed load balancer.\n"
         "---\n"
         "For the question and choices in this second example, generate the JSON format with `correct_indexes` and `explanations`.\n"
         "`correct_indexes` shows an array of indexes of correct options and `explanations` shows an array of explanations of why each option is correct/incorrect.\n"
@@ -119,11 +119,11 @@ class TestCreateChatCompletionsMessages(unittest.TestCase):
         "{{\n"
         '    "correct_indexes": [1, 2],\n'
         '    "explanations": [\n'
-        '        "This option is incorrect because additional EC2 instances will not minimize operational overhead. A managed service would be a better option.",\n'
-        '        "This option is correct because you can improve availability and scalability of the web tier by placing the web tier behind an Application Load Balancer (ALB). The ALB serves as the single point of contact for clients and distributes incoming application traffic to the Amazon EC2 instances.",\n'
-        '        "This option is correct because Amazon Aurora Serverless provides high performance and high availability with reduced operational complexity.",\n'
-        '        "This option is incorrect because the application includes Windows instances, which are not available for Graviton2.",\n'
-        '        "This option is incorrect because a company-managed load balancer will not minimize operational overhead."\n'
+        '        "Option A is incorrect because additional EC2 instances will not minimize operational overhead. A managed service would be a better option.",\n'
+        '        "Option B is correct because you can improve availability and scalability of the web tier by placing the web tier behind an Application Load Balancer (ALB). The ALB serves as the single point of contact for clients and distributes incoming application traffic to the Amazon EC2 instances.",\n'
+        '        "Option C is correct because Amazon Aurora Serverless provides high performance and high availability with reduced operational complexity.",\n'
+        '        "Option D is incorrect because the application includes Windows instances, which are not available for Graviton2.",\n'
+        '        "Option E is incorrect because a company-managed load balancer will not minimize operational overhead."\n'
         "    ]\n"
         "}}\n"
         "---\n\n"
@@ -167,9 +167,9 @@ class TestCreateChatCompletionsMessages(unittest.TestCase):
                                     answer_num=answer_num
                                 )
                                 + "What is 2 + 2?\n\n"
-                                + "0. 3\n"
-                                + "1. 4\n"
-                                + "2. 5\n"
+                                + "A. 3\n"
+                                + "B. 4\n"
+                                + "C. 5\n"
                                 + self.USER_CONTENT_TEXT_FOOTER
                             ),
                         }
@@ -224,9 +224,9 @@ class TestCreateChatCompletionsMessages(unittest.TestCase):
                         },
                         {
                             "type": "text",
-                            "text": "0. 3\n"
-                            + "1. 4\n"
-                            + "2. 5\n"
+                            "text": "A. 3\n"
+                            + "B. 4\n"
+                            + "C. 5\n"
                             + self.USER_CONTENT_TEXT_FOOTER,
                         },
                     ],
@@ -271,7 +271,7 @@ class TestCreateChatCompletionsMessages(unittest.TestCase):
                                     answer_num=answer_num
                                 )
                                 + "What is 2 + 2?\n\n"
-                                + "0. 3\n"
+                                + "A. 3\n"
                             ),
                         },
                         {
@@ -282,7 +282,7 @@ class TestCreateChatCompletionsMessages(unittest.TestCase):
                         },
                         {
                             "type": "text",
-                            "text": "1. 4\n" + "2. 5\n",
+                            "text": "B. 4\n" + "C. 5\n",
                         },
                         {
                             "type": "image_url",
@@ -336,7 +336,7 @@ class TestCreateChatCompletionsMessages(unittest.TestCase):
                                     answer_num=answer_num
                                 )
                                 + "What is 2 + 2?\n\n"
-                                + "0. \n"
+                                + "A. \n"
                             ),
                         },
                         {
@@ -347,7 +347,7 @@ class TestCreateChatCompletionsMessages(unittest.TestCase):
                         },
                         {
                             "type": "text",
-                            "text": "1. \n",
+                            "text": "B. \n",
                         },
                         {
                             "type": "image_url",
@@ -357,7 +357,7 @@ class TestCreateChatCompletionsMessages(unittest.TestCase):
                         },
                         {
                             "type": "text",
-                            "text": "2. \n",
+                            "text": "C. \n",
                         },
                         {
                             "type": "image_url",
