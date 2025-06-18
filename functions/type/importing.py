@@ -19,6 +19,27 @@ class EscapeTranslatedIdxes(TypedDict, total=False):
     """
 
 
+class Discussion(TypedDict, total=False):
+    """
+    ディスカッションの型
+    """
+
+    comment: str
+    """
+    ユーザーのコメント
+    """
+
+    upvotedNum: int
+    """
+    賛成票数
+    """
+
+    selectedAnswer: Optional[str]
+    """
+    ユーザーが選択した選択肢
+    """
+
+
 class ImportItem(TypedDict):
     """
     インポートデータファイルの各要素の型
@@ -41,7 +62,7 @@ class ImportItem(TypedDict):
 
     communityVotes: Optional[List[str]]
     """
-    コミュニティ回答割合
+    コミュニティでの回答割合
     """
 
     indicateSubjectImgIdxes: Optional[List[int]]
@@ -57,6 +78,11 @@ class ImportItem(TypedDict):
     escapeTranslatedIdxes: Optional[EscapeTranslatedIdxes]
     """
     翻訳しない問題文・選択肢のインデックス
+    """
+
+    discussions: Optional[List[Discussion]]
+    """
+    コミュニティでのディスカッション
     """
 
 

@@ -121,7 +121,20 @@ Azure Cosmos DB に格納するデータであるインポートデータファ�
     "escapeTranslatedIdxes": {
       "subjects": [0, ... ],
       "choices": [1, ... ],
-    }
+    },
+    "discussions": [
+      {
+        "comment": "コメント1",
+        "upvotedNum": 1,
+        "selectedAnswer": "選択肢1"
+      },
+      {
+        "comment": "コメント2",
+        "upvotedNum": 2,
+        "selectedAnswer": "選択肢2"
+      },
+      :
+    ]
   },
   {
     "subjects": [ ... ],
@@ -130,15 +143,26 @@ Azure Cosmos DB に格納するデータであるインポートデータファ�
 ]
 ```
 
-| キー名                    | 説明                                         | 必須指定 |
+インポートデータファイルには、以下の属性を持つ連想配列を記載する。
+
+| 属性名                    | 説明                                         | 必須指定 |
 | ------------------------- | -------------------------------------------- | :------: |
 | `subjects`                | 問題文/画像 URL                              |    o     |
 | `choices`                 | 選択肢(画像 URL のみの場合は null)           |    o     |
 | `answerNum`               | 回答の選択肢の個数                           |    o     |
-| `communityVotes`          | コミュニティ回答割合                         |          |
+| `communityVotes`          | コミュニティでの回答割合                     |          |
 | `indicateSubjectImgIdxes` | `subjects`で指定した画像 URL のインデックス  |          |
 | `indicateChoiceImgs`      | `choices`の文章の後に続ける画像 URL          |          |
 | `escapeTranslatedIdxes`   | 翻訳不要な`subjects`/`choices`のインデックス |          |
+| `discussions`             | コミュニティでのディスカッション             |          |
+
+上記の`discussions`には、以下の属性を持つ連想配列の配列を記載する。
+
+| 属性名           | 説明                     | 必須指定 |
+| ---------------- | ------------------------ | :------: |
+| `comment`        | ユーザーのコメント       |    o     |
+| `upvotedNum`     | 賛成票数                 |    o     |
+| `selectedAnswer` | ユーザーが選択した選択肢 |          |
 
 インポートデータファイルを作成したら、以下のコマンドを実行し、Azure Storage Account の Blob Storage にアップロードする。
 
