@@ -11,10 +11,6 @@
 
 [QuestionGPTPortal](https://github.com/infhyroyage/QuestionGPTPortal)の API サーバーを構成する。
 
-## ディレクトリ構成
-
-[directorystructure.md](directorystructure.md) 参照。
-
 ## 技術スタック
 
 [technologystack.md](technologystack.md) 参照。
