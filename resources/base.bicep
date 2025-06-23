@@ -26,6 +26,7 @@ var apimNamedValuesNames = {
 
 var cosmosDBContainerNames = {
   answer: 'Answer'
+  community: 'Community'
   favorite: 'Favorite'
   progress: 'Progress'
   question: 'Question'
@@ -199,6 +200,18 @@ resource cosmosDBDatabaseUsersContainerAnswer 'Microsoft.DocumentDb/databaseAcco
   properties: {
     resource: {
       id: cosmosDBContainerNames.answer
+      partitionKey: {
+        paths: ['/testId']
+      }
+    }
+  }
+}
+resource cosmosDBDatabaseUsersContainerCommunity 'Microsoft.DocumentDb/databaseAccounts/sqlDatabases/containers@2023-04-15' = {
+  parent: cosmosDBDatabaseUsers
+  name: cosmosDBContainerNames.community
+  properties: {
+    resource: {
+      id: cosmosDBContainerNames.community
       partitionKey: {
         paths: ['/testId']
       }

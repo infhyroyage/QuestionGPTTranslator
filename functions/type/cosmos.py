@@ -39,6 +39,32 @@ class Answer(TypedDict):
     """
 
 
+class Community(TypedDict):
+    """
+    Communityコンテナーの項目の型
+    """
+
+    id: str
+    """
+    ドキュメントID (= "{テストID}_{問題番号}")
+    """
+
+    questionNumber: int
+    """
+    問題番号
+    """
+
+    testId: str
+    """
+    テストID
+    """
+
+    discussionsSummany: str
+    """
+    コミュニティでのディスカッションの要約
+    """
+
+
 class Favorite(TypedDict):
     """
     Favoriteコンテナーの項目の型
