@@ -164,6 +164,27 @@ class EscapeTranslatedIdxes(TypedDict, total=False):
     """
 
 
+class QuestionDiscussion(TypedDict):
+    """
+    Questionコンテナーのdiscussionsフィールドの要素の型
+    """
+
+    comment: str
+    """
+    ユーザーのコメント
+    """
+
+    upvotedNum: int
+    """
+    賛成票数
+    """
+
+    selectedAnswer: Optional[str]
+    """
+    ユーザーが選択した選択肢
+    """
+
+
 class Question(TypedDict):
     """
     Questionコンテナーの項目の型
@@ -217,6 +238,11 @@ class Question(TypedDict):
     testId: str
     """
     テストID
+    """
+
+    discussions: Optional[List[QuestionDiscussion]]
+    """
+    コミュニティでのディスカッション
     """
 
 

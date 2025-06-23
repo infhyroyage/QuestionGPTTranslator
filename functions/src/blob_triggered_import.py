@@ -131,6 +131,8 @@ def upsert_question_items(
                     "escapeTranslatedIdxes"
                 ]["choices"]
             inserted_import_item["escapeTranslatedIdxes"] = escape_translated_idxes
+        if "discussions" in inserted_question_item:
+            inserted_import_item["discussions"] = inserted_question_item["discussions"]
         inserted_import_items.append(inserted_import_item)
     logging.info({"inserted_import_items": inserted_import_items})
 
