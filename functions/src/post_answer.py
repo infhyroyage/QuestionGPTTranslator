@@ -323,13 +323,11 @@ def post_answer(req: func.HttpRequest) -> func.HttpResponse:
             }
         )
 
-        # Questionコンテナーの読み取り専用インスタンスを取得
+        # Questionコンテナーの項目を取得
         container: ContainerProxy = get_read_only_container(
             database_name="Users",
             container_name="Question",
         )
-
-        # Questionコンテナーの項目を取得
         try:
             item: Question = container.read_item(
                 item=f"{test_id}_{question_number}", partition_key=test_id
