@@ -180,6 +180,62 @@ paths:
             application/json:
               schema:
                 type: string
+  /tests/{testId}/discussions/{questionNumber}:
+    post:
+      summary: ディスカッション要約生成API
+      description: コミュニティディスカッションの要約を生成します
+      operationId: post-discussion
+      parameters:
+        - name: testId
+          in: path
+          description: testId
+          required: true
+          schema:
+            type: string
+        - name: questionNumber
+          in: path
+          description: questionNumber
+          required: true
+          schema:
+            type: integer
+        - name: X-Access-Token
+          in: header
+          description: Microsoft ID Platformから発行されたアクセストークン
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: サーバー処理が正常終了しました
+          content:
+            text/plain:
+              schema:
+                type: string
+                description: コミュニティディスカッションの要約文字列(約200文字)
+        "400":
+          description: リクエストパラメーターが不正です
+          content:
+            application/json:
+              schema:
+                type: string
+        "401":
+          description: アクセスが拒否されました
+          content:
+            application/json:
+              schema:
+                type: string
+        "404":
+          description: 指定した問題が存在しません
+          content:
+            application/json:
+              schema:
+                type: string
+        "500":
+          description: サーバー処理が異常終了しました
+          content:
+            application/json:
+              schema:
+                type: string
   /tests/{testId}/favorites:
     get:
       summary: お気に入り情報一覧取得API

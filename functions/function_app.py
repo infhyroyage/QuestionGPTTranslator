@@ -11,6 +11,7 @@ from src.get_progresses import bp_get_progresses
 from src.get_question import bp_get_question
 from src.get_tests import bp_get_tests
 from src.post_answer import bp_post_answer
+from src.post_discussion import bp_post_discussion
 from src.post_favorite import bp_post_favorite
 from src.post_progress import bp_post_progress
 from src.post_progresses import bp_post_progresses
@@ -29,6 +30,7 @@ app.register_blueprint(bp_get_progresses)
 app.register_blueprint(bp_get_question)
 app.register_blueprint(bp_get_tests)
 app.register_blueprint(bp_post_answer)
+app.register_blueprint(bp_post_discussion)
 app.register_blueprint(bp_post_favorite)
 app.register_blueprint(bp_post_progress)
 app.register_blueprint(bp_post_progresses)

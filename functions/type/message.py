@@ -47,3 +47,24 @@ class MessageAnswer(TypedDict):
     """
     コミュニティ回答割合
     """
+
+
+class MessageDiscussion(TypedDict):
+    """
+    Discussionコンテナーの項目用のメッセージの型
+    """
+
+    testId: str
+    """
+    テストID
+    """
+
+    questionNumber: int
+    """
+    問題番号
+    """
+
+    summary: str
+    """
+    ディスカッション要約
+    """
