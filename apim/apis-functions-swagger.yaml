@@ -180,11 +180,11 @@ paths:
             application/json:
               schema:
                 type: string
-  /tests/{testId}/discussions/{questionNumber}:
+  /tests/{testId}/communities/{questionNumber}:
     post:
-      summary: ディスカッション要約生成API
+      summary: コミュニティディスカッション要約生成API
       description: コミュニティディスカッションの要約を生成します
-      operationId: post-discussion
+      operationId: post-community
       parameters:
         - name: testId
           in: path

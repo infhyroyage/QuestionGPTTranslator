@@ -1,5 +1,6 @@
-"""[POST] /tests/{testId}/discussions/{questionNumber} のモジュール"""
+"""[POST] /tests/{testId}/communities/{questionNumber} のモジュール"""
 
+import json
 import logging
 import os
 import traceback
@@ -7,10 +8,12 @@ import traceback
 import azure.functions as func
 from azure.cosmos import ContainerProxy
 from azure.cosmos.exceptions import CosmosResourceNotFoundError
+from azure.storage.queue import BinaryBase64EncodePolicy, QueueClient
 from openai import AzureOpenAI
 from type.cosmos import Question
-from type.message import MessageDiscussion
+from type.message import MessageCommunity
 from util.cosmos import get_read_only_container
+from util.queue import AZURITE_QUEUE_STORAGE_CONNECTION_STRING
 
 MAX_RETRY_NUMBER: int = 5
 SYSTEM_PROMPT: str = (
@@ -145,29 +148,36 @@ def generate_discussion_summary(discussions: list[dict]) -> str | None:
     return None
 
 
-def queue_message_discussion(
-    message_discussion: MessageDiscussion,  # pylint: disable=W0613
-) -> None:
+def queue_message_community(message_community: MessageCommunity) -> None:
     """
-    キューストレージにDiscussionコンテナーの項目用のメッセージを格納する
-    TODO: 未実装
+    キューストレージにCommunityコンテナーの項目用のメッセージを格納する
 
     Args:
-        message_discussion (MessageDiscussion): Discussionコンテナーの項目用のメッセージ
+        message_community (MessageCommunity): Communityコンテナーの項目用のメッセージ
     """
 
-    pass  # pylint: disable=W0107
+    connection_string: str = os.environ["AzureWebJobsStorage"]
+    if connection_string == "UseDevelopmentStorage=true":
+        connection_string = AZURITE_QUEUE_STORAGE_CONNECTION_STRING
+
+    queue_client = QueueClient.from_connection_string(
+        conn_str=connection_string,
+        queue_name="communities",
+        message_encode_policy=BinaryBase64EncodePolicy(),
+    )
+    logging.info({"message_community": message_community})
+    queue_client.send_message(json.dumps(message_community).encode("utf-8"))
 
 
-bp_post_discussion = func.Blueprint()
+bp_post_community = func.Blueprint()
 
 
-@bp_post_discussion.route(
-    route="tests/{testId}/discussions/{questionNumber}",
+@bp_post_community.route(
+    route="tests/{testId}/communities/{questionNumber}",
     methods=["POST"],
     auth_level=func.AuthLevel.FUNCTION,
 )
-def post_discussion(req: func.HttpRequest) -> func.HttpResponse:
+def post_community(req: func.HttpRequest) -> func.HttpResponse:
     """
     コミュニティディスカッションの要約を生成します
     """
@@ -210,12 +220,13 @@ def post_discussion(req: func.HttpRequest) -> func.HttpResponse:
                 raise ValueError("Failed to generate discussion summary")
 
             # キューストレージにメッセージを格納
-            message_discussion: MessageDiscussion = {
-                "testId": test_id,
-                "questionNumber": int(question_number),
-                "summary": summary,
-            }
-            queue_message_discussion(message_discussion)
+            queue_message_community(
+                {
+                    "testId": test_id,
+                    "questionNumber": int(question_number),
+                    "discussionsSummany": summary,
+                }
+            )
 
         return func.HttpResponse(
             body=summary,

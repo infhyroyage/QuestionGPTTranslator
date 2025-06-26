@@ -49,14 +49,9 @@ class MessageAnswer(TypedDict):
     """
 
 
-class MessageDiscussion(TypedDict):
+class MessageCommunity(TypedDict):
     """
-    Discussionコンテナーの項目用のメッセージの型
-    """
-
-    testId: str
-    """
-    テストID
+    Communityコンテナーの項目用のメッセージの型
     """
 
     questionNumber: int
@@ -64,7 +59,12 @@ class MessageDiscussion(TypedDict):
     問題番号
     """
 
-    summary: str
+    testId: str
     """
-    ディスカッション要約
+    テストID
+    """
+
+    discussionsSummany: str
+    """
+    コミュニティでのディスカッションの要約
     """
