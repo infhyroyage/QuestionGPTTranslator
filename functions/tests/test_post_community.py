@@ -238,7 +238,7 @@ class TestGenerateDiscussionSummary(unittest.TestCase):
                 call({"retry_number": 0}),
                 call(
                     {
-                        "generated_summary": "Community discussion focuses on answers A and B "
+                        "content": "Community discussion focuses on answers A and B "
                         "with A being more popular."
                     }
                 ),
@@ -270,7 +270,8 @@ class TestGenerateDiscussionSummary(unittest.TestCase):
         mock_prompt = "Test prompt for discussion summary"
         mock_create_discussion_summary_prompt.return_value = mock_prompt
         mock_response = MagicMock()
-        mock_response.choices = []
+        mock_response.choices = [MagicMock()]
+        mock_response.choices[0].message.content = None
         mock_azure_openai.return_value.chat.completions.create.return_value = (
             mock_response
         )
@@ -291,9 +292,10 @@ class TestGenerateDiscussionSummary(unittest.TestCase):
             mock_azure_openai.return_value.chat.completions.create.call_count,
             MAX_RETRY_NUMBER,
         )
-        mock_logging.info.assert_has_calls(
-            [call({"retry_number": i}) for i in range(MAX_RETRY_NUMBER)]
-        )
+        expected_calls = []
+        for i in range(MAX_RETRY_NUMBER):
+            expected_calls.extend([call({"retry_number": i}), call({"content": None})])
+        mock_logging.info.assert_has_calls(expected_calls)
         mock_logging.warning.assert_not_called()
 
     @patch("src.post_community.AzureOpenAI")

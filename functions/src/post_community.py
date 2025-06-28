@@ -10,7 +10,7 @@ from azure.cosmos import ContainerProxy
 from azure.cosmos.exceptions import CosmosResourceNotFoundError
 from azure.storage.queue import BinaryBase64EncodePolicy, QueueClient
 from openai import AzureOpenAI
-from type.cosmos import Question
+from type.cosmos import Question, QuestionDiscussion
 from type.message import MessageCommunity
 from util.cosmos import get_read_only_container
 from util.queue import AZURITE_QUEUE_STORAGE_CONNECTION_STRING
@@ -48,12 +48,12 @@ def validate_request(req: func.HttpRequest) -> str | None:
     return errors[0] if errors else None
 
 
-def create_discussion_summary_prompt(discussions: list[dict]) -> str:
+def create_discussion_summary_prompt(discussions: list[QuestionDiscussion]) -> str:
     """
     ディスカッション要約用のプロンプトを作成する
 
     Args:
-        discussions (list[dict]): ディスカッション情報のリスト
+        discussions (list[QuestionDiscussion]): ディスカッション情報のリスト
 
     Returns:
         str: 要約用のプロンプト
@@ -63,11 +63,11 @@ def create_discussion_summary_prompt(discussions: list[dict]) -> str:
         return "No community discussions available for this question."
 
     # ディスカッションの情報を整理
-    discussion_content = []
+    discussion_content: list[str] = []
     for i, discussion in enumerate(discussions, 1):
-        comment = discussion.get("comment", "")
-        upvoted_num = discussion.get("upvotedNum", 0)
-        selected_answer = discussion.get("selectedAnswer")
+        comment: str = discussion.get("comment")
+        upvoted_num: int = discussion.get("upvotedNum")
+        selected_answer: str | None = discussion.get("selectedAnswer")
         if selected_answer is None:
             selected_answer = "Not specified"
 
@@ -79,7 +79,8 @@ def create_discussion_summary_prompt(discussions: list[dict]) -> str:
         )
 
     # プロンプトを構築
-    prompt = f"""Please create a concise summary (approximately 200 characters) of the following \
+    # pylint: disable=line-too-long
+    prompt: str = f"""Please create a concise summary (approximately 200 characters) of the following \
 community discussions about an exam question. Focus on the main points, popular opinions \
 (based on upvotes), and the general consensus on answer choices.
 
@@ -96,19 +97,19 @@ Summary (approximately 200 characters):"""
     return prompt
 
 
-def generate_discussion_summary(discussions: list[dict]) -> str | None:
+def generate_discussion_summary(discussions: list[QuestionDiscussion]) -> str | None:
     """
     コミュニティディスカッションの要約を生成する
 
     Args:
-        discussions (list[dict]): ディスカッション情報のリスト
+        discussions (list[QuestionDiscussion]): ディスカッション情報のリスト
 
     Returns:
-        str | None: 生成された要約文字列（生成できない場合はNone）
+        str | None: 生成された要約文字列(生成できない場合はNone)
     """
 
     # プロンプトを作成
-    prompt = create_discussion_summary_prompt(discussions)
+    prompt: str = create_discussion_summary_prompt(discussions)
 
     try:
         for retry_number in range(MAX_RETRY_NUMBER):
@@ -135,12 +136,11 @@ def generate_discussion_summary(discussions: list[dict]) -> str | None:
                 max_tokens=300,
                 temperature=0.7,
             )
+            logging.info({"content": response.choices[0].message.content})
 
             # レスポンスから要約文字列を取得
             if response.choices and response.choices[0].message.content:
-                summary = response.choices[0].message.content.strip()
-                logging.info({"generated_summary": summary})
-                return summary
+                return response.choices[0].message.content.strip()
 
     except Exception:
         logging.warning(traceback.format_exc())
@@ -212,8 +212,8 @@ def post_community(req: func.HttpRequest) -> func.HttpResponse:
             return func.HttpResponse(body="Not Found Question", status_code=404)
 
         # discussionsフィールドが存在する場合はディスカッション要約を生成(存在しない場合は空文字列)
-        discussions = item.get("discussions")
-        summary = ""
+        discussions: list[QuestionDiscussion] | None = item.get("discussions")
+        summary: str | None = ""
         if discussions:
             summary = generate_discussion_summary(discussions)
             if summary is None:
