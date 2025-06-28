@@ -64,7 +64,7 @@ class MessageCommunity(TypedDict):
     テストID
     """
 
-    discussionsSummany: str
+    discussionsSummary: str
     """
     コミュニティでのディスカッションの要約
     """

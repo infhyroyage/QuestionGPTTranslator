@@ -359,7 +359,7 @@ class TestQueueMessageCommunity(unittest.TestCase):
         message_community = {
             "testId": "test123",
             "questionNumber": 1,
-            "discussionsSummany": "Test summary",
+            "discussionsSummary": "Test summary",
         }
 
         queue_message_community(message_community)
@@ -384,7 +384,7 @@ class TestQueueMessageCommunity(unittest.TestCase):
         message_community = {
             "testId": "test123",
             "questionNumber": 1,
-            "discussionsSummany": "Test summary",
+            "discussionsSummary": "Test summary",
         }
 
         queue_message_community(message_community)
@@ -473,7 +473,7 @@ class TestPostDiscussion(unittest.TestCase):
             {
                 "testId": "1",
                 "questionNumber": 1,
-                "discussionsSummany": "Community agrees B is correct with strong consensus.",
+                "discussionsSummary": "Community agrees B is correct with strong consensus.",
             }
         )
         mock_logging.error.assert_not_called()

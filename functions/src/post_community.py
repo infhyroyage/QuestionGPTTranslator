@@ -224,7 +224,7 @@ def post_community(req: func.HttpRequest) -> func.HttpResponse:
                 {
                     "testId": test_id,
                     "questionNumber": int(question_number),
-                    "discussionsSummany": summary,
+                    "discussionsSummary": summary,
                 }
             )
 
