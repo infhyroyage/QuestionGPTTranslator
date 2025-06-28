@@ -47,6 +47,11 @@ def create_databases_and_containers() -> None:
         id="Answer", partition_key=PartitionKey(path="/testId")
     )
 
+    # Communityコンテナー
+    database_res.create_container_if_not_exists(
+        id="Community", partition_key=PartitionKey(path="/testId")
+    )
+
     # Favoriteコンテナー
     database_res.create_container_if_not_exists(
         id="Favorite",
