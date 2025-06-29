@@ -12,6 +12,7 @@ from azure.storage.queue import BinaryBase64EncodePolicy, QueueClient
 from openai import AzureOpenAI
 from type.cosmos import Question, QuestionDiscussion
 from type.message import MessageCommunity
+from type.response import PostCommunityRes
 from util.cosmos import get_read_only_container
 from util.queue import AZURITE_QUEUE_STORAGE_CONNECTION_STRING
 
@@ -213,11 +214,15 @@ def post_community(req: func.HttpRequest) -> func.HttpResponse:
 
         # discussionsフィールドが存在する場合はディスカッション要約を生成(存在しない場合は空文字列)
         discussions: list[QuestionDiscussion] | None = item.get("discussions")
-        summary: str | None = ""
-        if discussions:
-            summary = generate_discussion_summary(discussions)
+        body: PostCommunityRes = {
+            "isExisted": False,
+        }
+        if discussions and len(discussions) > 0:
+            summary: str | None = generate_discussion_summary(discussions)
             if summary is None:
                 raise ValueError("Failed to generate discussion summary")
+            body["discussionsSummary"] = summary
+            body["isExisted"] = True
 
             # キューストレージにメッセージを格納
             queue_message_community(
@@ -229,9 +234,9 @@ def post_community(req: func.HttpRequest) -> func.HttpResponse:
             )
 
         return func.HttpResponse(
-            body=summary,
+            body=json.dumps(body),
             status_code=200,
-            mimetype="text/plain",
+            mimetype="application/json",
         )
 
     except Exception:

@@ -214,10 +214,18 @@ paths:
         "200":
           description: サーバー処理が正常終了しました
           content:
-            text/plain:
+            application/json:
               schema:
-                type: string
-                description: コミュニティでのディスカッションの要約文字列(約200文字)
+                type: object
+                properties:
+                  discussionsSummary:
+                    type: string
+                    description: コミュニティでのディスカッションの要約文字列(約200文字)
+                  isExisted:
+                    type: boolean
+                    description: コミュニティでのディスカッションの要約が存在する場合はtrue、存在しない場合はfalse
+                required:
+                  - isExisted
         "400":
           description: リクエストパラメーターが不正です
           content:
@@ -263,10 +271,18 @@ paths:
         "200":
           description: サーバー処理が正常終了しました
           content:
-            text/plain:
+            application/json:
               schema:
-                type: string
-                description: コミュニティディスカッションの要約文字列(約200文字)
+                type: object
+                properties:
+                  discussionsSummary:
+                    type: string
+                    description: コミュニティディスカッションの要約文字列(約200文字)
+                  isExisted:
+                    type: boolean
+                    description: コミュニティでのディスカッションの要約が存在する場合はtrue、存在しない場合はfalse
+                required:
+                  - isExisted
         "400":
           description: リクエストパラメーターが不正です
           content:

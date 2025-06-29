@@ -1,5 +1,6 @@
 """[GET] /tests/{testId}/communities/{questionNumber} のモジュール"""
 
+import json
 import logging
 import traceback
 
@@ -7,6 +8,7 @@ import azure.functions as func
 from azure.cosmos import ContainerProxy
 from azure.cosmos.exceptions import CosmosResourceNotFoundError
 from type.cosmos import Community
+from type.response import GetCommunityRes
 from util.cosmos import get_read_only_container
 
 bp_get_community = func.Blueprint()
@@ -71,20 +73,27 @@ def get_community(req: func.HttpRequest) -> func.HttpResponse:
             logging.info({"item": item})
 
             # レスポンス整形
-            summary: str = item["discussionsSummary"]
-            logging.info({"summary": summary})
+            body: GetCommunityRes = {
+                "discussionsSummary": item["discussionsSummary"],
+                "isExisted": True,
+            }
+            logging.info({"body": body})
 
             return func.HttpResponse(
-                body=summary,
+                body=json.dumps(body),
                 status_code=200,
-                mimetype="text/plain",
+                mimetype="application/json",
             )
         except CosmosResourceNotFoundError:
-            # Communityコンテナーから項目を取得できない場合は空文字列をレスポンス
+            # Communityコンテナーから項目を取得できない場合、
+            # コミュニティでのディスカッションの要約を除いてレスポンス
+            body: GetCommunityRes = {
+                "isExisted": False,
+            }
             return func.HttpResponse(
-                body="",
+                body=json.dumps(body),
                 status_code=200,
-                mimetype="text/plain",
+                mimetype="application/json",
             )
     except Exception:
         logging.error(traceback.format_exc())

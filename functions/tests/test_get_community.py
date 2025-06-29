@@ -1,5 +1,6 @@
 """[GET] /tests/{testId}/communities/{questionNumber} のテスト"""
 
+import json
 from unittest import TestCase
 from unittest.mock import MagicMock, call, patch
 
@@ -82,6 +83,7 @@ class TestGetCommunity(TestCase):
         response = get_community(req)
 
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.mimetype, "application/json")
         mock_validate_request.assert_called_once_with(req)
         mock_get_read_only_container.assert_called_once_with(
             database_name="Users",
@@ -91,12 +93,18 @@ class TestGetCommunity(TestCase):
             item="1_1",
             partition_key="1",
         )
-        expected_summary = (
-            "Users discuss correct answers and share insights about this question."
-        )
-        self.assertEqual(response.get_body().decode(), expected_summary)
+
+        expected_body = {
+            "discussionsSummary": (
+                "Users discuss correct answers and share insights about this question."
+            ),
+            "isExisted": True,
+        }
+        actual_body = response.get_body().decode()
+        self.assertEqual(json.loads(actual_body), expected_body)
+
         mock_logging.info.assert_has_calls(
-            [call({"item": mock_item}), call({"summary": expected_summary})]
+            [call({"item": mock_item}), call({"body": expected_body})]
         )
         mock_logging.error.assert_not_called()
 
@@ -133,7 +141,14 @@ class TestGetCommunity(TestCase):
         response = get_community(req)
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.get_body().decode(), "")
+        self.assertEqual(response.mimetype, "application/json")
+
+        expected_body = {
+            "isExisted": False,
+        }
+        actual_body = response.get_body().decode()
+        self.assertEqual(json.loads(actual_body), expected_body)
+
         mock_validate_request.assert_called_once_with(req)
         mock_get_read_only_container.assert_called_once_with(
             database_name="Users",

@@ -88,7 +88,8 @@ def get_answer(req: func.HttpRequest) -> func.HttpResponse:
                 mimetype="application/json",
             )
         except CosmosResourceNotFoundError:
-            # Answerコンテナーから項目を取得できない場合は空の正解の選択肢・正解/不正解の理由をレスポンス
+            # Answerコンテナーから項目を取得できない場合、
+            # 正解の選択肢・正解/不正解の理由を除いてレスポンス
             body: GetAnswerRes = {
                 "isExisted": False,
             }

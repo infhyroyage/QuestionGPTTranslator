@@ -1,5 +1,6 @@
 """[POST] /tests/{testId}/communities/{questionNumber} のテスト"""
 
+import json
 import os
 import unittest
 from unittest.mock import MagicMock, call, patch
@@ -448,11 +449,14 @@ class TestPostDiscussion(unittest.TestCase):
         response = post_community(req)
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(
-            response.get_body().decode(),
-            "Community agrees B is correct with strong consensus.",
-        )
-        self.assertEqual(response.mimetype, "text/plain")
+        self.assertEqual(response.mimetype, "application/json")
+
+        expected_body = {
+            "discussionsSummary": "Community agrees B is correct with strong consensus.",
+            "isExisted": True,
+        }
+        actual_body = response.get_body().decode()
+        self.assertEqual(json.loads(actual_body), expected_body)
 
         mock_validate_request.assert_called_once_with(req)
         mock_get_read_only_container.assert_called_once_with(
@@ -569,8 +573,13 @@ class TestPostDiscussion(unittest.TestCase):
         response = post_community(req)
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.get_body().decode(), "")
-        self.assertEqual(response.mimetype, "text/plain")
+        self.assertEqual(response.mimetype, "application/json")
+
+        expected_body = {
+            "isExisted": False,
+        }
+        actual_body = response.get_body().decode()
+        self.assertEqual(json.loads(actual_body), expected_body)
 
         mock_validate_request.assert_called_once_with(req)
         mock_get_read_only_container.assert_called_once_with(
