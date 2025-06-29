@@ -23,6 +23,11 @@ class GetAnswerRes(TypedDict):
     コミュニティ回答割合
     """
 
+    isExisted: bool
+    """
+    正解の選択肢・正解/不正解の理由が存在する場合はtrue、存在しない場合はfalse
+    """
+
 
 class GetFavoriteRes(TypedDict):
     """

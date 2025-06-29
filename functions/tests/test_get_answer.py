@@ -93,6 +93,7 @@ class TestGetAnswer(TestCase):
             "correctIdxes": [1],
             "explanations": ["Option 1 is correct because..."],
             "communityVotes": ["BC (70%)", "BD (30%)"],
+            "isExisted": True,
         }
         self.assertEqual(json.loads(response.get_body().decode()), expected_body)
         mock_logging.info.assert_has_calls(
@@ -135,6 +136,7 @@ class TestGetAnswer(TestCase):
         expected_body = {
             "correctIdxes": [1],
             "explanations": ["Option 1 is correct because..."],
+            "isExisted": True,
         }
         self.assertEqual(json.loads(response.get_body().decode()), expected_body)
         mock_logging.info.assert_has_calls(
@@ -175,7 +177,10 @@ class TestGetAnswer(TestCase):
         response = get_answer(req)
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(json.loads(response.get_body().decode()), {})
+        expected_body = {
+            "isExisted": False,
+        }
+        self.assertEqual(json.loads(response.get_body().decode()), expected_body)
         mock_validate_request.assert_called_once_with(req)
         mock_get_read_only_container.assert_called_once_with(
             database_name="Users",

@@ -76,6 +76,7 @@ def get_answer(req: func.HttpRequest) -> func.HttpResponse:
             body: GetAnswerRes = {
                 "correctIdxes": item["correctIdxes"],
                 "explanations": item["explanations"],
+                "isExisted": True,
             }
             if item.get("communityVotes") is not None:
                 body["communityVotes"] = item["communityVotes"]
@@ -88,8 +89,11 @@ def get_answer(req: func.HttpRequest) -> func.HttpResponse:
             )
         except CosmosResourceNotFoundError:
             # Answerコンテナーから項目を取得できない場合は空の正解の選択肢・正解/不正解の理由をレスポンス
+            body: GetAnswerRes = {
+                "isExisted": False,
+            }
             return func.HttpResponse(
-                body=json.dumps({}),
+                body=json.dumps(body),
                 status_code=200,
                 mimetype="application/json",
             )
