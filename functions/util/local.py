@@ -19,12 +19,18 @@ def create_queue_storages() -> None:
     """
 
     # 既にQueueが存在する場合は、Queueを作成しない
-    queue_client = QueueClient.from_connection_string(
-        conn_str=AZURITE_QUEUE_STORAGE_CONNECTION_STRING,
-        queue_name="answers",
-    )
     try:
-        queue_client.create_queue()
+        QueueClient.from_connection_string(
+            conn_str=AZURITE_QUEUE_STORAGE_CONNECTION_STRING,
+            queue_name="answers",
+        ).create_queue()
+    except ResourceExistsError:
+        pass
+    try:
+        QueueClient.from_connection_string(
+            conn_str=AZURITE_QUEUE_STORAGE_CONNECTION_STRING,
+            queue_name="communities",
+        ).create_queue()
     except ResourceExistsError:
         pass
 

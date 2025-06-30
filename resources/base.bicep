@@ -43,7 +43,10 @@ var insightsName = 'qgtranslator-je-insights'
 var lawName = 'qgtranslator-je-law'
 
 var storageBlobContainerName = 'import-items'
-var storageQueueName = 'answers'
+var storageQueueNames = {
+  answers: 'answers'
+  communities: 'communities'
+}
 
 var vaultSecretNames = {
   cosmosDBPrimaryKey: 'cosmos-db-primary-key'
@@ -355,9 +358,13 @@ resource storageQueue 'Microsoft.Storage/storageAccounts/queueServices@2023-05-0
   parent: storage
   name: 'default'
 }
-resource storageQueueQueue 'Microsoft.Storage/storageAccounts/queueServices/queues@2023-05-01' = {
+resource storageQueueQueueAnswers 'Microsoft.Storage/storageAccounts/queueServices/queues@2023-05-01' = {
   parent: storageQueue
-  name: storageQueueName
+  name: storageQueueNames.answers
+}
+resource storageQueueQueueCommunities 'Microsoft.Storage/storageAccounts/queueServices/queues@2023-05-01' = {
+  parent: storageQueue
+  name: storageQueueNames.communities
 }
 
 // Log Analytics Workspaces

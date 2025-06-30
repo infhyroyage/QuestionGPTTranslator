@@ -29,30 +29,65 @@ class TestCreateQueueStorages(unittest.TestCase):
     ):
         """まだQueueが存在しない場合のcreate_queue_storages関数のテスト"""
         mock_queue_client = MagicMock()
-        mock_from_connection_string.return_value = mock_queue_client
+        mock_from_connection_string.side_effect = [
+            mock_queue_client,
+            mock_queue_client,
+        ]
 
         create_queue_storages()
 
-        mock_from_connection_string.assert_called_once_with(
-            conn_str=AZURITE_QUEUE_STORAGE_CONNECTION_STRING,
-            queue_name="answers",
+        mock_from_connection_string.assert_has_calls(
+            [
+                call(
+                    conn_str=AZURITE_QUEUE_STORAGE_CONNECTION_STRING,
+                    queue_name="answers",
+                ),
+                call(
+                    conn_str=AZURITE_QUEUE_STORAGE_CONNECTION_STRING,
+                    queue_name="communities",
+                ),
+            ]
         )
-        mock_queue_client.create_queue.assert_called_once()
+        mock_queue_client.create_queue.assert_has_calls(
+            [
+                call(),
+                call(),
+            ]
+        )
 
     @patch("util.local.QueueClient.from_connection_string")
     def test_create_queue_storages_when_queue_exists(self, mock_from_connection_string):
         """Queueが既に存在する場合のcreate_queue_storages関数のテスト"""
         mock_queue_client = MagicMock()
-        mock_from_connection_string.return_value = mock_queue_client
-        mock_queue_client.create_queue.side_effect = ResourceExistsError
+        mock_from_connection_string.side_effect = [
+            mock_queue_client,
+            mock_queue_client,
+        ]
+        mock_queue_client.create_queue.side_effect = [
+            ResourceExistsError,
+            ResourceExistsError,
+        ]
 
         create_queue_storages()
 
-        mock_from_connection_string.assert_called_once_with(
-            conn_str=AZURITE_QUEUE_STORAGE_CONNECTION_STRING,
-            queue_name="answers",
+        mock_from_connection_string.assert_has_calls(
+            [
+                call(
+                    conn_str=AZURITE_QUEUE_STORAGE_CONNECTION_STRING,
+                    queue_name="answers",
+                ),
+                call(
+                    conn_str=AZURITE_QUEUE_STORAGE_CONNECTION_STRING,
+                    queue_name="communities",
+                ),
+            ]
         )
-        mock_queue_client.create_queue.assert_called_once()
+        mock_queue_client.create_queue.assert_has_calls(
+            [
+                call(),
+                call(),
+            ]
+        )
 
 
 class TestCreateDatabasesAndContainers(unittest.TestCase):
