@@ -337,7 +337,7 @@ def post_answer(req: func.HttpRequest) -> func.HttpResponse:
             return func.HttpResponse(body="Not Found Question", status_code=404)
 
         # 正解の選択肢・正解/不正解の理由を生成
-        correct_answers = generate_correct_answers(
+        correct_answers: CorrectAnswers | None = generate_correct_answers(
             item.get("subjects"),
             item.get("choices"),
             item.get("answerNum"),

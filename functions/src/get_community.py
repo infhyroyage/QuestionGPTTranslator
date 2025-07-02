@@ -1,4 +1,4 @@
-"""[GET] /tests/{testId}/answers/{questionNumber} のモジュール"""
+"""[GET] /tests/{testId}/communities/{questionNumber} のモジュール"""
 
 import json
 import logging
@@ -7,11 +7,11 @@ import traceback
 import azure.functions as func
 from azure.cosmos import ContainerProxy
 from azure.cosmos.exceptions import CosmosResourceNotFoundError
-from type.cosmos import Answer
-from type.response import GetAnswerRes
+from type.cosmos import Community
+from type.response import GetCommunityRes
 from util.cosmos import get_read_only_container
 
-bp_get_answer = func.Blueprint()
+bp_get_community = func.Blueprint()
 
 
 def validate_request(req: func.HttpRequest) -> str | None:
@@ -40,14 +40,14 @@ def validate_request(req: func.HttpRequest) -> str | None:
     return errors[0] if errors else None
 
 
-@bp_get_answer.route(
-    route="tests/{testId}/answers/{questionNumber}",
+@bp_get_community.route(
+    route="tests/{testId}/communities/{questionNumber}",
     methods=["GET"],
     auth_level=func.AuthLevel.FUNCTION,
 )
-def get_answer(req: func.HttpRequest) -> func.HttpResponse:
+def get_community(req: func.HttpRequest) -> func.HttpResponse:
     """
-    指定したテストID・問題番号での正解の選択肢・正解/不正解の理由を取得します
+    指定したテストID・問題番号でのコミュニティディスカッションの要約を取得します
     """
 
     try:
@@ -59,27 +59,24 @@ def get_answer(req: func.HttpRequest) -> func.HttpResponse:
         test_id = req.route_params.get("testId")
         question_number = req.route_params.get("questionNumber")
 
-        # Answerコンテナーの読み取り専用インスタンスを取得
+        # Communityコンテナーの読み取り専用インスタンスを取得
         container: ContainerProxy = get_read_only_container(
             database_name="Users",
-            container_name="Answer",
+            container_name="Community",
         )
 
         try:
-            # Answerコンテナーから項目取得
-            item: Answer = container.read_item(
+            # Communityコンテナーから項目取得
+            item: Community = container.read_item(
                 item=f"{test_id}_{question_number}", partition_key=test_id
             )
             logging.info({"item": item})
 
             # レスポンス整形
-            body: GetAnswerRes = {
-                "correctIdxes": item["correctIdxes"],
-                "explanations": item["explanations"],
+            body: GetCommunityRes = {
+                "discussionsSummary": item["discussionsSummary"],
                 "isExisted": True,
             }
-            if item.get("communityVotes") is not None:
-                body["communityVotes"] = item["communityVotes"]
             logging.info({"body": body})
 
             return func.HttpResponse(
@@ -88,9 +85,9 @@ def get_answer(req: func.HttpRequest) -> func.HttpResponse:
                 mimetype="application/json",
             )
         except CosmosResourceNotFoundError:
-            # Answerコンテナーから項目を取得できない場合、
-            # 正解の選択肢・正解/不正解の理由を除いてレスポンス
-            body: GetAnswerRes = {
+            # Communityコンテナーから項目を取得できない場合、
+            # コミュニティでのディスカッションの要約を除いてレスポンス
+            body: GetCommunityRes = {
                 "isExisted": False,
             }
             return func.HttpResponse(
