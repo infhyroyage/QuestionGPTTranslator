@@ -25,6 +25,7 @@ paths:
             application/json:
               schema:
                 type: object
+                description: コース名をキーとする、各テストのディクショナリ
                 additionalProperties:
                   type: array
                   items:
@@ -32,10 +33,13 @@ paths:
                     properties:
                       id:
                         type: string
+                        description: テストID
                       testName:
                         type: string
+                        description: テスト名
                       length:
                         type: integer
+                        description: テストの問題数
         "401":
           description: アクセスが拒否されました
           content:
@@ -56,13 +60,13 @@ paths:
       parameters:
         - name: testId
           in: path
-          description: testId
+          description: テストID
           required: true
           schema:
             type: string
         - name: questionNumber
           in: path
-          description: questionNumber
+          description: 問題番号
           required: true
           schema:
             type: integer
@@ -82,16 +86,19 @@ paths:
                 properties:
                   correctIdxes:
                     type: array
+                    description: 正解の選択肢のインデックス
                     items:
                       type: integer
                       nullable: true
                   explanations:
                     type: array
+                    description: 各選択肢の正解/不正解の理由
                     items:
                       type: string
                       nullable: true
                   communityVotes:
                     type: array
+                    description: コミュニティ回答割合
                     items:
                       type: string
                       nullable: true
@@ -126,13 +133,13 @@ paths:
       parameters:
         - name: testId
           in: path
-          description: testId
+          description: テストID
           required: true
           schema:
             type: string
         - name: questionNumber
           in: path
-          description: questionNumber
+          description: 問題番号
           required: true
           schema:
             type: integer
@@ -152,22 +159,25 @@ paths:
                 properties:
                   correctIdxes:
                     type: array
+                    description: 正解の選択肢のインデックス
                     items:
                       type: integer
                     nullable: true
                   explanations:
                     type: array
+                    description: 各選択肢の正解/不正解の理由
                     items:
                       type: string
                     nullable: true
                   communityVotes:
                     type: array
+                    description: コミュニティ回答割合
                     items:
                       type: string
                     nullable: true
                   isExisted:
                     type: boolean
-                    description: 回答データが存在する場合はtrue、存在しない場合はfalse
+                    description: 正解の選択肢・正解/不正解の理由が存在する場合はtrue、存在しない場合はfalse
         "400":
           description: リクエストパラメーターが不正です
           content:
@@ -194,13 +204,13 @@ paths:
       parameters:
         - name: testId
           in: path
-          description: testId
+          description: テストID
           required: true
           schema:
             type: string
         - name: questionNumber
           in: path
-          description: questionNumber
+          description: 問題番号
           required: true
           schema:
             type: integer
@@ -220,7 +230,7 @@ paths:
                 properties:
                   discussionsSummary:
                     type: string
-                    description: コミュニティでのディスカッションの要約文字列(約200文字)
+                    description: コミュニティでのディスカッションの要約
                   isExisted:
                     type: boolean
                     description: コミュニティでのディスカッションの要約が存在する場合はtrue、存在しない場合はfalse
@@ -251,13 +261,13 @@ paths:
       parameters:
         - name: testId
           in: path
-          description: testId
+          description: テストID
           required: true
           schema:
             type: string
         - name: questionNumber
           in: path
-          description: questionNumber
+          description: 問題番号
           required: true
           schema:
             type: integer
@@ -277,7 +287,7 @@ paths:
                 properties:
                   discussionsSummary:
                     type: string
-                    description: コミュニティディスカッションの要約文字列(約200文字)
+                    description: コミュニティでのディスカッションの要約
                   isExisted:
                     type: boolean
                     description: コミュニティでのディスカッションの要約が存在する場合はtrue、存在しない場合はfalse
@@ -338,6 +348,7 @@ paths:
             application/json:
               schema:
                 type: array
+                description: お気に入り情報一覧(問題番号の昇順)
                 items:
                   type: object
                   properties:
@@ -507,21 +518,26 @@ paths:
                 properties:
                   order:
                     type: array
+                    description: テストを解く問題番号の順番
                     items:
                       type: integer
                   progresses:
                     type: array
+                    description: 問題番号の順番に対応する進捗項目
                     items:
                       type: object
                       properties:
                         isCorrect:
                           type: boolean
+                          description: 正解の場合はtrue、不正解の場合はfalse
                         selectedIdxes:
                           type: array
+                          description: 選択した選択肢のインデックス
                           items:
                             type: integer
                         correctIdxes:
                           type: array
+                          description: 正解の選択肢のインデックス
                           items:
                             type: integer
         "400":
@@ -697,17 +713,21 @@ paths:
             application/json:
               schema:
                 type: array
+                description: 保存後の問題番号の順番に対応する進捗項目
                 items:
                   type: object
                   properties:
                     isCorrect:
                       type: boolean
+                      description: 正解の場合はtrue、不正解の場合はfalse
                     selectedIdxes:
                       type: array
+                      description: 選択した選択肢のインデックス
                       items:
                         type: integer
                     correctIdxes:
                       type: array
+                      description: 正解の選択肢のインデックス
                       items:
                         type: integer
         "400":
@@ -730,13 +750,13 @@ paths:
       parameters:
         - name: testId
           in: path
-          description: testId
+          description: テストID
           required: true
           schema:
             type: string
         - name: questionNumber
           in: path
-          description: questionNumber
+          description: 問題番号
           required: true
           schema:
             type: integer
@@ -756,30 +776,39 @@ paths:
                 properties:
                   subjects:
                     type: array
+                    description: 各問題文
                     items:
                       type: object
                       properties:
                         sentence:
                           type: string
+                          description: 問題文
                         isIndicatedImg:
                           type: boolean
+                          description: 問題文の文章が画像URLである場合はtrue、そうでない場合はfalse
                         isEscapedTranslation:
                           type: boolean
+                          description: 翻訳不要の場合はtrue、翻訳する場合はfalse
                   choices:
                     type: array
+                    description: 各選択肢の文
                     items:
                       type: object
                       properties:
                         sentence:
                           type: string
+                          description: 選択肢の文(画像URLのみの場合はNone)
                           nullable: true
                         img:
                           type: string
+                          description: 選択肢の文に続く画像URL(画像がない場合はNone)
                           nullable: true
                         isEscapedTranslation:
                           type: boolean
+                          description: 翻訳不要の場合はtrue、翻訳する場合はfalse
                   isMultiplied:
                     type: boolean
+                    description: 回答が複数個の場合はtrue、回答が1個の場合はfalse
         "400":
           description: リクエストパラメーターが不正です
           content:
@@ -822,6 +851,7 @@ paths:
           application/json:
             schema:
               type: array
+              description: 英語の各文章
               items:
                 type: string
         required: true
@@ -832,6 +862,7 @@ paths:
             application/json:
               schema:
                 type: array
+                description: 英語の各文章を和訳した文章
                 items:
                   type: string
         "400":
