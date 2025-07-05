@@ -7,7 +7,7 @@ import traceback
 import azure.functions as func
 from azure.cosmos import ContainerProxy
 from azure.cosmos.exceptions import CosmosResourceNotFoundError
-from type.cosmos import Community
+from type.cosmos import Answer, Community
 from type.response import GetCommunityRes
 from util.cosmos import get_read_only_container
 
@@ -47,7 +47,7 @@ def validate_request(req: func.HttpRequest) -> str | None:
 )
 def get_community(req: func.HttpRequest) -> func.HttpResponse:
     """
-    指定したテストID・問題番号でのコミュニティディスカッションの要約を取得します
+    指定したテストID・問題番号でのコミュニティ情報を取得します
     """
 
     try:
@@ -60,23 +60,48 @@ def get_community(req: func.HttpRequest) -> func.HttpResponse:
         question_number = req.route_params.get("questionNumber")
 
         # Communityコンテナーの読み取り専用インスタンスを取得
-        container: ContainerProxy = get_read_only_container(
+        community_container: ContainerProxy = get_read_only_container(
             database_name="Users",
             container_name="Community",
         )
 
+        # Answerコンテナーの読み取り専用インスタンスを取得
+        answer_container: ContainerProxy = get_read_only_container(
+            database_name="Users",
+            container_name="Answer",
+        )
+
+        community_item: Community | None = None
+        answer_item: Answer | None = None
+
         try:
             # Communityコンテナーから項目取得
-            item: Community = container.read_item(
+            community_item = community_container.read_item(
                 item=f"{test_id}_{question_number}", partition_key=test_id
             )
-            logging.info({"item": item})
+            logging.info({"community_item": community_item})
+        except CosmosResourceNotFoundError:
+            logging.info("Community item not found")
 
-            # レスポンス整形
+        try:
+            # Answerコンテナーから項目取得
+            answer_item = answer_container.read_item(
+                item=f"{test_id}_{question_number}", partition_key=test_id
+            )
+            logging.info({"answer_item": answer_item})
+        except CosmosResourceNotFoundError:
+            logging.info("Answer item not found")
+
+        # レスポンス整形
+        if community_item is not None or answer_item is not None:
             body: GetCommunityRes = {
-                "discussionsSummary": item["discussionsSummary"],
                 "isExisted": True,
             }
+            if community_item is not None:
+                body["discussionsSummary"] = community_item["discussionsSummary"]
+            if answer_item is not None and answer_item.get("communityVotes") is not None:
+                body["communityVotes"] = answer_item["communityVotes"]
+
             logging.info({"body": body})
 
             return func.HttpResponse(
@@ -84,17 +109,16 @@ def get_community(req: func.HttpRequest) -> func.HttpResponse:
                 status_code=200,
                 mimetype="application/json",
             )
-        except CosmosResourceNotFoundError:
-            # Communityコンテナーから項目を取得できない場合、
-            # コミュニティでのディスカッションの要約を除いてレスポンス
-            body: GetCommunityRes = {
-                "isExisted": False,
-            }
-            return func.HttpResponse(
-                body=json.dumps(body),
-                status_code=200,
-                mimetype="application/json",
-            )
+
+        # コミュニティ情報が存在しない場合
+        body: GetCommunityRes = {
+            "isExisted": False,
+        }
+        return func.HttpResponse(
+            body=json.dumps(body),
+            status_code=200,
+            mimetype="application/json",
+        )
     except Exception:
         logging.error(traceback.format_exc())
         return func.HttpResponse(

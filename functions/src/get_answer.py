@@ -78,8 +78,6 @@ def get_answer(req: func.HttpRequest) -> func.HttpResponse:
                 "explanations": item["explanations"],
                 "isExisted": True,
             }
-            if item.get("communityVotes") is not None:
-                body["communityVotes"] = item["communityVotes"]
             logging.info({"body": body})
 
             return func.HttpResponse(

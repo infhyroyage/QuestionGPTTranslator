@@ -62,14 +62,13 @@ class TestGetAnswer(TestCase):
     def test_get_answer_success(
         self, mock_logging, mock_get_read_only_container, mock_validate_request
     ):
-        """ommunityVotesが存在する場合のレスポンスが正常であることのテスト"""
+        """レスポンスが正常であることのテスト"""
 
         mock_validate_request.return_value = None
         mock_container = MagicMock()
         mock_item = {
             "correctIdxes": [1],
             "explanations": ["Option 1 is correct because..."],
-            "communityVotes": ["BC (70%)", "BD (30%)"],
         }
         mock_container.read_item.return_value = mock_item
         mock_get_read_only_container.return_value = mock_container
@@ -92,7 +91,6 @@ class TestGetAnswer(TestCase):
         expected_body = {
             "correctIdxes": [1],
             "explanations": ["Option 1 is correct because..."],
-            "communityVotes": ["BC (70%)", "BD (30%)"],
             "isExisted": True,
         }
         self.assertEqual(json.loads(response.get_body().decode()), expected_body)
@@ -107,7 +105,7 @@ class TestGetAnswer(TestCase):
     def test_get_answer_success_without_community_votes(
         self, mock_logging, mock_get_read_only_container, mock_validate_request
     ):
-        """communityVotesが存在しない場合のレスポンスが正常であることのテスト"""
+        """レスポンスが正常であることのテスト"""
 
         mock_validate_request.return_value = None
         mock_container = MagicMock()

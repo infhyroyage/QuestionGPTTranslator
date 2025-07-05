@@ -662,7 +662,6 @@ class TestPostAnswer(unittest.TestCase):
             {
                 "correctIdxes": [1],
                 "explanations": ["Option 2 is correct because 2 + 2 equals 4."],
-                "communityVotes": ["BC (70%)", "BD (30%)"],
             },
         )
         mock_validate_request.assert_called_once_with(req)

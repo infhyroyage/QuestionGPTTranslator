@@ -421,9 +421,11 @@ class TestPostDiscussion(unittest.TestCase):
         """正常にディスカッション要約を生成する場合のテスト"""
 
         mock_validate_request.return_value = None
-        mock_container = MagicMock()
-        mock_get_read_only_container.return_value = mock_container
-        mock_item: Question = {
+        mock_question_container = MagicMock()
+        mock_answer_container = MagicMock()
+        mock_get_read_only_container.side_effect = [mock_question_container, mock_answer_container]
+
+        mock_question_item: Question = {
             "id": "1_1",
             "number": 1,
             "subjects": ["What is 2 + 2?"],
@@ -438,7 +440,14 @@ class TestPostDiscussion(unittest.TestCase):
                 }
             ],
         }
-        mock_container.read_item.return_value = mock_item
+        mock_answer_item = {
+            "id": "1_1",
+            "testId": "1",
+            "questionNumber": 1,
+            "communityVotes": ["B (80%)", "A (20%)"],
+        }
+        mock_question_container.read_item.return_value = mock_question_item
+        mock_answer_container.read_item.return_value = mock_answer_item
         mock_generate_discussion_summary.return_value = (
             "Community agrees B is correct with strong consensus."
         )
@@ -453,24 +462,32 @@ class TestPostDiscussion(unittest.TestCase):
 
         expected_body = {
             "discussionsSummary": "Community agrees B is correct with strong consensus.",
+            "communityVotes": ["B (80%)", "A (20%)"],
             "isExisted": True,
         }
         actual_body = response.get_body().decode()
         self.assertEqual(json.loads(actual_body), expected_body)
 
         mock_validate_request.assert_called_once_with(req)
-        mock_get_read_only_container.assert_called_once_with(
+        self.assertEqual(mock_get_read_only_container.call_count, 2)
+        mock_get_read_only_container.assert_any_call(
             database_name="Users",
             container_name="Question",
         )
-        mock_container.read_item.assert_called_once_with(item="1_1", partition_key="1")
+        mock_get_read_only_container.assert_any_call(
+            database_name="Users",
+            container_name="Answer",
+        )
+        mock_question_container.read_item.assert_called_once_with(item="1_1", partition_key="1")
+        mock_answer_container.read_item.assert_called_once_with(item="1_1", partition_key="1")
         mock_generate_discussion_summary.assert_called_once_with(
-            mock_item["discussions"]
+            mock_question_item["discussions"]
         )
         mock_logging.info.assert_has_calls(
             [
                 call({"question_number": "1", "test_id": "1"}),
-                call({"item": mock_item}),
+                call({"question_item": mock_question_item}),
+                call({"answer_item": mock_answer_item}),
             ]
         )
         mock_queue_message_community.assert_called_once_with(
@@ -554,9 +571,11 @@ class TestPostDiscussion(unittest.TestCase):
         """discussionsフィールドが存在しない場合のテスト"""
 
         mock_validate_request.return_value = None
-        mock_container = MagicMock()
-        mock_get_read_only_container.return_value = mock_container
-        mock_item: Question = {
+        mock_question_container = MagicMock()
+        mock_answer_container = MagicMock()
+        mock_get_read_only_container.side_effect = [mock_question_container, mock_answer_container]
+
+        mock_question_item: Question = {
             "id": "1_1",
             "number": 1,
             "subjects": ["What is 2 + 2?"],
@@ -565,7 +584,8 @@ class TestPostDiscussion(unittest.TestCase):
             "testId": "1",
             "discussions": None,
         }
-        mock_container.read_item.return_value = mock_item
+        mock_question_container.read_item.return_value = mock_question_item
+        mock_answer_container.read_item.side_effect = CosmosResourceNotFoundError
 
         req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
         req.route_params = {"testId": "1", "questionNumber": "1"}
@@ -582,15 +602,22 @@ class TestPostDiscussion(unittest.TestCase):
         self.assertEqual(json.loads(actual_body), expected_body)
 
         mock_validate_request.assert_called_once_with(req)
-        mock_get_read_only_container.assert_called_once_with(
+        self.assertEqual(mock_get_read_only_container.call_count, 2)
+        mock_get_read_only_container.assert_any_call(
             database_name="Users",
             container_name="Question",
         )
-        mock_container.read_item.assert_called_once_with(item="1_1", partition_key="1")
+        mock_get_read_only_container.assert_any_call(
+            database_name="Users",
+            container_name="Answer",
+        )
+        mock_question_container.read_item.assert_called_once_with(item="1_1", partition_key="1")
+        mock_answer_container.read_item.assert_called_once_with(item="1_1", partition_key="1")
         mock_logging.info.assert_has_calls(
             [
                 call({"question_number": "1", "test_id": "1"}),
-                call({"item": mock_item}),
+                call({"question_item": mock_question_item}),
+                call("Answer item not found"),
             ]
         )
         mock_logging.error.assert_not_called()
@@ -609,9 +636,11 @@ class TestPostDiscussion(unittest.TestCase):
         """ディスカッション要約の生成に失敗した場合のテスト"""
 
         mock_validate_request.return_value = None
-        mock_container = MagicMock()
-        mock_get_read_only_container.return_value = mock_container
-        mock_item: Question = {
+        mock_question_container = MagicMock()
+        mock_answer_container = MagicMock()
+        mock_get_read_only_container.side_effect = [mock_question_container, mock_answer_container]
+
+        mock_question_item: Question = {
             "id": "1_1",
             "number": 1,
             "subjects": ["What is 2 + 2?"],
@@ -626,7 +655,8 @@ class TestPostDiscussion(unittest.TestCase):
                 }
             ],
         }
-        mock_container.read_item.return_value = mock_item
+        mock_question_container.read_item.return_value = mock_question_item
+        mock_answer_container.read_item.side_effect = CosmosResourceNotFoundError
         mock_generate_discussion_summary.return_value = None
 
         req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
@@ -638,18 +668,25 @@ class TestPostDiscussion(unittest.TestCase):
         self.assertEqual(response.get_body().decode(), "Internal Server Error")
 
         mock_validate_request.assert_called_once_with(req)
-        mock_get_read_only_container.assert_called_once_with(
+        self.assertEqual(mock_get_read_only_container.call_count, 2)
+        mock_get_read_only_container.assert_any_call(
             database_name="Users",
             container_name="Question",
         )
-        mock_container.read_item.assert_called_once_with(item="1_1", partition_key="1")
+        mock_get_read_only_container.assert_any_call(
+            database_name="Users",
+            container_name="Answer",
+        )
+        mock_question_container.read_item.assert_called_once_with(item="1_1", partition_key="1")
+        mock_answer_container.read_item.assert_called_once_with(item="1_1", partition_key="1")
         mock_generate_discussion_summary.assert_called_once_with(
-            mock_item["discussions"]
+            mock_question_item["discussions"]
         )
         mock_logging.info.assert_has_calls(
             [
                 call({"question_number": "1", "test_id": "1"}),
-                call({"item": mock_item}),
+                call({"question_item": mock_question_item}),
+                call("Answer item not found"),
             ]
         )
         mock_logging.error.assert_called_once()

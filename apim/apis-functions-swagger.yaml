@@ -96,12 +96,6 @@ paths:
                     items:
                       type: string
                       nullable: true
-                  communityVotes:
-                    type: array
-                    description: コミュニティ回答割合
-                    items:
-                      type: string
-                      nullable: true
         "400":
           description: リクエストパラメーターが不正です
           content:
@@ -169,12 +163,6 @@ paths:
                     items:
                       type: string
                     nullable: true
-                  communityVotes:
-                    type: array
-                    description: コミュニティ回答割合
-                    items:
-                      type: string
-                    nullable: true
                   isExisted:
                     type: boolean
                     description: 正解の選択肢・正解/不正解の理由が存在する場合はtrue、存在しない場合はfalse
@@ -198,8 +186,8 @@ paths:
                 type: string
   /tests/{testId}/communities/{questionNumber}:
     get:
-      summary: コミュニティディスカッション要約取得API
-      description: 指定したテストID・問題番号でのコミュニティディスカッションの要約を取得します
+      summary: コミュニティ情報取得API
+      description: 指定したテストID・問題番号でのコミュニティ情報を取得します
       operationId: get-community
       parameters:
         - name: testId
@@ -231,9 +219,15 @@ paths:
                   discussionsSummary:
                     type: string
                     description: コミュニティでのディスカッションの要約
+                  communityVotes:
+                    type: array
+                    description: コミュニティ回答割合
+                    items:
+                      type: string
+                    nullable: true
                   isExisted:
                     type: boolean
-                    description: コミュニティでのディスカッションの要約が存在する場合はtrue、存在しない場合はfalse
+                    description: コミュニティ情報が存在する場合はtrue、存在しない場合はfalse
                 required:
                   - isExisted
         "400":
@@ -255,8 +249,8 @@ paths:
               schema:
                 type: string
     post:
-      summary: コミュニティディスカッション要約生成API
-      description: コミュニティディスカッションの要約を生成します
+      summary: コミュニティ情報生成API
+      description: コミュニティ情報を生成します
       operationId: post-community
       parameters:
         - name: testId
@@ -288,9 +282,15 @@ paths:
                   discussionsSummary:
                     type: string
                     description: コミュニティでのディスカッションの要約
+                  communityVotes:
+                    type: array
+                    description: コミュニティ回答割合
+                    items:
+                      type: string
+                    nullable: true
                   isExisted:
                     type: boolean
-                    description: コミュニティでのディスカッションの要約が存在する場合はtrue、存在しない場合はfalse
+                    description: コミュニティ情報が存在する場合はtrue、存在しない場合はfalse
                 required:
                   - isExisted
         "400":

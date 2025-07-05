@@ -10,7 +10,7 @@ from azure.cosmos import ContainerProxy
 from azure.cosmos.exceptions import CosmosResourceNotFoundError
 from azure.storage.queue import BinaryBase64EncodePolicy, QueueClient
 from openai import AzureOpenAI
-from type.cosmos import Question, QuestionDiscussion
+from type.cosmos import Answer, Question, QuestionDiscussion
 from type.message import MessageCommunity
 from type.response import PostCommunityRes
 from util.cosmos import get_read_only_container
@@ -180,7 +180,7 @@ bp_post_community = func.Blueprint()
 )
 def post_community(req: func.HttpRequest) -> func.HttpResponse:
     """
-    コミュニティディスカッションの要約を生成します
+    コミュニティ情報を生成します
     """
 
     try:
@@ -200,20 +200,34 @@ def post_community(req: func.HttpRequest) -> func.HttpResponse:
         )
 
         # Questionコンテナーの項目を取得
-        container: ContainerProxy = get_read_only_container(
+        question_container: ContainerProxy = get_read_only_container(
             database_name="Users",
             container_name="Question",
         )
         try:
-            item: Question = container.read_item(
+            question_item: Question = question_container.read_item(
                 item=f"{test_id}_{question_number}", partition_key=test_id
             )
-            logging.info({"item": item})
+            logging.info({"question_item": question_item})
         except CosmosResourceNotFoundError:
             return func.HttpResponse(body="Not Found Question", status_code=404)
 
+        # Answerコンテナーの項目を取得
+        answer_container: ContainerProxy = get_read_only_container(
+            database_name="Users",
+            container_name="Answer",
+        )
+        answer_item: Answer | None = None
+        try:
+            answer_item = answer_container.read_item(
+                item=f"{test_id}_{question_number}", partition_key=test_id
+            )
+            logging.info({"answer_item": answer_item})
+        except CosmosResourceNotFoundError:
+            logging.info("Answer item not found")
+
         # discussionsフィールドが存在する場合はディスカッション要約を生成(存在しない場合は空文字列)
-        discussions: list[QuestionDiscussion] | None = item.get("discussions")
+        discussions: list[QuestionDiscussion] | None = question_item.get("discussions")
         body: PostCommunityRes = {
             "isExisted": False,
         }
@@ -232,6 +246,11 @@ def post_community(req: func.HttpRequest) -> func.HttpResponse:
                     "discussionsSummary": summary,
                 }
             )
+
+        # communityVotesを追加
+        if answer_item is not None and answer_item.get("communityVotes") is not None:
+            body["communityVotes"] = answer_item["communityVotes"]
+            body["isExisted"] = True
 
         return func.HttpResponse(
             body=json.dumps(body),

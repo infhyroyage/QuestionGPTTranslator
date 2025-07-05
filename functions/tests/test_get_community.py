@@ -62,11 +62,12 @@ class TestGetCommunity(TestCase):
     def test_get_community_success(
         self, mock_logging, mock_get_read_only_container, mock_validate_request
     ):
-        """コミュニティディスカッション要約が存在する場合のレスポンスが正常であることのテスト"""
+        """コミュニティ情報が存在する場合のレスポンスが正常であることのテスト"""
 
         mock_validate_request.return_value = None
-        mock_container = MagicMock()
-        mock_item = {
+        mock_community_container = MagicMock()
+        mock_answer_container = MagicMock()
+        mock_community_item = {
             "id": "1_1",
             "testId": "1",
             "questionNumber": 1,
@@ -74,8 +75,17 @@ class TestGetCommunity(TestCase):
                 "Users discuss correct answers and share insights about this question."
             ),
         }
-        mock_container.read_item.return_value = mock_item
-        mock_get_read_only_container.return_value = mock_container
+        mock_answer_item = {
+            "id": "1_1",
+            "testId": "1",
+            "questionNumber": 1,
+            "communityVotes": ["BC (70%)", "BD (30%)"],
+        }
+        mock_community_container.read_item.return_value = mock_community_item
+        mock_answer_container.read_item.return_value = mock_answer_item
+        mock_get_read_only_container.side_effect = [
+            mock_community_container, mock_answer_container
+        ]
 
         req = MagicMock(spec=func.HttpRequest)
         req.route_params = {"testId": "1", "questionNumber": "1"}
@@ -85,11 +95,20 @@ class TestGetCommunity(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.mimetype, "application/json")
         mock_validate_request.assert_called_once_with(req)
-        mock_get_read_only_container.assert_called_once_with(
+        self.assertEqual(mock_get_read_only_container.call_count, 2)
+        mock_get_read_only_container.assert_any_call(
             database_name="Users",
             container_name="Community",
         )
-        mock_container.read_item.assert_called_once_with(
+        mock_get_read_only_container.assert_any_call(
+            database_name="Users",
+            container_name="Answer",
+        )
+        mock_community_container.read_item.assert_called_once_with(
+            item="1_1",
+            partition_key="1",
+        )
+        mock_answer_container.read_item.assert_called_once_with(
             item="1_1",
             partition_key="1",
         )
@@ -98,14 +117,17 @@ class TestGetCommunity(TestCase):
             "discussionsSummary": (
                 "Users discuss correct answers and share insights about this question."
             ),
+            "communityVotes": ["BC (70%)", "BD (30%)"],
             "isExisted": True,
         }
         actual_body = response.get_body().decode()
         self.assertEqual(json.loads(actual_body), expected_body)
 
-        mock_logging.info.assert_has_calls(
-            [call({"item": mock_item}), call({"body": expected_body})]
-        )
+        mock_logging.info.assert_has_calls([
+            call({"community_item": mock_community_item}),
+            call({"answer_item": mock_answer_item}),
+            call({"body": expected_body})
+        ])
         mock_logging.error.assert_not_called()
 
     @patch("src.get_community.validate_request")
@@ -128,12 +150,16 @@ class TestGetCommunity(TestCase):
     def test_get_community_not_found(
         self, mock_logging, mock_get_read_only_container, mock_validate_request
     ):
-        """コミュニティ要約が見つからない場合のレスポンスのテスト"""
+        """コミュニティ情報が見つからない場合のレスポンスのテスト"""
 
         mock_validate_request.return_value = None
-        mock_container = MagicMock()
-        mock_container.read_item.side_effect = CosmosResourceNotFoundError
-        mock_get_read_only_container.return_value = mock_container
+        mock_community_container = MagicMock()
+        mock_answer_container = MagicMock()
+        mock_community_container.read_item.side_effect = CosmosResourceNotFoundError
+        mock_answer_container.read_item.side_effect = CosmosResourceNotFoundError
+        mock_get_read_only_container.side_effect = [
+            mock_community_container, mock_answer_container
+        ]
 
         req = MagicMock(spec=func.HttpRequest)
         req.route_params = {"testId": "1", "questionNumber": "1"}
@@ -150,15 +176,26 @@ class TestGetCommunity(TestCase):
         self.assertEqual(json.loads(actual_body), expected_body)
 
         mock_validate_request.assert_called_once_with(req)
-        mock_get_read_only_container.assert_called_once_with(
+        self.assertEqual(mock_get_read_only_container.call_count, 2)
+        mock_get_read_only_container.assert_any_call(
             database_name="Users",
             container_name="Community",
         )
-        mock_container.read_item.assert_called_once_with(
+        mock_get_read_only_container.assert_any_call(
+            database_name="Users",
+            container_name="Answer",
+        )
+        mock_community_container.read_item.assert_called_once_with(
             item="1_1",
             partition_key="1",
         )
-        mock_logging.info.assert_not_called()
+        mock_answer_container.read_item.assert_called_once_with(
+            item="1_1",
+            partition_key="1",
+        )
+        mock_logging.info.assert_has_calls(
+            [call("Community item not found"), call("Answer item not found")]
+        )
         mock_logging.error.assert_not_called()
 
     @patch("src.get_community.validate_request")
