@@ -32,7 +32,7 @@ class TestUpsertTestItem(TestCase):
         course_name = "Math"
         test_name = "Algebra"
         json_data = [
-            ImportItem(subjects=["Q1"], choices=["A", "B"], communityVotes=["A (100%)"])
+            ImportItem(subjects=["Q1"], choices=["A", "B"], answerNum=1)
         ]
 
         test_id, is_existed_test = upsert_test_item(course_name, test_name, json_data)
@@ -72,7 +72,7 @@ class TestUpsertTestItem(TestCase):
         course_name = "Math"
         test_name = "Algebra"
         json_data = [
-            ImportItem(subjects=["Q1"], choices=["A", "B"], communityVotes=["A (100%)"])
+            ImportItem(subjects=["Q1"], choices=["A", "B"], answerNum=1)
         ]
 
         test_id, is_existed_test = upsert_test_item(course_name, test_name, json_data)
@@ -105,7 +105,7 @@ class TestUpsertTestItem(TestCase):
         course_name = "Math"
         test_name = "Algebra"
         json_data = [
-            ImportItem(subjects=["Q1"], choices=["A", "B"], communityVotes=["A (100%)"])
+            ImportItem(subjects=["Q1"], choices=["A", "B"], answerNum=1)
         ]
 
         with self.assertRaises(ValueError) as context:
@@ -141,13 +141,11 @@ class TestUpsertQuestionItems(TestCase):
             ImportItem(
                 subjects=["Q1"],
                 choices=["A"],
-                communityVotes=["A (100%)"],
                 answerNum=1,
             ),
             ImportItem(
                 subjects=["Q2-1", "Q2-2", "Q2-3"],
                 choices=["B", "C"],
-                communityVotes=["BC (70%)", "BD (30%)"],
                 indicateSubjectImgIdxes=[0, 2],
                 indicateChoiceImgs=["img1", "img2"],
                 escapeTranslatedIdxes={"subjects": [0, 2], "choices": [1, 3]},
@@ -160,7 +158,6 @@ class TestUpsertQuestionItems(TestCase):
         expected_question_item_1st = {
             "subjects": ["Q1"],
             "choices": ["A"],
-            "communityVotes": ["A (100%)"],
             "id": "test-id_1",
             "number": 1,
             "testId": "test-id",
@@ -169,7 +166,6 @@ class TestUpsertQuestionItems(TestCase):
         expected_question_item_2nd = {
             "subjects": ["Q2-1", "Q2-2", "Q2-3"],
             "choices": ["B", "C"],
-            "communityVotes": ["BC (70%)", "BD (30%)"],
             "indicateSubjectImgIdxes": [0, 2],
             "indicateChoiceImgs": ["img1", "img2"],
             "escapeTranslatedIdxes": {"subjects": [0, 2], "choices": [1, 3]},
@@ -208,7 +204,6 @@ class TestUpsertQuestionItems(TestCase):
                 number=2,
                 subjects=["Q2-1", "Q2-2", "Q2-3"],
                 choices=["B", "C"],
-                communityVotes=["BC (70%)", "BD (30%)"],
                 indicateSubjectImgIdxes=[0, 2],
                 indicateChoiceImgs=["img1", "img2"],
                 escapeTranslatedIdxes={"subjects": [0, 2], "choices": [1, 3]},
@@ -220,7 +215,6 @@ class TestUpsertQuestionItems(TestCase):
                 number=3,
                 subjects=["Q3-1", "Q3-2"],
                 choices=["D"],
-                communityVotes=["D (95%)", "B (5%)"],
                 testId="test-id",
                 answerNum=1,
             ),
@@ -231,13 +225,11 @@ class TestUpsertQuestionItems(TestCase):
             ImportItem(
                 subjects=["Q1"],
                 choices=["A"],
-                communityVotes=["A (100%)"],
                 answerNum=1,
             ),
             ImportItem(
                 subjects=["Q2-1", "Q2-2", "Q2-3"],
                 choices=["B", "C"],
-                communityVotes=["BC (70%)", "BD (30%)"],
                 indicateSubjectImgIdxes=[0, 2],
                 indicateChoiceImgs=["img1", "img2"],
                 escapeTranslatedIdxes={"subjects": [0, 2], "choices": [1, 3]},
@@ -250,7 +242,6 @@ class TestUpsertQuestionItems(TestCase):
         expected_question_item = {
             "subjects": ["Q1"],
             "choices": ["A"],
-            "communityVotes": ["A (100%)"],
             "id": "test-id_1",
             "number": 1,
             "testId": "test-id",
@@ -265,7 +256,6 @@ class TestUpsertQuestionItems(TestCase):
                             {
                                 "subjects": ["Q2-1", "Q2-2", "Q2-3"],
                                 "choices": ["B", "C"],
-                                "communityVotes": ["BC (70%)", "BD (30%)"],
                                 "indicateSubjectImgIdxes": [0, 2],
                                 "indicateChoiceImgs": ["img1", "img2"],
                                 "escapeTranslatedIdxes": {
@@ -277,7 +267,6 @@ class TestUpsertQuestionItems(TestCase):
                             {
                                 "subjects": ["Q3-1", "Q3-2"],
                                 "choices": ["D"],
-                                "communityVotes": ["D (95%)", "B (5%)"],
                                 "answerNum": 1,
                             },
                         ]
@@ -306,7 +295,6 @@ class TestBlobTriggeredImport(TestCase):
                 {
                     "subjects": ["Q1"],
                     "choices": ["A"],
-                    "communityVotes": ["A (100%)"],
                     "answerNum": 1,
                 }
             ]
@@ -325,7 +313,6 @@ class TestBlobTriggeredImport(TestCase):
                 {
                     "subjects": ["Q1"],
                     "choices": ["A"],
-                    "communityVotes": ["A (100%)"],
                     "answerNum": 1,
                 }
             ],
@@ -337,7 +324,6 @@ class TestBlobTriggeredImport(TestCase):
                 {
                     "subjects": ["Q1"],
                     "choices": ["A"],
-                    "communityVotes": ["A (100%)"],
                     "answerNum": 1,
                 }
             ],

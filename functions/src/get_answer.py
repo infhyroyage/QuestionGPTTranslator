@@ -3,15 +3,53 @@
 import json
 import logging
 import traceback
+from collections import Counter
+from typing import List, Optional
 
 import azure.functions as func
 from azure.cosmos import ContainerProxy
 from azure.cosmos.exceptions import CosmosResourceNotFoundError
-from type.cosmos import Answer
+from type.cosmos import Answer, Question
 from type.response import GetAnswerRes
 from util.cosmos import get_read_only_container
 
 bp_get_answer = func.Blueprint()
+
+
+def calculate_community_votes(discussions: Optional[List[dict]]) -> Optional[List[str]]:
+    """
+    discussionsのselectedAnswerから動的にcommunityVotesを算出する
+
+    Args:
+        discussions: QuestionのdiscussionsフィールドのList
+
+    Returns:
+        communityVotes: 選択肢毎の割合のリスト
+    """
+    if not discussions:
+        return None
+
+    # selectedAnswerを収集（None以外）
+    selected_answers = [
+        discussion["selectedAnswer"]
+        for discussion in discussions
+        if discussion.get("selectedAnswer") is not None
+    ]
+
+    if not selected_answers:
+        return None
+
+    # 各選択肢の選択回数を集計
+    answer_counts = Counter(selected_answers)
+    total_count = len(selected_answers)
+
+    # 割合を計算してcommunityVotesを生成
+    community_votes = []
+    for answer, count in answer_counts.items():
+        percentage = round((count / total_count) * 100)
+        community_votes.append(f"{answer} ({percentage}%)")
+
+    return community_votes
 
 
 def validate_request(req: func.HttpRequest) -> str | None:
@@ -60,26 +98,41 @@ def get_answer(req: func.HttpRequest) -> func.HttpResponse:
         question_number = req.route_params.get("questionNumber")
 
         # Answerコンテナーの読み取り専用インスタンスを取得
-        container: ContainerProxy = get_read_only_container(
+        answer_container: ContainerProxy = get_read_only_container(
             database_name="Users",
             container_name="Answer",
         )
 
+        # Questionコンテナーの読み取り専用インスタンスを取得
+        question_container: ContainerProxy = get_read_only_container(
+            database_name="Users",
+            container_name="Question",
+        )
+
         try:
             # Answerコンテナーから項目取得
-            item: Answer = container.read_item(
+            answer_item: Answer = answer_container.read_item(
                 item=f"{test_id}_{question_number}", partition_key=test_id
             )
-            logging.info({"item": item})
+
+            # Questionコンテナーから項目取得（discussionsを取得するため）
+            question_item: Question = question_container.read_item(
+                item=f"{test_id}_{question_number}", partition_key=test_id
+            )
+
+            logging.info({"answer_item": answer_item, "question_item": question_item})
+
+            # discussionsからcommunityVotesを動的に算出
+            community_votes = calculate_community_votes(question_item.get("discussions"))
 
             # レスポンス整形
             body: GetAnswerRes = {
-                "correctIdxes": item["correctIdxes"],
-                "explanations": item["explanations"],
+                "correctIdxes": answer_item["correctIdxes"],
+                "explanations": answer_item["explanations"],
                 "isExisted": True,
             }
-            if item.get("communityVotes") is not None:
-                body["communityVotes"] = item["communityVotes"]
+            if community_votes is not None:
+                body["communityVotes"] = community_votes
             logging.info({"body": body})
 
             return func.HttpResponse(

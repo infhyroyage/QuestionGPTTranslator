@@ -74,7 +74,7 @@ class GetAnswerRes(TypedDict):
 
     communityVotes: Optional[List[str]]
     """
-    コミュニティ回答割合
+    コミュニティ回答割合（discussionsから動的に算出）
     """
 
     isExisted: bool
@@ -96,11 +96,6 @@ class PostAnswerRes(TypedDict, total=False):
     explanations: List[str]
     """
     各選択肢の正解/不正解の理由
-    """
-
-    communityVotes: Optional[List[str]]
-    """
-    コミュニティ回答割合
     """
 
 

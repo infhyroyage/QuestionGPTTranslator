@@ -28,11 +28,6 @@ class Answer(TypedDict):
     各選択肢の正解/不正解の理由
     """
 
-    communityVotes: List[str]
-    """
-    コミュニティ回答割合
-    """
-
     testId: str
     """
     テストID
@@ -213,11 +208,6 @@ class Question(TypedDict):
     answerNum: int
     """
     回答の選択肢の個数
-    """
-
-    communityVotes: Optional[List[str]]
-    """
-    コミュニティ回答割合
     """
 
     indicateSubjectImgIdxes: Optional[List[int]]
