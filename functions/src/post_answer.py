@@ -20,6 +20,7 @@ from type.message import MessageAnswer
 from type.openai import CorrectAnswers
 from type.response import PostAnswerRes
 from type.structured import AnswerFormat
+from util.community_votes import calculate_community_votes
 from util.cosmos import get_read_only_container
 from util.queue import AZURITE_QUEUE_STORAGE_CONNECTION_STRING
 
@@ -347,6 +348,9 @@ def post_answer(req: func.HttpRequest) -> func.HttpResponse:
         if correct_answers is None:
             raise ValueError("Failed to generate correct answers")
 
+        # discussionsからcommunityVotesを動的算出
+        community_votes = calculate_community_votes(item.get("discussions"))
+
         # キューストレージにメッセージを格納
         message_answer: MessageAnswer = {
             "testId": test_id,
@@ -357,16 +361,14 @@ def post_answer(req: func.HttpRequest) -> func.HttpResponse:
             "correctIdxes": correct_answers["correct_indexes"],
             "explanations": correct_answers["explanations"],
         }
-        if item.get("communityVotes") is not None:
-            message_answer["communityVotes"] = item.get("communityVotes")
         queue_message_answer(message_answer)
 
         body: PostAnswerRes = {
             "correctIdxes": correct_answers["correct_indexes"],
             "explanations": correct_answers["explanations"],
         }
-        if item.get("communityVotes") is not None:
-            body["communityVotes"] = item.get("communityVotes")
+        if community_votes is not None:
+            body["communityVotes"] = community_votes
         return func.HttpResponse(
             body=json.dumps(body),
             status_code=200,

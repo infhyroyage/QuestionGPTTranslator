@@ -108,10 +108,7 @@ def upsert_question_items(
             "choices": inserted_question_item["choices"],
             "answerNum": inserted_question_item["answerNum"],
         }
-        if "communityVotes" in inserted_question_item:
-            inserted_import_item["communityVotes"] = inserted_question_item[
-                "communityVotes"
-            ]
+
         if "indicateSubjectImgIdxes" in inserted_question_item:
             inserted_import_item["indicateSubjectImgIdxes"] = inserted_question_item[
                 "indicateSubjectImgIdxes"

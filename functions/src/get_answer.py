@@ -7,8 +7,9 @@ import traceback
 import azure.functions as func
 from azure.cosmos import ContainerProxy
 from azure.cosmos.exceptions import CosmosResourceNotFoundError
-from type.cosmos import Answer
+from type.cosmos import Answer, Question
 from type.response import GetAnswerRes
+from util.community_votes import calculate_community_votes
 from util.cosmos import get_read_only_container
 
 bp_get_answer = func.Blueprint()
@@ -60,26 +61,40 @@ def get_answer(req: func.HttpRequest) -> func.HttpResponse:
         question_number = req.route_params.get("questionNumber")
 
         # Answerコンテナーの読み取り専用インスタンスを取得
-        container: ContainerProxy = get_read_only_container(
+        answer_container: ContainerProxy = get_read_only_container(
             database_name="Users",
             container_name="Answer",
         )
 
+        # Questionコンテナーの読み取り専用インスタンスを取得
+        question_container: ContainerProxy = get_read_only_container(
+            database_name="Users",
+            container_name="Question",
+        )
+
         try:
             # Answerコンテナーから項目取得
-            item: Answer = container.read_item(
+            answer_item: Answer = answer_container.read_item(
                 item=f"{test_id}_{question_number}", partition_key=test_id
             )
-            logging.info({"item": item})
+            logging.info({"answer_item": answer_item})
+
+            # Questionコンテナーから項目取得してdiscussionsを取得
+            question_item: Question = question_container.read_item(
+                item=f"{test_id}_{question_number}", partition_key=test_id
+            )
+            
+            # discussionsからcommunityVotesを動的算出
+            community_votes = calculate_community_votes(question_item.get("discussions"))
 
             # レスポンス整形
             body: GetAnswerRes = {
-                "correctIdxes": item["correctIdxes"],
-                "explanations": item["explanations"],
+                "correctIdxes": answer_item["correctIdxes"],
+                "explanations": answer_item["explanations"],
                 "isExisted": True,
             }
-            if item.get("communityVotes") is not None:
-                body["communityVotes"] = item["communityVotes"]
+            if community_votes is not None:
+                body["communityVotes"] = community_votes
             logging.info({"body": body})
 
             return func.HttpResponse(

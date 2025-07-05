@@ -60,10 +60,7 @@ class ImportItem(TypedDict):
     回答の選択肢の個数
     """
 
-    communityVotes: Optional[List[str]]
-    """
-    コミュニティでの回答割合
-    """
+
 
     indicateSubjectImgIdxes: Optional[List[int]]
     """

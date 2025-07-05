@@ -43,10 +43,7 @@ class MessageAnswer(TypedDict):
     各選択肢の正解/不正解の理由
     """
 
-    communityVotes: Optional[List[str]]
-    """
-    コミュニティ回答割合
-    """
+
 
 
 class MessageCommunity(TypedDict):

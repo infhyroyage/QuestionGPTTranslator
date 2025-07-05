@@ -581,7 +581,6 @@ class TestQueueMessageAnswer(unittest.TestCase):
             answerNum=1,
             correctIdxes=[1],
             explanations=["Option 2 is correct because 2 + 2 equals 4."],
-            communityVotes=["A (100%)"],
         )
 
         queue_message_answer(message_answer)
@@ -641,7 +640,11 @@ class TestPostAnswer(unittest.TestCase):
         mock_item = Question(
             subjects=["What is 2 + 2?"],
             choices=["3", "4", "5"],
-            communityVotes=["BC (70%)", "BD (30%)"],
+            discussions=[
+                {"comment": "I think B is correct", "upvotedNum": 5, "selectedAnswer": "B"},
+                {"comment": "C is right", "upvotedNum": 3, "selectedAnswer": "C"},
+                {"comment": "B definitely", "upvotedNum": 2, "selectedAnswer": "B"},
+            ],
             answerNum=1,
         )
         mock_container.read_item.return_value = mock_item
@@ -662,7 +665,7 @@ class TestPostAnswer(unittest.TestCase):
             {
                 "correctIdxes": [1],
                 "explanations": ["Option 2 is correct because 2 + 2 equals 4."],
-                "communityVotes": ["BC (70%)", "BD (30%)"],
+                "communityVotes": ["B (67%)", "C (33%)"],
             },
         )
         mock_validate_request.assert_called_once_with(req)
@@ -690,7 +693,6 @@ class TestPostAnswer(unittest.TestCase):
                 answerNum=1,
                 correctIdxes=[1],
                 explanations=["Option 2 is correct because 2 + 2 equals 4."],
-                communityVotes=["BC (70%)", "BD (30%)"],
             )
         )
         mock_logging.info.assert_has_calls(

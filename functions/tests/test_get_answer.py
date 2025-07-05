@@ -62,17 +62,25 @@ class TestGetAnswer(TestCase):
     def test_get_answer_success(
         self, mock_logging, mock_get_read_only_container, mock_validate_request
     ):
-        """ommunityVotesが存在する場合のレスポンスが正常であることのテスト"""
+        """discussionsからcommunityVotesを動的算出する場合のレスポンスが正常であることのテスト"""
 
         mock_validate_request.return_value = None
-        mock_container = MagicMock()
-        mock_item = {
+        mock_answer_container = MagicMock()
+        mock_question_container = MagicMock()
+        mock_answer_item = {
             "correctIdxes": [1],
             "explanations": ["Option 1 is correct because..."],
-            "communityVotes": ["BC (70%)", "BD (30%)"],
         }
-        mock_container.read_item.return_value = mock_item
-        mock_get_read_only_container.return_value = mock_container
+        mock_question_item = {
+            "discussions": [
+                {"comment": "B is correct", "upvotedNum": 5, "selectedAnswer": "B"},
+                {"comment": "C is right", "upvotedNum": 3, "selectedAnswer": "C"},
+                {"comment": "B definitely", "upvotedNum": 2, "selectedAnswer": "B"},
+            ]
+        }
+        mock_answer_container.read_item.return_value = mock_answer_item
+        mock_question_container.read_item.return_value = mock_question_item
+        mock_get_read_only_container.side_effect = [mock_answer_container, mock_question_container]
 
         req = MagicMock(spec=func.HttpRequest)
         req.route_params = {"testId": "1", "questionNumber": "1"}
@@ -81,23 +89,32 @@ class TestGetAnswer(TestCase):
 
         self.assertEqual(response.status_code, 200)
         mock_validate_request.assert_called_once_with(req)
-        mock_get_read_only_container.assert_called_once_with(
+        self.assertEqual(mock_get_read_only_container.call_count, 2)
+        mock_get_read_only_container.assert_any_call(
             database_name="Users",
             container_name="Answer",
         )
-        mock_container.read_item.assert_called_once_with(
+        mock_get_read_only_container.assert_any_call(
+            database_name="Users",
+            container_name="Question",
+        )
+        mock_answer_container.read_item.assert_called_once_with(
+            item="1_1",
+            partition_key="1",
+        )
+        mock_question_container.read_item.assert_called_once_with(
             item="1_1",
             partition_key="1",
         )
         expected_body = {
             "correctIdxes": [1],
             "explanations": ["Option 1 is correct because..."],
-            "communityVotes": ["BC (70%)", "BD (30%)"],
+            "communityVotes": ["B (67%)", "C (33%)"],
             "isExisted": True,
         }
         self.assertEqual(json.loads(response.get_body().decode()), expected_body)
         mock_logging.info.assert_has_calls(
-            [call({"item": mock_item}), call({"body": expected_body})]
+            [call({"answer_item": mock_answer_item}), call({"body": expected_body})]
         )
         mock_logging.error.assert_not_called()
 
@@ -107,16 +124,21 @@ class TestGetAnswer(TestCase):
     def test_get_answer_success_without_community_votes(
         self, mock_logging, mock_get_read_only_container, mock_validate_request
     ):
-        """communityVotesが存在しない場合のレスポンスが正常であることのテスト"""
+        """discussionsが存在しない場合のレスポンスが正常であることのテスト"""
 
         mock_validate_request.return_value = None
-        mock_container = MagicMock()
-        mock_item = {
+        mock_answer_container = MagicMock()
+        mock_question_container = MagicMock()
+        mock_answer_item = {
             "correctIdxes": [1],
             "explanations": ["Option 1 is correct because..."],
         }
-        mock_container.read_item.return_value = mock_item
-        mock_get_read_only_container.return_value = mock_container
+        mock_question_item = {
+            "discussions": []
+        }
+        mock_answer_container.read_item.return_value = mock_answer_item
+        mock_question_container.read_item.return_value = mock_question_item
+        mock_get_read_only_container.side_effect = [mock_answer_container, mock_question_container]
 
         req = MagicMock(spec=func.HttpRequest)
         req.route_params = {"testId": "1", "questionNumber": "1"}
@@ -125,11 +147,20 @@ class TestGetAnswer(TestCase):
 
         self.assertEqual(response.status_code, 200)
         mock_validate_request.assert_called_once_with(req)
-        mock_get_read_only_container.assert_called_once_with(
+        self.assertEqual(mock_get_read_only_container.call_count, 2)
+        mock_get_read_only_container.assert_any_call(
             database_name="Users",
             container_name="Answer",
         )
-        mock_container.read_item.assert_called_once_with(
+        mock_get_read_only_container.assert_any_call(
+            database_name="Users",
+            container_name="Question",
+        )
+        mock_answer_container.read_item.assert_called_once_with(
+            item="1_1",
+            partition_key="1",
+        )
+        mock_question_container.read_item.assert_called_once_with(
             item="1_1",
             partition_key="1",
         )
@@ -140,7 +171,7 @@ class TestGetAnswer(TestCase):
         }
         self.assertEqual(json.loads(response.get_body().decode()), expected_body)
         mock_logging.info.assert_has_calls(
-            [call({"item": mock_item}), call({"body": expected_body})]
+            [call({"answer_item": mock_answer_item}), call({"body": expected_body})]
         )
         mock_logging.error.assert_not_called()
 
@@ -167,9 +198,9 @@ class TestGetAnswer(TestCase):
         """回答が見つからない場合のレスポンスのテスト"""
 
         mock_validate_request.return_value = None
-        mock_container = MagicMock()
-        mock_container.read_item.side_effect = CosmosResourceNotFoundError
-        mock_get_read_only_container.return_value = mock_container
+        mock_answer_container = MagicMock()
+        mock_answer_container.read_item.side_effect = CosmosResourceNotFoundError
+        mock_get_read_only_container.return_value = mock_answer_container
 
         req = MagicMock(spec=func.HttpRequest)
         req.route_params = {"testId": "1", "questionNumber": "1"}
@@ -186,7 +217,7 @@ class TestGetAnswer(TestCase):
             database_name="Users",
             container_name="Answer",
         )
-        mock_container.read_item.assert_called_once_with(
+        mock_answer_container.read_item.assert_called_once_with(
             item="1_1",
             partition_key="1",
         )
