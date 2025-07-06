@@ -55,7 +55,6 @@ def queue_triggered_answer(msg: func.QueueMessage):
             "questionNumber": message_answer["questionNumber"],
             "correctIdxes": message_answer["correctIdxes"],
             "explanations": message_answer["explanations"],
-            "communityVotes": message_answer["communityVotes"],
             "testId": message_answer["testId"],
         }
         logging.info({"answer_item": answer_item})
