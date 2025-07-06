@@ -41,4 +41,3 @@ def calculate_community_votes(
         community_votes.append(f"{answer} ({percentage}%)")
 
     return community_votes if community_votes else None
-
