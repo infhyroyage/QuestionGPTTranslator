@@ -778,7 +778,7 @@ class TestPostAnswer(unittest.TestCase):
         mock_item = Question(
             subjects=["What is 2 + 2?"],
             choices=["3", "4", "5"],
-            communityVotes=["BC (70%)", "BD (30%)"],
+            discussions=[],
             answerNum=1,
         )
         mock_container.read_item.return_value = mock_item

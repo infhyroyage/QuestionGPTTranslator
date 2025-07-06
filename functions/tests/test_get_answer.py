@@ -199,8 +199,9 @@ class TestGetAnswer(TestCase):
 
         mock_validate_request.return_value = None
         mock_answer_container = MagicMock()
+        mock_question_container = MagicMock()
         mock_answer_container.read_item.side_effect = CosmosResourceNotFoundError
-        mock_get_read_only_container.return_value = mock_answer_container
+        mock_get_read_only_container.side_effect = [mock_answer_container, mock_question_container]
 
         req = MagicMock(spec=func.HttpRequest)
         req.route_params = {"testId": "1", "questionNumber": "1"}
