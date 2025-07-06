@@ -90,14 +90,11 @@ class TestGetAnswer(TestCase):
         self.assertEqual(response.status_code, 200)
         mock_validate_request.assert_called_once_with(req)
         self.assertEqual(mock_get_read_only_container.call_count, 2)
-        mock_get_read_only_container.assert_any_call(
-            database_name="Users",
-            container_name="Answer",
-        )
-        mock_get_read_only_container.assert_any_call(
-            database_name="Users",
-            container_name="Question",
-        )
+        # 順序通りに呼び出されることを確認
+        mock_get_read_only_container.assert_has_calls([
+            call(database_name="Users", container_name="Answer"),
+            call(database_name="Users", container_name="Question"),
+        ])
         mock_answer_container.read_item.assert_called_once_with(
             item="1_1",
             partition_key="1",
@@ -148,14 +145,11 @@ class TestGetAnswer(TestCase):
         self.assertEqual(response.status_code, 200)
         mock_validate_request.assert_called_once_with(req)
         self.assertEqual(mock_get_read_only_container.call_count, 2)
-        mock_get_read_only_container.assert_any_call(
-            database_name="Users",
-            container_name="Answer",
-        )
-        mock_get_read_only_container.assert_any_call(
-            database_name="Users",
-            container_name="Question",
-        )
+        # 順序通りに呼び出されることを確認
+        mock_get_read_only_container.assert_has_calls([
+            call(database_name="Users", container_name="Answer"),
+            call(database_name="Users", container_name="Question"),
+        ])
         mock_answer_container.read_item.assert_called_once_with(
             item="1_1",
             partition_key="1",
@@ -199,9 +193,8 @@ class TestGetAnswer(TestCase):
 
         mock_validate_request.return_value = None
         mock_answer_container = MagicMock()
-        mock_question_container = MagicMock()
         mock_answer_container.read_item.side_effect = CosmosResourceNotFoundError
-        mock_get_read_only_container.side_effect = [mock_answer_container, mock_question_container]
+        mock_get_read_only_container.return_value = mock_answer_container
 
         req = MagicMock(spec=func.HttpRequest)
         req.route_params = {"testId": "1", "questionNumber": "1"}

@@ -66,18 +66,18 @@ def get_answer(req: func.HttpRequest) -> func.HttpResponse:
             container_name="Answer",
         )
 
-        # Questionコンテナーの読み取り専用インスタンスを取得
-        question_container: ContainerProxy = get_read_only_container(
-            database_name="Users",
-            container_name="Question",
-        )
-
         try:
             # Answerコンテナーから項目取得
             answer_item: Answer = answer_container.read_item(
                 item=f"{test_id}_{question_number}", partition_key=test_id
             )
             logging.info({"answer_item": answer_item})
+
+            # Questionコンテナーの読み取り専用インスタンスを取得
+            question_container: ContainerProxy = get_read_only_container(
+                database_name="Users",
+                container_name="Question",
+            )
 
             # Questionコンテナーから項目取得してdiscussionsを取得
             question_item: Question = question_container.read_item(
