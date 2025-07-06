@@ -1,6 +1,6 @@
 """キューストレージのメッセージの型定義"""
 
-from typing import List, Optional, TypedDict
+from typing import List, TypedDict
 
 
 class MessageAnswer(TypedDict):

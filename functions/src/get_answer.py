@@ -83,7 +83,7 @@ def get_answer(req: func.HttpRequest) -> func.HttpResponse:
             question_item: Question = question_container.read_item(
                 item=f"{test_id}_{question_number}", partition_key=test_id
             )
-            
+
             # discussionsからcommunityVotesを動的算出
             community_votes = calculate_community_votes(question_item.get("discussions"))
 
