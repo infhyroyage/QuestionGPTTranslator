@@ -59,23 +59,24 @@ class TestGetCommunity(TestCase):
     @patch("src.get_community.validate_request")
     @patch("src.get_community.get_read_only_container")
     @patch("src.get_community.logging")
-    def test_get_community_success(
+    def test_get_community_success_with_votes(
         self, mock_logging, mock_get_read_only_container, mock_validate_request
     ):
-        """コミュニティディスカッション要約が存在する場合のレスポンスが正常であることのテスト"""
+        """Communityコンテナーのvotesフィールドを含む場合のレスポンスが正常であることのテスト"""
 
         mock_validate_request.return_value = None
-        mock_container = MagicMock()
-        mock_item = {
+        mock_community_container = MagicMock()
+        mock_community_item = {
             "id": "1_1",
             "testId": "1",
             "questionNumber": 1,
             "discussionsSummary": (
                 "Users discuss correct answers and share insights about this question."
             ),
+            "votes": ["B (67%)", "C (33%)"],
         }
-        mock_container.read_item.return_value = mock_item
-        mock_get_read_only_container.return_value = mock_container
+        mock_community_container.read_item.return_value = mock_community_item
+        mock_get_read_only_container.return_value = mock_community_container
 
         req = MagicMock(spec=func.HttpRequest)
         req.route_params = {"testId": "1", "questionNumber": "1"}
@@ -86,10 +87,9 @@ class TestGetCommunity(TestCase):
         self.assertEqual(response.mimetype, "application/json")
         mock_validate_request.assert_called_once_with(req)
         mock_get_read_only_container.assert_called_once_with(
-            database_name="Users",
-            container_name="Community",
+            database_name="Users", container_name="Community"
         )
-        mock_container.read_item.assert_called_once_with(
+        mock_community_container.read_item.assert_called_once_with(
             item="1_1",
             partition_key="1",
         )
@@ -98,13 +98,67 @@ class TestGetCommunity(TestCase):
             "discussionsSummary": (
                 "Users discuss correct answers and share insights about this question."
             ),
+            "votes": ["B (67%)", "C (33%)"],
             "isExisted": True,
         }
         actual_body = response.get_body().decode()
         self.assertEqual(json.loads(actual_body), expected_body)
 
         mock_logging.info.assert_has_calls(
-            [call({"item": mock_item}), call({"body": expected_body})]
+            [call({"item": mock_community_item}), call({"body": expected_body})]
+        )
+        mock_logging.error.assert_not_called()
+
+    @patch("src.get_community.validate_request")
+    @patch("src.get_community.get_read_only_container")
+    @patch("src.get_community.logging")
+    def test_get_community_success_without_votes(
+        self, mock_logging, mock_get_read_only_container, mock_validate_request
+    ):
+        """votesフィールドが空の場合のレスポンスが正常であることのテスト"""
+
+        mock_validate_request.return_value = None
+        mock_community_container = MagicMock()
+        mock_community_item = {
+            "id": "1_1",
+            "testId": "1",
+            "questionNumber": 1,
+            "discussionsSummary": (
+                "Users discuss correct answers and share insights about this question."
+            ),
+            "votes": [],
+        }
+        mock_community_container.read_item.return_value = mock_community_item
+        mock_get_read_only_container.return_value = mock_community_container
+
+        req = MagicMock(spec=func.HttpRequest)
+        req.route_params = {"testId": "1", "questionNumber": "1"}
+
+        response = get_community(req)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.mimetype, "application/json")
+        mock_validate_request.assert_called_once_with(req)
+        mock_get_read_only_container.assert_called_once_with(
+            database_name="Users", container_name="Community"
+        )
+        mock_community_container.read_item.assert_called_once_with(
+            item="1_1",
+            partition_key="1",
+        )
+
+        expected_body = {
+            "discussionsSummary": (
+                "Users discuss correct answers and share insights about this question."
+            ),
+            "votes": [],
+            "isExisted": True,
+        }
+        actual_body = response.get_body().decode()
+        self.assertEqual(json.loads(actual_body), expected_body)
+
+        mock_logging.info.assert_has_calls(
+            [call({"item": mock_community_item}), call({"body": expected_body})]
         )
         mock_logging.error.assert_not_called()
 

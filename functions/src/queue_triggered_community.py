@@ -36,6 +36,7 @@ def queue_triggered_community(msg: func.QueueMessage):
         "questionNumber": message_community["questionNumber"],
         "testId": message_community["testId"],
         "discussionsSummary": message_community["discussionsSummary"],
+        "votes": message_community["votes"],
     }
     logging.info({"community_item": community_item})
     container_community.upsert_item(community_item)

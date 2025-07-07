@@ -96,12 +96,6 @@ paths:
                     items:
                       type: string
                       nullable: true
-                  communityVotes:
-                    type: array
-                    description: コミュニティ回答割合
-                    items:
-                      type: string
-                      nullable: true
         "400":
           description: リクエストパラメーターが不正です
           content:
@@ -169,12 +163,6 @@ paths:
                     items:
                       type: string
                     nullable: true
-                  communityVotes:
-                    type: array
-                    description: コミュニティ回答割合
-                    items:
-                      type: string
-                    nullable: true
                   isExisted:
                     type: boolean
                     description: 正解の選択肢・正解/不正解の理由が存在する場合はtrue、存在しない場合はfalse
@@ -231,6 +219,13 @@ paths:
                   discussionsSummary:
                     type: string
                     description: コミュニティでのディスカッションの要約
+                    nullable: true
+                  votes:
+                    type: array
+                    description: コミュニティでの回答の割合
+                    items:
+                      type: string
+                    nullable: true
                   isExisted:
                     type: boolean
                     description: コミュニティでのディスカッションの要約が存在する場合はtrue、存在しない場合はfalse
@@ -288,6 +283,13 @@ paths:
                   discussionsSummary:
                     type: string
                     description: コミュニティでのディスカッションの要約
+                    nullable: true
+                  votes:
+                    type: array
+                    description: コミュニティでの回答の割合
+                    items:
+                      type: string
+                    nullable: true
                   isExisted:
                     type: boolean
                     description: コミュニティでのディスカッションの要約が存在する場合はtrue、存在しない場合はfalse

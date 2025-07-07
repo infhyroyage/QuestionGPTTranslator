@@ -29,6 +29,7 @@ class TestQueueTriggeredCommunity(unittest.TestCase):
             "testId": "1",
             "questionNumber": 1,
             "discussionsSummary": "Community discussion focuses on answer B with strong consensus.",
+            "votes": ["B (80%)", "C (20%)"],
         }
 
         msg: func.QueueMessage = MagicMock(spec=func.QueueMessage)
@@ -41,6 +42,7 @@ class TestQueueTriggeredCommunity(unittest.TestCase):
             "questionNumber": 1,
             "testId": "1",
             "discussionsSummary": "Community discussion focuses on answer B with strong consensus.",
+            "votes": ["B (80%)", "C (20%)"],
         }
 
         mock_get_read_write_container.assert_called_once_with(
