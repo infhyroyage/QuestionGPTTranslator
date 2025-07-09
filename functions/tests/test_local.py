@@ -164,7 +164,7 @@ class TestCreateImportData(unittest.TestCase):
     @patch(
         "builtins.open",
         new_callable=mock_open,
-        read_data='[{"subjects": ["Q1"], "choices": ["A", "B"], "communityVotes": ["A (100%)"], "answerNum": 1}]',  # pylint: disable=C0301
+        read_data='[{"subjects": ["Q1"], "choices": ["A", "B"], "answerNum": 1}]',  # pylint: disable=C0301
     )
     @patch("util.local.os.path.exists")
     @patch("util.local.os.listdir")
@@ -207,7 +207,6 @@ class TestCreateImportData(unittest.TestCase):
                     {
                         "subjects": ["Q1"],
                         "choices": ["A", "B"],
-                        "communityVotes": ["A (100%)"],
                         "answerNum": 1,
                     }
                 ],
@@ -215,7 +214,6 @@ class TestCreateImportData(unittest.TestCase):
                     {
                         "subjects": ["Q1"],
                         "choices": ["A", "B"],
-                        "communityVotes": ["A (100%)"],
                         "answerNum": 1,
                     }
                 ],
@@ -225,7 +223,6 @@ class TestCreateImportData(unittest.TestCase):
                     {
                         "subjects": ["Q1"],
                         "choices": ["A", "B"],
-                        "communityVotes": ["A (100%)"],
                         "answerNum": 1,
                     }
                 ],
@@ -233,7 +230,6 @@ class TestCreateImportData(unittest.TestCase):
                     {
                         "subjects": ["Q1"],
                         "choices": ["A", "B"],
-                        "communityVotes": ["A (100%)"],
                         "answerNum": 1,
                     }
                 ],
@@ -262,7 +258,6 @@ class TestGenerateTestItems(unittest.TestCase):
                     {
                         "subjects": ["Q1"],
                         "choices": ["A", "B"],
-                        "communityVotes": ["A (100%)"],
                         "answerNum": 1,
                     }
                 ],
@@ -270,7 +265,6 @@ class TestGenerateTestItems(unittest.TestCase):
                     {
                         "subjects": ["Q2"],
                         "choices": ["A", "B"],
-                        "communityVotes": ["A (100%)"],
                         "answerNum": 1,
                     }
                 ],
@@ -306,7 +300,6 @@ class TestGenerateTestItems(unittest.TestCase):
                     {
                         "subjects": ["Q1"],
                         "choices": ["A", "B"],
-                        "communityVotes": ["A (100%)"],
                         "answerNum": 1,
                     }
                 ],
@@ -314,7 +307,6 @@ class TestGenerateTestItems(unittest.TestCase):
                     {
                         "subjects": ["Q2"],
                         "choices": ["A", "B"],
-                        "communityVotes": ["A (100%)"],
                         "answerNum": 1,
                     }
                 ],
@@ -369,7 +361,6 @@ class TestGenerateQuestionItems(unittest.TestCase):
                     {
                         "subjects": ["Q1"],
                         "choices": ["A", "B"],
-                        "communityVotes": ["AB (100%)"],
                         "answerNum": 2,
                     }
                 ],
@@ -384,7 +375,6 @@ class TestGenerateQuestionItems(unittest.TestCase):
             {
                 "subjects": ["Q1"],
                 "choices": ["A", "B"],
-                "communityVotes": ["AB (100%)"],
                 "answerNum": 2,
                 "id": "1_1",
                 "number": 1,
@@ -408,7 +398,6 @@ class TestGenerateQuestionItems(unittest.TestCase):
                     {
                         "subjects": ["Q1"],
                         "choices": ["A", "B"],
-                        "communityVotes": ["AB (100%)"],
                         "answerNum": 2,
                     }
                 ],
@@ -441,7 +430,6 @@ class TestImportQuestionItems(unittest.TestCase):
             {
                 "subjects": ["Q1"],
                 "choices": ["A", "B"],
-                "communityVotes": ["AB (100%)"],
                 "answerNum": 2,
                 "id": "1_1",
                 "number": 1,
@@ -450,7 +438,6 @@ class TestImportQuestionItems(unittest.TestCase):
             {
                 "subjects": ["Q2"],
                 "choices": ["C"],
-                "communityVotes": ["C (100%)"],
                 "answerNum": 1,
                 "id": "1_2",
                 "number": 2,
