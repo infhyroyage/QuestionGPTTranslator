@@ -115,7 +115,6 @@ Azure Cosmos DB に格納するデータであるインポートデータファ�
     "subjects": ["問題文1", "https://www.example.com/aaa/xxx.png", "問題文2", ... ],
     "choices": ["選択肢1", "選択肢2", ... ],
     "answerNum": 1,
-    "communityVotes": ["回答割合1", "回答割合2", ... ],
     "indicateImgIdxes": [0, ... ],
     "indicateChoiceImgs": [null, "https://www.example.com/bbb/yyy.png", ... ],
     "escapeTranslatedIdxes": {
@@ -150,7 +149,6 @@ Azure Cosmos DB に格納するデータであるインポートデータファ�
 | `subjects`                | 問題文/画像 URL                              |    o     |
 | `choices`                 | 選択肢(画像 URL のみの場合は null)           |    o     |
 | `answerNum`               | 回答の選択肢の個数                           |    o     |
-| `communityVotes`          | コミュニティでの回答割合                     |          |
 | `indicateSubjectImgIdxes` | `subjects`で指定した画像 URL のインデックス  |          |
 | `indicateChoiceImgs`      | `choices`の文章の後に続ける画像 URL          |          |
 | `escapeTranslatedIdxes`   | 翻訳不要な`subjects`/`choices`のインデックス |          |

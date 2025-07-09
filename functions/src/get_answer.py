@@ -7,9 +7,8 @@ import traceback
 import azure.functions as func
 from azure.cosmos import ContainerProxy
 from azure.cosmos.exceptions import CosmosResourceNotFoundError
-from type.cosmos import Answer, Question
+from type.cosmos import Answer
 from type.response import GetAnswerRes
-from util.community_votes import calculate_community_votes
 from util.cosmos import get_read_only_container
 
 bp_get_answer = func.Blueprint()
@@ -73,34 +72,12 @@ def get_answer(req: func.HttpRequest) -> func.HttpResponse:
             )
             logging.info({"answer_item": answer_item})
 
-            # レスポンス整形（基本情報）
+            # レスポンス整形
             body: GetAnswerRes = {
                 "correctIdxes": answer_item["correctIdxes"],
                 "explanations": answer_item["explanations"],
                 "isExisted": True,
             }
-
-            try:
-                # Questionコンテナーの読み取り専用インスタンスを取得
-                question_container: ContainerProxy = get_read_only_container(
-                    database_name="Users",
-                    container_name="Question",
-                )
-
-                # Questionコンテナーから項目取得してdiscussionsを取得
-                question_item: Question = question_container.read_item(
-                    item=f"{test_id}_{question_number}", partition_key=test_id
-                )
-
-                # discussionsからcommunityVotesを動的算出
-                community_votes = calculate_community_votes(question_item.get("discussions"))
-                if community_votes is not None:
-                    body["communityVotes"] = community_votes
-
-            except CosmosResourceNotFoundError:
-                # Questionコンテナーの項目が見つからない場合はcommunityVotesを省略
-                # Answerは存在するので、isExisted: trueのまま継続
-                logging.info("Question item not found, omitting communityVotes")
 
             logging.info({"body": body})
 

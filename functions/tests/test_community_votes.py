@@ -1,6 +1,7 @@
 """コミュニティ投票集計のテストケース"""
 
 import unittest
+
 from type.cosmos import QuestionDiscussion
 from util.community_votes import calculate_community_votes
 
@@ -8,37 +9,21 @@ from util.community_votes import calculate_community_votes
 class TestCalculateCommunityVotes(unittest.TestCase):
     """calculate_community_votes関数のテストケース"""
 
-    def test_calculate_community_votes_empty_discussions(self):
-        """discussionsが空の場合のテスト"""
-        discussions = []
-        result = calculate_community_votes(discussions)
-        self.assertIsNone(result)
-
-    def test_calculate_community_votes_none_discussions(self):
-        """discussionsがNoneの場合のテスト"""
-        discussions = None
-        result = calculate_community_votes(discussions)
-        self.assertIsNone(result)
-
     def test_calculate_community_votes_no_selected_answers(self):
         """selectedAnswerがない場合のテスト"""
         discussions = [
             QuestionDiscussion(
-                comment="Great question!",
-                upvotedNum=5,
-                selectedAnswer=None
+                comment="Great question!", upvotedNum=5, selectedAnswer=None
             )
         ]
         result = calculate_community_votes(discussions)
-        self.assertIsNone(result)
+        self.assertEqual(result, [])
 
     def test_calculate_community_votes_single_answer(self):
         """単一の回答の場合のテスト"""
         discussions = [
             QuestionDiscussion(
-                comment="I think A is correct",
-                upvotedNum=5,
-                selectedAnswer="A"
+                comment="I think A is correct", upvotedNum=5, selectedAnswer="A"
             )
         ]
         result = calculate_community_votes(discussions)
@@ -48,20 +33,14 @@ class TestCalculateCommunityVotes(unittest.TestCase):
         """複数の回答の場合のテスト"""
         discussions = [
             QuestionDiscussion(
-                comment="I think A is correct",
-                upvotedNum=5,
-                selectedAnswer="A"
+                comment="I think A is correct", upvotedNum=5, selectedAnswer="A"
             ),
             QuestionDiscussion(
-                comment="B is the right answer",
-                upvotedNum=3,
-                selectedAnswer="B"
+                comment="B is the right answer", upvotedNum=3, selectedAnswer="B"
             ),
             QuestionDiscussion(
-                comment="A definitely",
-                upvotedNum=2,
-                selectedAnswer="A"
-            )
+                comment="A definitely", upvotedNum=2, selectedAnswer="A"
+            ),
         ]
         result = calculate_community_votes(discussions)
         # A: 2回 (67%), B: 1回 (33%)
@@ -71,15 +50,11 @@ class TestCalculateCommunityVotes(unittest.TestCase):
         """等しい分布の場合のテスト"""
         discussions = [
             QuestionDiscussion(
-                comment="A is correct",
-                upvotedNum=5,
-                selectedAnswer="A"
+                comment="A is correct", upvotedNum=5, selectedAnswer="A"
             ),
             QuestionDiscussion(
-                comment="B is correct",
-                upvotedNum=3,
-                selectedAnswer="B"
-            )
+                comment="B is correct", upvotedNum=3, selectedAnswer="B"
+            ),
         ]
         result = calculate_community_votes(discussions)
         # A: 1回 (50%), B: 1回 (50%)
@@ -89,20 +64,14 @@ class TestCalculateCommunityVotes(unittest.TestCase):
         """アルファベット順にソートされることのテスト"""
         discussions = [
             QuestionDiscussion(
-                comment="C is correct",
-                upvotedNum=5,
-                selectedAnswer="C"
+                comment="C is correct", upvotedNum=5, selectedAnswer="C"
             ),
             QuestionDiscussion(
-                comment="A is correct",
-                upvotedNum=3,
-                selectedAnswer="A"
+                comment="A is correct", upvotedNum=3, selectedAnswer="A"
             ),
             QuestionDiscussion(
-                comment="B is correct",
-                upvotedNum=2,
-                selectedAnswer="B"
-            )
+                comment="B is correct", upvotedNum=2, selectedAnswer="B"
+            ),
         ]
         result = calculate_community_votes(discussions)
         # アルファベット順でソート
@@ -112,30 +81,12 @@ class TestCalculateCommunityVotes(unittest.TestCase):
         """選択肢が混在する場合のテスト"""
         discussions = [
             QuestionDiscussion(
-                comment="I think A is correct",
-                upvotedNum=5,
-                selectedAnswer="A"
+                comment="I think A is correct", upvotedNum=5, selectedAnswer="A"
             ),
-            QuestionDiscussion(
-                comment="No answer",
-                upvotedNum=3,
-                selectedAnswer=None
-            ),
-            QuestionDiscussion(
-                comment="B is right",
-                upvotedNum=2,
-                selectedAnswer="B"
-            ),
-            QuestionDiscussion(
-                comment="A again",
-                upvotedNum=1,
-                selectedAnswer="A"
-            )
+            QuestionDiscussion(comment="No answer", upvotedNum=3, selectedAnswer=None),
+            QuestionDiscussion(comment="B is right", upvotedNum=2, selectedAnswer="B"),
+            QuestionDiscussion(comment="A again", upvotedNum=1, selectedAnswer="A"),
         ]
         result = calculate_community_votes(discussions)
         # A: 2回 (67%), B: 1回 (33%) - Noneは除外
         self.assertEqual(result, ["A (67%)", "B (33%)"])
-
-
-if __name__ == '__main__':
-    unittest.main()

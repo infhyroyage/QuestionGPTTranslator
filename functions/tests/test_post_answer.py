@@ -625,7 +625,7 @@ class TestPostAnswer(unittest.TestCase):
     @patch("src.post_answer.generate_correct_answers")
     @patch("src.post_answer.queue_message_answer")
     @patch("src.post_answer.logging")
-    def test_post_answer(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+    def test_post_answer(  # pylint: disable=R0913,R0917
         self,
         mock_logging,
         mock_queue_message_answer,
@@ -641,7 +641,11 @@ class TestPostAnswer(unittest.TestCase):
             subjects=["What is 2 + 2?"],
             choices=["3", "4", "5"],
             discussions=[
-                {"comment": "I think B is correct", "upvotedNum": 5, "selectedAnswer": "B"},
+                {
+                    "comment": "I think B is correct",
+                    "upvotedNum": 5,
+                    "selectedAnswer": "B",
+                },
                 {"comment": "C is right", "upvotedNum": 3, "selectedAnswer": "C"},
                 {"comment": "B definitely", "upvotedNum": 2, "selectedAnswer": "B"},
             ],
@@ -665,7 +669,6 @@ class TestPostAnswer(unittest.TestCase):
             {
                 "correctIdxes": [1],
                 "explanations": ["Option 2 is correct because 2 + 2 equals 4."],
-                "communityVotes": ["B (67%)", "C (33%)"],
             },
         )
         mock_validate_request.assert_called_once_with(req)

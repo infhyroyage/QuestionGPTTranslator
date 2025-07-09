@@ -13,6 +13,7 @@ from openai import AzureOpenAI
 from type.cosmos import Question, QuestionDiscussion
 from type.message import MessageCommunity
 from type.response import PostCommunityRes
+from util.community_votes import calculate_community_votes
 from util.cosmos import get_read_only_container
 from util.queue import AZURITE_QUEUE_STORAGE_CONNECTION_STRING
 
@@ -217,11 +218,16 @@ def post_community(req: func.HttpRequest) -> func.HttpResponse:
         body: PostCommunityRes = {
             "isExisted": False,
         }
+
         if discussions and len(discussions) > 0:
+            # ディスカッション要約を生成
             summary: str | None = generate_discussion_summary(discussions)
+            # コミュニティでの回答の割合を動的算出
+            votes: list[str] = calculate_community_votes(discussions)
             if summary is None:
                 raise ValueError("Failed to generate discussion summary")
             body["discussionsSummary"] = summary
+            body["votes"] = votes
             body["isExisted"] = True
 
             # キューストレージにメッセージを格納
@@ -230,6 +236,7 @@ def post_community(req: func.HttpRequest) -> func.HttpResponse:
                     "testId": test_id,
                     "questionNumber": int(question_number),
                     "discussionsSummary": summary,
+                    "votes": votes,
                 }
             )
 

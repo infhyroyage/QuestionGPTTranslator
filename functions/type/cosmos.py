@@ -28,8 +28,6 @@ class Answer(TypedDict):
     各選択肢の正解/不正解の理由
     """
 
-
-
     testId: str
     """
     テストID
@@ -59,6 +57,11 @@ class Community(TypedDict):
     discussionsSummary: str
     """
     コミュニティでのディスカッションの要約
+    """
+
+    votes: List[str]
+    """
+    コミュニティでの回答の割合
     """
 
 
@@ -211,8 +214,6 @@ class Question(TypedDict):
     """
     回答の選択肢の個数
     """
-
-
 
     indicateSubjectImgIdxes: Optional[List[int]]
     """

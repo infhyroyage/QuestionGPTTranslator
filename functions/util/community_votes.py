@@ -1,30 +1,25 @@
 """コミュニティ投票集計のユーティリティモジュール"""
 
-from typing import List, Optional
+from typing import List
+
 from type.cosmos import QuestionDiscussion
 
 
-def calculate_community_votes(
-        discussions: Optional[List[QuestionDiscussion]]
-) -> Optional[List[str]]:
+def calculate_community_votes(discussions: List[QuestionDiscussion]) -> List[str]:
     """
-    discussions配列からselectedAnswerを集計してcommunityVotes形式の文字列配列を生成する
+    コミュニティのディスカッションからユーザーが選択した選択肢を集計し、
+    コミュニティでの回答の割合の文字列配列を生成する
 
     Args:
-        discussions (Optional[List[QuestionDiscussion]]): ディスカッション配列
+        discussions (List[QuestionDiscussion]): コミュニティのディスカッション
 
     Returns:
-        Optional[List[str]]: communityVotes形式の文字列配列（例：["A (60%)", "B (40%)"]）
-                            discussionsがNoneまたは空の場合はNone
+        List[str]: コミュニティでの回答の割合の文字列配列(例：["A (60%)", "B (40%)"]、ユーザーが選択した選択肢がすべてNoneの場合は空配列)
     """
 
-    if not discussions:
-        return None
-
-    # selectedAnswerを集計
+    # ユーザーが選択した選択肢(selectedAnswer)を集計
     answer_counts = {}
     total_votes = 0
-
     for discussion in discussions:
         selected_answer = discussion.get("selectedAnswer")
         if selected_answer:
@@ -32,12 +27,12 @@ def calculate_community_votes(
             total_votes += 1
 
     if total_votes == 0:
-        return None
+        return []
 
-    # 割合を計算してcommunityVotes形式の文字列配列を生成
+    # 割合を計算してコミュニティでの回答の割合の文字列配列を生成
     community_votes = []
     for answer, count in sorted(answer_counts.items()):
         percentage = round((count / total_votes) * 100)
         community_votes.append(f"{answer} ({percentage}%)")
 
-    return community_votes if community_votes else None
+    return community_votes

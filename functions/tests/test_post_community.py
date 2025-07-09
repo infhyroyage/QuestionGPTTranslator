@@ -361,6 +361,7 @@ class TestQueueMessageCommunity(unittest.TestCase):
             "testId": "test123",
             "questionNumber": 1,
             "discussionsSummary": "Test summary",
+            "votes": ["A (60%)", "B (40%)"],
         }
 
         queue_message_community(message_community)
@@ -386,6 +387,7 @@ class TestQueueMessageCommunity(unittest.TestCase):
             "testId": "test123",
             "questionNumber": 1,
             "discussionsSummary": "Test summary",
+            "votes": ["A (60%)", "B (40%)"],
         }
 
         queue_message_community(message_community)
@@ -408,12 +410,14 @@ class TestPostDiscussion(unittest.TestCase):
     @patch("src.post_community.validate_request")
     @patch("src.post_community.get_read_only_container")
     @patch("src.post_community.generate_discussion_summary")
+    @patch("src.post_community.calculate_community_votes")
     @patch("src.post_community.queue_message_community")
     @patch("src.post_community.logging")
     def test_post_community(  # pylint: disable=R0913,R0917
         self,
         mock_logging,
         mock_queue_message_community,
+        mock_calculate_community_votes,
         mock_generate_discussion_summary,
         mock_get_read_only_container,
         mock_validate_request,
@@ -435,13 +439,24 @@ class TestPostDiscussion(unittest.TestCase):
                     "comment": "I think the answer is B because 2 + 2 = 4.",
                     "upvotedNum": 10,
                     "selectedAnswer": "B",
-                }
+                },
+                {
+                    "comment": "C is also possible.",
+                    "upvotedNum": 3,
+                    "selectedAnswer": "C",
+                },
+                {
+                    "comment": "B is definitely correct.",
+                    "upvotedNum": 2,
+                    "selectedAnswer": "B",
+                },
             ],
         }
         mock_container.read_item.return_value = mock_item
         mock_generate_discussion_summary.return_value = (
             "Community agrees B is correct with strong consensus."
         )
+        mock_calculate_community_votes.return_value = ["B (67%)", "C (33%)"]
 
         req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
         req.route_params = {"testId": "1", "questionNumber": "1"}
@@ -453,6 +468,7 @@ class TestPostDiscussion(unittest.TestCase):
 
         expected_body = {
             "discussionsSummary": "Community agrees B is correct with strong consensus.",
+            "votes": ["B (67%)", "C (33%)"],
             "isExisted": True,
         }
         actual_body = response.get_body().decode()
@@ -467,6 +483,7 @@ class TestPostDiscussion(unittest.TestCase):
         mock_generate_discussion_summary.assert_called_once_with(
             mock_item["discussions"]
         )
+        mock_calculate_community_votes.assert_called_once_with(mock_item["discussions"])
         mock_logging.info.assert_has_calls(
             [
                 call({"question_number": "1", "test_id": "1"}),
@@ -478,6 +495,7 @@ class TestPostDiscussion(unittest.TestCase):
                 "testId": "1",
                 "questionNumber": 1,
                 "discussionsSummary": "Community agrees B is correct with strong consensus.",
+                "votes": ["B (67%)", "C (33%)"],
             }
         )
         mock_logging.error.assert_not_called()
@@ -545,7 +563,7 @@ class TestPostDiscussion(unittest.TestCase):
     @patch("src.post_community.validate_request")
     @patch("src.post_community.get_read_only_container")
     @patch("src.post_community.logging")
-    def test_post_community_no_discussions_success(
+    def test_post_community_no_discussions_success(  # pylint: disable=R0913,R0917
         self,
         mock_logging,
         mock_get_read_only_container,
@@ -598,10 +616,12 @@ class TestPostDiscussion(unittest.TestCase):
     @patch("src.post_community.validate_request")
     @patch("src.post_community.get_read_only_container")
     @patch("src.post_community.generate_discussion_summary")
+    @patch("src.post_community.calculate_community_votes")
     @patch("src.post_community.logging")
-    def test_post_community_generate_summary_error(
+    def test_post_community_generate_summary_error(  # pylint: disable=R0913,R0917
         self,
         mock_logging,
+        mock_calculate_community_votes,
         mock_generate_discussion_summary,
         mock_get_read_only_container,
         mock_validate_request,
@@ -628,6 +648,7 @@ class TestPostDiscussion(unittest.TestCase):
         }
         mock_container.read_item.return_value = mock_item
         mock_generate_discussion_summary.return_value = None
+        mock_calculate_community_votes.return_value = ["B (100%)"]
 
         req: func.HttpRequest = MagicMock(spec=func.HttpRequest)
         req.route_params = {"testId": "1", "questionNumber": "1"}

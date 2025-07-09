@@ -75,8 +75,10 @@ def get_community(req: func.HttpRequest) -> func.HttpResponse:
             # レスポンス整形
             body: GetCommunityRes = {
                 "discussionsSummary": item["discussionsSummary"],
+                "votes": item["votes"],
                 "isExisted": True,
             }
+
             logging.info({"body": body})
 
             return func.HttpResponse(

@@ -72,11 +72,6 @@ class GetAnswerRes(TypedDict):
     各選択肢の正解/不正解の理由
     """
 
-    communityVotes: Optional[List[str]]
-    """
-    コミュニティ回答割合
-    """
-
     isExisted: bool
     """
     正解の選択肢・正解/不正解の理由が存在する場合はtrue、存在しない場合はfalse
@@ -98,11 +93,6 @@ class PostAnswerRes(TypedDict, total=False):
     各選択肢の正解/不正解の理由
     """
 
-    communityVotes: Optional[List[str]]
-    """
-    コミュニティ回答割合
-    """
-
 
 class GetCommunityRes(TypedDict):
     """
@@ -112,6 +102,11 @@ class GetCommunityRes(TypedDict):
     discussionsSummary: Optional[str]
     """
     コミュニティでのディスカッションの要約
+    """
+
+    votes: Optional[List[str]]
+    """
+    コミュニティでの回答の割合
     """
 
     isExisted: bool
@@ -128,6 +123,11 @@ class PostCommunityRes(TypedDict):
     discussionsSummary: Optional[str]
     """
     コミュニティでのディスカッションの要約
+    """
+
+    votes: Optional[List[str]]
+    """
+    コミュニティでの回答の割合
     """
 
     isExisted: bool
