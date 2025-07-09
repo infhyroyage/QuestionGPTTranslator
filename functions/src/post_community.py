@@ -220,10 +220,14 @@ def post_community(req: func.HttpRequest) -> func.HttpResponse:
         }
 
         if discussions and len(discussions) > 0:
+            # ディスカッション要約を生成
             summary: str | None = generate_discussion_summary(discussions)
+            # コミュニティでの回答の割合を動的算出
+            votes: list[str] = calculate_community_votes(discussions)
             if summary is None:
                 raise ValueError("Failed to generate discussion summary")
             body["discussionsSummary"] = summary
+            body["votes"] = votes
             body["isExisted"] = True
 
             # キューストレージにメッセージを格納
@@ -232,9 +236,7 @@ def post_community(req: func.HttpRequest) -> func.HttpResponse:
                     "testId": test_id,
                     "questionNumber": int(question_number),
                     "discussionsSummary": summary,
-                    "votes": calculate_community_votes(
-                        discussions
-                    ),  # discussionsフィールドからコミュニティでの回答の割合を動的算出
+                    "votes": votes,
                 }
             )
 

@@ -468,6 +468,7 @@ class TestPostDiscussion(unittest.TestCase):
 
         expected_body = {
             "discussionsSummary": "Community agrees B is correct with strong consensus.",
+            "votes": ["B (67%)", "C (33%)"],
             "isExisted": True,
         }
         actual_body = response.get_body().decode()
