@@ -13,7 +13,6 @@ from openai import AzureOpenAI
 from type.cosmos import Question, QuestionDiscussion
 from type.message import MessageCommunity
 from type.response import PostCommunityRes
-from util.community_votes import calculate_community_votes
 from util.cosmos import get_read_only_container
 from util.queue import AZURITE_QUEUE_STORAGE_CONNECTION_STRING
 
@@ -22,6 +21,39 @@ SYSTEM_PROMPT: str = (
     "You are a professional content summarizer who creates concise summaries "
     "of community discussions."
 )
+
+
+def calculate_community_votes(discussions: list[QuestionDiscussion]) -> list[str]:
+    """
+    コミュニティのディスカッションからユーザーが選択した選択肢を集計し、
+    コミュニティでの回答の割合の文字列配列を生成する
+
+    Args:
+        discussions (list[QuestionDiscussion]): コミュニティのディスカッション
+
+    Returns:
+        list[str]: コミュニティでの回答の割合の文字列配列(例：["A (60%)", "B (40%)"]、ユーザーが選択した選択肢がすべてNoneの場合は空配列)
+    """
+
+    # ユーザーが選択した選択肢(selectedAnswer)を集計
+    answer_counts = {}
+    total_votes = 0
+    for discussion in discussions:
+        selected_answer = discussion.get("selectedAnswer")
+        if selected_answer:
+            answer_counts[selected_answer] = answer_counts.get(selected_answer, 0) + 1
+            total_votes += 1
+
+    if total_votes == 0:
+        return []
+
+    # 割合を計算してコミュニティでの回答の割合の文字列配列を生成
+    community_votes = []
+    for answer, count in sorted(answer_counts.items()):
+        percentage = round((count / total_votes) * 100)
+        community_votes.append(f"{answer} ({percentage}%)")
+
+    return community_votes
 
 
 def validate_request(req: func.HttpRequest) -> str | None:
