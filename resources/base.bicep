@@ -8,6 +8,7 @@ param deeplAuthKey string
 param functionsName string
 param location string = resourceGroup().location
 param openAIApiVersion string
+param openAICapacity int
 param openAIDeploymentName string
 param openAILocation string
 param openAIModelName string
@@ -302,7 +303,7 @@ resource openAIDeployments 'Microsoft.CognitiveServices/accounts/deployments@202
   name: openAIDeploymentName
   sku: {
     name: 'GlobalStandard'
-    capacity: 500
+    capacity: openAICapacity
   }
   properties: {
     model: {
@@ -311,7 +312,7 @@ resource openAIDeployments 'Microsoft.CognitiveServices/accounts/deployments@202
       version: openAIModelVersion
     }
     versionUpgradeOption: 'OnceCurrentVersionExpired'
-    currentCapacity: 500
+    currentCapacity: openAICapacity
   }
 }
 

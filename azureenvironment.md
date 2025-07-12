@@ -88,6 +88,7 @@ Variables タブから「New repository variable」ボタンを押下して、�
 | COSMOSDB_NAME                     | Azure Cosmos DB 名                                                                        |
 | FUNCTIONS_NAME                    | Azure Functions 名                                                                        |
 | OPENAI_API_VERSION                | Azure OpenAI の API バージョン                                                            |
+| OPENAI_CAPACITY                   | Azure OpenAI の Capacity 数                                                               |
 | OPENAI_DEPLOYMENT_NAME            | Azure OpenAI のデプロイ名                                                                 |
 | OPENAI_LOCATION                   | Azure OpenAI のリージョン                                                                 |
 | OPENAI_MODEL_NAME                 | Azure OpenAI のモデル名                                                                   |
@@ -96,6 +97,9 @@ Variables タブから「New repository variable」ボタンを押下して、�
 | STORAGE_NAME                      | Azure ストレージアカウント名                                                              |
 | TRANSLATOR_NAME                   | Azure Translator 名                                                                       |
 | VAULT_NAME                        | Azure Key Vault 名                                                                        |
+
+> [!NOTE]  
+> Azure OpenAI の Capacity 数とは、1 分間あたりに処理できるトークン数(=TPM)であり、1 Capacity = 1000 TPM である。Azure OpenAI のモデルによって、Capacity 数の最大値が異なる。
 
 ### 5. Azure リソースの構築
 

@@ -48,6 +48,7 @@ jobs:
             deeplAuthKey=${{ secrets.DEEPL_AUTH_KEY }}
             functionsName=${{ vars.FUNCTIONS_NAME }}
             openAIApiVersion=${{ vars.OPENAI_API_VERSION }}
+            openAICapacity=${{ vars.OPENAI_CAPACITY }}
             openAIDeploymentName=${{ vars.OPENAI_DEPLOYMENT_NAME }}
             openAILocation=${{ vars.OPENAI_LOCATION }}
             openAIModelName=${{ vars.OPENAI_MODEL_NAME }}
