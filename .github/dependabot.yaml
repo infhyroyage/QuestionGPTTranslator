@@ -17,8 +17,6 @@ updates:
     ignore:
       - dependency-name: "openai"
     labels: []
-    reviewers:
-      - "infhyroyage"
 
   - package-ecosystem: "github-actions"
     directory: "/"
@@ -30,5 +28,3 @@ updates:
     assignees:
       - "infhyroyage"
     labels: []
-    reviewers:
-      - "infhyroyage"
