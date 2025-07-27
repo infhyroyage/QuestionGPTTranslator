@@ -47,7 +47,7 @@ class ImportItem(TypedDict):
 
     subjects: List[str]
     """
-    問題文
+    問題文/画像 URL
     """
 
     choices: List[str | None]
@@ -59,8 +59,6 @@ class ImportItem(TypedDict):
     """
     回答の選択肢の個数
     """
-
-
 
     indicateSubjectImgIdxes: Optional[List[int]]
     """
