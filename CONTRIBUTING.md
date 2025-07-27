@@ -46,7 +46,7 @@
   ```
 - HTTP Trigger 関数の関数アプリの API リファレンスは Swagger ファイルとして、基本的に apim/apis-functions-swagger.yaml で管理する。ただし、ヘルスチェック API のみ認証処理を行わないため、別の Swagger ファイル apim/apis-healthcheck-functions-swagger.yaml で管理する。
   - API Management のデプロイは、これらの Swagger ファイルをインポートする。
-- 認証は Microsoft ID Platform (Azure AD) による JWT トークンで実現し、 `X-User-Id` ヘッダーに設定した JWT トークンの検証を Azure API Management のポリシー設定で行う。
+- Microsoft ID Platform で Entra ID で認証して発行したアクセストークン(JWT)は、`X-User-Id` ヘッダーに設定された状態で Azure API Management のポリシー設定により検証される。
 - Azure Cosmos DB には強い整合性を採用して、確実な重複防止を保証する。
 - Azure OpenAI は、以下の機能を利用する。
   - Structured Outputs
