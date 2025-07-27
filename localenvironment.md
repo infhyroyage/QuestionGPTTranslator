@@ -24,8 +24,10 @@ Azure 環境構築後に、以下のサーバーをすべて起動すると、�
 1. 以下をすべてインストールする。
    - Azure Functions Core Tools
    - Docker
+   - Git
    - Python 3.12
-2. 以下を記述したファイル`local.settings.json`を QuestionGPTTranslator リポジトリの functions ディレクトリ配下に保存する。
+2. GitHub アカウントを用意して、このリポジトリをフォークし、ローカル環境にクローンする
+3. 以下を記述したファイル`local.settings.json`を QuestionGPTTranslator リポジトリの functions ディレクトリ配下に保存する。
    ```json
    {
      "IsEncrypted": false,
@@ -53,7 +55,7 @@ Azure 環境構築後に、以下のサーバーをすべて起動すると、�
    }
    ```
    - CORS は任意のオリジンを許可するように設定しているため、特定のオリジンのみ許可したい場合は`Host` > `CORS`にそのオリジンを設定すること。
-3. ターミナルを起動して以下のコマンドを実行し、Cosmos DB、Blob/Queue/Table ストレージをすべて起動する。実行したターミナルはそのまま放置する。
+4. ターミナルを起動して以下のコマンドを実行し、Cosmos DB、Blob/Queue/Table ストレージをすべて起動する。実行したターミナルはそのまま放置する。
    ```bash
    docker compose up
    ```
@@ -61,18 +63,23 @@ Azure 環境構築後に、以下のサーバーをすべて起動すると、�
    ```
    localcosmosdb     | Started
    ```
-4. 3 とは別のターミナルで以下のコマンドを実行し、Python3.12 の仮想環境を作成・有効化し、PyPI パッケージをインストールする。
+5. Python 3.12 の仮想環境を作成する:
    ```bash
    python3.12 -m venv venv
-   ./venv/Scripts/activate
-   pip install -r requirements.txt
    ```
-5. 4 と同じターミナルで以下のコマンドを実行し、Azure Functions を起動する。実行したターミナルはそのまま放置する。
+6. Python 3.12 の仮想環境を有効化する:
+   ```bash
+   # Linux/macOSの場合
+   source venv/bin/activate
+   # Windowsの場合
+   venv\Scripts\activate
+   ```
+7. 6 と同じターミナルで以下のコマンドを実行し、Azure Functions を起動する。実行したターミナルはそのまま放置する。
    ```bash
    cd functions
    func start --verbose
    ```
-6. 5 とは別のターミナルで以下のコマンドを実行し、4 で作成した仮想環境の有効後、起動した Cosmos DB サーバーに対し、インポートデータファイルからインポートする。
+8. 7 とは別のターミナルで以下のコマンドを実行し、6 で作成した仮想環境の有効後、起動した Cosmos DB サーバーに対し、インポートデータファイルからインポートする。
    ```bash
    ./venv/Scripts/activate
    python functions/import_local.py
@@ -81,8 +88,8 @@ Azure 環境構築後に、以下のサーバーをすべて起動すると、�
 
 ## 削除手順
 
-1. 構築手順の 5 で起動した Azure Functions のターミナルに対して Ctrl+C キーを入力し、起動した Azure Functions を停止する。
-2. ターミナルを起動して以下のコマンドを実行し、構築手順の 3 で起動した Cosmos DB、Blob/Queue/Table ストレージをすべて停止する。
+1. 構築手順の 7 で起動した Azure Functions のターミナルに対して Ctrl+C キーを入力し、起動した Azure Functions を停止する。
+2. ターミナルを起動して以下のコマンドを実行し、構築手順の 4 で起動した Cosmos DB、Blob/Queue/Table ストレージをすべて停止する。
    ```bash
    docker compose down
    ```
