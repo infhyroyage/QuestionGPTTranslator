@@ -9,7 +9,7 @@
 
 ## 概要
 
-[QuestionGPTPortal](https://github.com/infhyroyage/QuestionGPTPortal)の API サーバーを構成する。
+生成 AI を活用した、英語の IT 資格試験問題の学習支援システムのバックエンドを提供する。
 
 ## 技術スタック
 
@@ -22,6 +22,10 @@
 ## ローカル環境構築手順・削除手順
 
 [localenvironment.md](localenvironment.md) 参照。
+
+## Contribution Guide
+
+[CONTRIBUTING.md](CONTRIBUTING.md) 参照。
 
 ## ライセンス
 
