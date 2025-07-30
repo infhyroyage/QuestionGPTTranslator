@@ -36,11 +36,11 @@
   - API レスポンスデータ： functions/type/response.py
   - Azure Cosmos DB のドキュメント構造： functions/type/cosmos.py
   - Azure OpenAI Structured Outputs： functions/type/structured.py
-- 関数アプリの Python のユニットテストは functions/tests に実装し、stmt のカバレッジ率 80%以上をみたすようにして、コード品質を担保する。ユニットテストは、以下のコマンドで実行する。
+- 関数アプリの Python のユニットテストは functions/tests に実装し、stmt のカバレッジ率 80%以上をみたすようにして、コード品質を担保する。ユニットテストは、以下のコマンドで実行する:
   ```bash
   cd functions && coverage run -m unittest discover -s tests && coverage report -m && cd ..
   ```
-- 関数アプリは Python を用いてコーディングし、.pylintrc に記載した例外を除き、必ず Pylint の警告・エラーをすべて解消するように、コード品質を担保する。Pylint の静的解析は、以下のコマンドで実行する。
+- 関数アプリは Python を用いてコーディングし、.pylintrc に記載した例外を除き、必ず Pylint の警告・エラーをすべて解消するように、コード品質を担保する。Pylint の静的解析は、以下のコマンドで実行する:
   ```bash
   pylint functions/**/*.py
   ```
@@ -111,7 +111,6 @@
 本システムでは、セキュリティの脆弱性や新機能に対応するように定期的にパッケージのバージョンアップを自動的に提案する GitHub の機能である GitHub Dependabot を使用して、Python パッケージの依存関係を `requirements.txt` として管理する。
 GitHub Dependabot は以下の実行方式に従い、`.github/dependabot.yaml`で管理する:
 
-- **実行スケジュール**: 毎週月曜日 10:00 (Asia/Tokyo)
-- **対象ファイル**: `requirements.txt`
-- **更新方式**: プルリクエストによる自動提案
-- **特別な制約**: `openai` パッケージは破壊的変更が多いため、管理対象外
+- 実行スケジュール: 毎週月曜日 10:00 (Asia/Tokyo)
+- 更新方式: プルリクエストによる自動提案
+- 特別な制約: `openai` パッケージは破壊的変更が多いため、管理対象外

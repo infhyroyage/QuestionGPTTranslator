@@ -130,12 +130,6 @@ alwaysApply: true
 
 ---
 
-# ディレクトリ構成
-
-@directorystructure.md
-
----
-
 # Azure 環境構築手順・削除手順
 
 @azureenvironment.md
