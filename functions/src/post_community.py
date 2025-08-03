@@ -167,8 +167,6 @@ def generate_discussion_summary(discussions: list[QuestionDiscussion]) -> str | 
                         "content": prompt,
                     },
                 ],
-                max_tokens=300,
-                temperature=0.7,
             )
             logging.info({"content": response.choices[0].message.content})
 

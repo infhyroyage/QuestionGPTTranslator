@@ -318,8 +318,6 @@ class TestGenerateDiscussionSummary(unittest.TestCase):
                     "content": mock_prompt,
                 },
             ],
-            max_tokens=300,
-            temperature=0.7,
         )
         mock_logging.info.assert_has_calls(
             [
