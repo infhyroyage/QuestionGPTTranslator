@@ -2,9 +2,7 @@
 .vscode/
 
 # Azurite
-azurite/__blobstorage__
-azurite/__queuestorage__
-azurite/__azurite_db_*.json
+azurite/
 
 # Azure Functions
 functions/data
