@@ -47,6 +47,7 @@ jobs:
             cosmosDBName=${{ vars.COSMOSDB_NAME }}
             deeplAuthKey=${{ secrets.DEEPL_AUTH_KEY }}
             functionsName=${{ vars.FUNCTIONS_NAME }}
+            githubRepoUrl=${{ github.server_url }}/${{ github.repository }}
             openAIApiVersion=${{ vars.OPENAI_API_VERSION }}
             openAICapacity=${{ vars.OPENAI_CAPACITY }}
             openAIDeploymentName=${{ vars.OPENAI_DEPLOYMENT_NAME }}

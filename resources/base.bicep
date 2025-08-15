@@ -6,6 +6,7 @@ param cosmosDBName string
 @secure()
 param deeplAuthKey string
 param functionsName string
+param githubRepoUrl string
 param location string = resourceGroup().location
 param openAIApiVersion string
 param openAICapacity int
@@ -477,6 +478,7 @@ resource swa 'Microsoft.Web/staticSites@2022-09-01' = {
   properties: {
     branch: 'main'
     enterpriseGradeCdnStatus: 'disabled'
+    repositoryUrl: githubRepoUrl
   }
   sku: {
     name: 'Free'
