@@ -9,7 +9,7 @@
 1. [Azure Portal](https://portal.azure.com/) にログインし、サブスクリプションに遷移する。
 2. 「+ 追加」ボタンを押下する。
 3. 表示されたフォームに必要事項を入力し、「確認と作成」ボタンを押下する。
-   - サブスクリプション名: 任意の名前（例: `QuestionGPTTranslator`）
+   - サブスクリプション名: 任意の名前
    - 課金アカウント: 適切な課金アカウントを選択
    - 請求者セクション: 適切な請求者セクションを選択
    - プラン: 適切なプランを選択
@@ -24,7 +24,6 @@
 2. App Registrations > New registration の順で押下し、以下の項目を入力後、Register ボタンを押下してサービスプリンシパルを登録する。
    - Name : `QGTranslator_MSAL`
    - Supported account types : `Accounts in this organizational directory only`
-   - Redirect URI : `Single-page application(SPA)`(左) と `https://infhyroyage.github.io/QuestionGPTPortal`(右)
 3. 登録して自動遷移した「QGTranslator_MSAL」の Overview にある「Application (client) ID」の値(=クライアント ID)を手元に控える。
 4. Expose an API > Application ID URI の右にある小さな文字「Add」を押下し、Application ID URI の入力欄に`api://{3で手元に控えたクライアントID}`が自動反映されていることを確認し、Save ボタンを押下する。
 5. Expose an API > Scopes defined by this API にある「Add a scope」を押下し、以下の項目を入力後、Save ボタンを押下する。
@@ -95,6 +94,7 @@ Variables タブから「New repository variable」ボタンを押下して、�
 | OPENAI_MODEL_VERSION              | Azure OpenAI のモデルのバージョン                                                         |
 | OPENAI_NAME                       | Azure OpenAI 名                                                                           |
 | STORAGE_NAME                      | Azure ストレージアカウント名                                                              |
+| SWA_NAME                          | Azure Static Web Apps 名                                                                  |
 | TRANSLATOR_NAME                   | Azure Translator 名                                                                       |
 | VAULT_NAME                        | Azure Key Vault 名                                                                        |
 
@@ -109,7 +109,21 @@ Variables タブから「New repository variable」ボタンを押下して、�
 2. Create Azure Resources の workflow が無効化されている場合は、workflow を有効化する。
 3. 右上の「Re-run jobs」から「Re-run all jobs」を押下し、確認ダイアログ内の「Re-run jobs」ボタンを押下する。
 
-### 6. インポートデータファイルの作成・アップロード
+### 6. Azure AD 認証認可用サービスプリンシパルのリダイレクト URI の追加
+
+発行した QGTranslator_MSAL のリダイレクト URI に Azure Static Web Apps の URL を設定する。
+
+1. [Azure Portal](https://portal.azure.com/)にログインし、CloudShell を起動する。
+2. 以下のコマンドを実行して得た、Azure Static Web Apps の URL を手元に控える。
+   ```bash
+   echo "https://`az staticwebapp show -n (当リポジトリの変数SWA_NAMEの値) -g qgtranslator-je --query 'defaultHostname' -o tsv`"
+   ```
+3. CloudShell を閉じ、Azure AD > App Registrations に遷移する。
+4. QGTranslator_MSAL のリンク先にある Overview にある「Redirect URI:」のリンク「Add a Redirect URI」を押下し、Authentication (Preview) に遷移する。
+5. 「Add a Redirect URI」タブにある「+ Add Redirect URI」ボタンを押下し、「Select a platform to add redirect URI」で「Single-page application」ボタンを押下する。
+6. 「Redirect URI」のテキストボックスに、2 で手元に控えた Azure Static Web Apps の URL を入力し、「Configure」ボタンを押下する。
+
+### 7. インポートデータファイルの作成・アップロード
 
 Azure Cosmos DB に格納するデータであるインポートデータファイルを、以下の json フォーマットで`data/(コース名)/(テスト名).json`に作成する。
 
