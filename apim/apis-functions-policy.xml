@@ -3,7 +3,7 @@
     <!--CORSチェック-->
     <cors>
       <allowed-origins>
-        <origin>https://infhyroyage.github.io/</origin>
+        <origin>{SWA_URL}</origin>
       </allowed-origins>
       <allowed-methods>
         <method>DELETE</method>

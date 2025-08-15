@@ -27,6 +27,7 @@
   - Azure Key Vault
   - Azure Application Insights
   - Azure OpenAI
+  - Azure Static Web Apps
   - Azure Translator
 - 関数アプリの各エントリーポイントは、functions/function_app.py にブループリントを登録する。
 - 関数アプリは、functions/src ディレクトリに個別ファイルで実装する。

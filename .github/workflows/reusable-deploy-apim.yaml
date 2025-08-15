@@ -64,11 +64,22 @@ jobs:
             --specification-path ./apim/apis-functions-swagger.yaml \
             --subscription-required false
 
+      - name: Get Host Name of Azure Static Web App
+        id: get-azure-static-web-app-host-name
+        run: |
+          HOST_NAME=$(az staticwebapp show \
+            -g ${{ inputs.RESOURCE_GROUP }} \
+            -n ${{ inputs.APIM_NAME }} \
+            --query "defaultHostName" \
+            -o tsv)
+          echo "hostName=${HOST_NAME}" >> $GITHUB_OUTPUT
+
       - name: Update API Management Policy XML File
         run: |
           sed -i.bak \
             -e "s/{AZURE_AD_SP_MSAL_CLIENT_ID}/${{ inputs.AZURE_AD_SP_MSAL_CLIENT_ID }}/g" \
             -e "s/{AZURE_TENANT_ID}/${{ inputs.AZURE_TENANT_ID }}/g" \
+            -e "s/{SWA_URL}/https:\/\/${{ steps.get-azure-static-web-app-host-name.outputs.hostName }}\//g" \
             apim/apis-functions-policy.xml
 
       # 従量課金のAPI Managementは、ARMテンプレートにポリシーを記述してデプロイできないため、
