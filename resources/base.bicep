@@ -15,6 +15,7 @@ param openAIModelName string
 param openAIModelVersion string
 param openAIName string
 param storageName string
+param swaName string
 param translatorName string
 param vaultName string
 
@@ -466,6 +467,20 @@ resource functions 'Microsoft.Web/sites@2022-09-01' = {
       keyVaultReferenceIdentity: 'SystemAssigned'
       use32BitWorkerProcess: false
     }
+  }
+}
+
+// Static Web Apps
+resource swa 'Microsoft.Web/staticSites@2022-09-01' = {
+  name: swaName
+  location: 'eastasia'
+  properties: {
+    branch: 'main'
+    enterpriseGradeCdnStatus: 'disabled'
+  }
+  sku: {
+    name: 'Free'
+    tier: 'Free'
   }
 }
 

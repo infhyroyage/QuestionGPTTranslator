@@ -55,6 +55,7 @@ jobs:
             openAIModelVersion=${{ vars.OPENAI_MODEL_VERSION }}
             openAIName=${{ vars.OPENAI_NAME }}
             storageName=${{ vars.STORAGE_NAME }}
+            swaName=${{ vars.SWA_NAME }}
             translatorName=${{ vars.TRANSLATOR_NAME }}
             vaultName=${{ vars.VAULT_NAME }}
 
