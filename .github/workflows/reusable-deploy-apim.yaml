@@ -30,6 +30,9 @@ on:
         default: qgtranslator-je
         required: false
         type: string
+      SWA_NAME:
+        required: true
+        type: string
     secrets:
       AZURE_AD_SP_CONTRIBUTOR_CLIENT_SECRET:
         required: true
@@ -69,7 +72,7 @@ jobs:
         run: |
           HOST_NAME=$(az staticwebapp show \
             -g ${{ inputs.RESOURCE_GROUP }} \
-            -n ${{ inputs.APIM_NAME }} \
+            -n ${{ inputs.SWA_NAME }} \
             --query "defaultHostName" \
             -o tsv)
           echo "hostName=${HOST_NAME}" >> $GITHUB_OUTPUT
