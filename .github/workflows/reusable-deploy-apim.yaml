@@ -69,17 +69,17 @@ jobs:
 
       - name: Update API Management Policy XML File
         run: |
-          swaHostName=$( \
+          swaHostname=$( \
             az staticwebapp show \
               -g ${{ inputs.RESOURCE_GROUP }} \
               -n ${{ inputs.SWA_NAME }} \
-              --query defaultHostName \
+              --query defaultHostname \
               -o tsv \
           )
           sed -i.bak \
             -e "s/{AZURE_AD_SP_MSAL_CLIENT_ID}/${{ inputs.AZURE_AD_SP_MSAL_CLIENT_ID }}/g" \
             -e "s/{AZURE_TENANT_ID}/${{ inputs.AZURE_TENANT_ID }}/g" \
-            -e "s/{SWA_HOST_NAME}/${swaHostName}/g" \
+            -e "s/{SWA_HOSTNAME}/${swaHostname}/g" \
             apim/apis-functions-policy.xml
 
       # 従量課金のAPI Managementは、ARMテンプレートにポリシーを記述してデプロイできないため、

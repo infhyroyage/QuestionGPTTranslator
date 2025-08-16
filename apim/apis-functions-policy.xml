@@ -3,7 +3,7 @@
     <!--CORSチェック-->
     <cors>
       <allowed-origins>
-        <origin>https://{SWA_HOST_NAME}/</origin>
+        <origin>https://{SWA_HOSTNAME}/</origin>
       </allowed-origins>
       <allowed-methods>
         <method>DELETE</method>
