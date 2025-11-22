@@ -453,10 +453,6 @@ resource functions 'Microsoft.Web/sites@2023-12-01' = {
           value: '~4'
         }
         {
-          name: 'FUNCTIONS_WORKER_RUNTIME'
-          value: 'python'
-        }
-        {
           name: 'OPENAI_API_VERSION'
           value: openAIApiVersion
         }
