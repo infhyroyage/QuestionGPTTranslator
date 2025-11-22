@@ -429,18 +429,13 @@ class TestGenerateDiscussionSummary(unittest.TestCase):
 class TestQueueMessageCommunity(unittest.TestCase):
     """queue_message_community関数のテストケース"""
 
-    @patch("src.post_community.QueueClient")
+    @patch("src.post_community.get_queue_client")
     @patch("src.post_community.logging")
-    @patch.dict(
-        os.environ, {"AzureWebJobsStorage": "DefaultEndpointsProtocol=https;..."}
-    )
-    def test_queue_message_community_normal(
-        self, mock_logging, mock_queue_client_class
-    ):
+    def test_queue_message_community_normal(self, mock_logging, mock_get_queue_client):
         """正常にキューメッセージを格納する場合のテスト"""
 
         mock_queue_client = MagicMock()
-        mock_queue_client_class.from_connection_string.return_value = mock_queue_client
+        mock_get_queue_client.return_value = mock_queue_client
 
         message_community = {
             "testId": "test123",
@@ -451,22 +446,21 @@ class TestQueueMessageCommunity(unittest.TestCase):
 
         queue_message_community(message_community)
 
-        mock_queue_client_class.from_connection_string.assert_called_once()
+        mock_get_queue_client.assert_called_once_with("communities")
         mock_queue_client.send_message.assert_called_once()
         mock_logging.info.assert_called_once_with(
             {"message_community": message_community}
         )
 
-    @patch("src.post_community.QueueClient")
+    @patch("src.post_community.get_queue_client")
     @patch("src.post_community.logging")
-    @patch.dict(os.environ, {"AzureWebJobsStorage": "UseDevelopmentStorage=true"})
     def test_queue_message_community_development_storage(
-        self, mock_logging, mock_queue_client_class
+        self, mock_logging, mock_get_queue_client
     ):
         """ローカル開発環境（Azurite）でキューメッセージを格納する場合のテスト"""
 
         mock_queue_client = MagicMock()
-        mock_queue_client_class.from_connection_string.return_value = mock_queue_client
+        mock_get_queue_client.return_value = mock_queue_client
 
         message_community = {
             "testId": "test123",
@@ -477,12 +471,7 @@ class TestQueueMessageCommunity(unittest.TestCase):
 
         queue_message_community(message_community)
 
-        # AZURITE_QUEUE_STORAGE_CONNECTION_STRINGが使用されることを確認
-        mock_queue_client_class.from_connection_string.assert_called_once()
-        call_args = mock_queue_client_class.from_connection_string.call_args
-        self.assertIn(
-            "127.0.0.1:10001", call_args[1]["conn_str"]
-        )  # Azuriteの接続文字列
+        mock_get_queue_client.assert_called_once_with("communities")
         mock_queue_client.send_message.assert_called_once()
         mock_logging.info.assert_called_once_with(
             {"message_community": message_community}

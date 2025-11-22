@@ -564,14 +564,13 @@ class TestGenerateCorrectAnswers(unittest.TestCase):
 class TestQueueMessageAnswer(unittest.TestCase):
     """queue_message_answer関数のテストケース"""
 
-    @patch("src.post_answer.QueueClient.from_connection_string")
+    @patch("src.post_answer.get_queue_client")
     @patch("src.post_answer.logging")
-    @patch.dict(os.environ, {"AzureWebJobsStorage": "on-azure"})
-    def test_queue_message_answer_azure(self, mock_logging, mock_queue_client):
+    def test_queue_message_answer_azure(self, mock_logging, mock_get_queue_client):
         """Azureにて、キューストレージにAnswerコンテナーの項目用のメッセージを格納するテスト"""
 
         mock_queue = MagicMock()
-        mock_queue_client.return_value = mock_queue
+        mock_get_queue_client.return_value = mock_queue
 
         message_answer = MessageAnswer(
             testId="1",
@@ -585,19 +584,19 @@ class TestQueueMessageAnswer(unittest.TestCase):
 
         queue_message_answer(message_answer)
 
+        mock_get_queue_client.assert_called_once_with("answers")
         mock_queue.send_message.assert_called_once_with(
             json.dumps(message_answer).encode("utf-8")
         )
         mock_logging.info.assert_called_once_with({"message_answer": message_answer})
 
-    @patch("src.post_answer.QueueClient.from_connection_string")
+    @patch("src.post_answer.get_queue_client")
     @patch("src.post_answer.logging")
-    @patch.dict(os.environ, {"AzureWebJobsStorage": "UseDevelopmentStorage=true"})
-    def test_queue_message_answer_local(self, mock_logging, mock_queue_client):
+    def test_queue_message_answer_local(self, mock_logging, mock_get_queue_client):
         """ローカル環境にて、キューストレージにAnswerコンテナーの項目用のメッセージを格納するテスト"""
 
         mock_queue = MagicMock()
-        mock_queue_client.return_value = mock_queue
+        mock_get_queue_client.return_value = mock_queue
 
         message_answer = MessageAnswer(
             testId="1",
@@ -611,6 +610,7 @@ class TestQueueMessageAnswer(unittest.TestCase):
 
         queue_message_answer(message_answer)
 
+        mock_get_queue_client.assert_called_once_with("answers")
         mock_queue.send_message.assert_called_once_with(
             json.dumps(message_answer).encode("utf-8")
         )

@@ -8,13 +8,13 @@ import traceback
 import azure.functions as func
 from azure.cosmos import ContainerProxy
 from azure.cosmos.exceptions import CosmosResourceNotFoundError
-from azure.storage.queue import BinaryBase64EncodePolicy, QueueClient
+from azure.storage.queue import BinaryBase64EncodePolicy
 from openai import AzureOpenAI
 from type.cosmos import Question, QuestionDiscussion
 from type.message import MessageCommunity
 from type.response import PostCommunityRes
 from util.cosmos import get_read_only_container
-from util.queue import AZURITE_QUEUE_STORAGE_CONNECTION_STRING
+from util.queue import get_queue_client
 
 MAX_RETRY_NUMBER: int = 5
 SYSTEM_PROMPT: str = (
@@ -188,15 +188,8 @@ def queue_message_community(message_community: MessageCommunity) -> None:
         message_community (MessageCommunity): Communityコンテナーの項目用のメッセージ
     """
 
-    connection_string: str = os.environ["AzureWebJobsStorage"]
-    if connection_string == "UseDevelopmentStorage=true":
-        connection_string = AZURITE_QUEUE_STORAGE_CONNECTION_STRING
-
-    queue_client = QueueClient.from_connection_string(
-        conn_str=connection_string,
-        queue_name="communities",
-        message_encode_policy=BinaryBase64EncodePolicy(),
-    )
+    queue_client = get_queue_client("communities")
+    queue_client.message_encode_policy = BinaryBase64EncodePolicy()
     logging.info({"message_community": message_community})
     queue_client.send_message(json.dumps(message_community).encode("utf-8"))
 
