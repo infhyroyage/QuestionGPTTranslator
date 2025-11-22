@@ -105,7 +105,8 @@ jobs:
             --query "[0].id" \
             -o tsv | grep -q .; then
             az role assignment create \
-              --assignee ${{ steps.get-ids.outputs.FUNCTIONS_PRINCIPAL_ID }} \
+              --assignee-object-id ${{ steps.get-ids.outputs.FUNCTIONS_PRINCIPAL_ID }} \
+              --assignee-principal-type ServicePrincipal \
               --role "Storage Blob Data Owner" \
               --scope ${{ steps.get-ids.outputs.STORAGE_RESOURCE_ID }}
           fi
@@ -119,7 +120,8 @@ jobs:
             --query "[0].id" \
             -o tsv | grep -q .; then
             az role assignment create \
-              --assignee ${{ steps.get-ids.outputs.FUNCTIONS_PRINCIPAL_ID }} \
+              --assignee-object-id ${{ steps.get-ids.outputs.FUNCTIONS_PRINCIPAL_ID }} \
+              --assignee-principal-type ServicePrincipal \
               --role "Storage Queue Data Contributor" \
               --scope ${{ steps.get-ids.outputs.STORAGE_RESOURCE_ID }}
           fi
@@ -133,7 +135,8 @@ jobs:
             --query "[0].id" \
             -o tsv | grep -q .; then
             az role assignment create \
-              --assignee ${{ steps.get-ids.outputs.FUNCTIONS_PRINCIPAL_ID }} \
+              --assignee-object-id ${{ steps.get-ids.outputs.FUNCTIONS_PRINCIPAL_ID }} \
+              --assignee-principal-type ServicePrincipal \
               --role "Storage Table Data Contributor" \
               --scope ${{ steps.get-ids.outputs.STORAGE_RESOURCE_ID }}
           fi
