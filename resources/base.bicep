@@ -97,7 +97,6 @@ resource apimApis 'Microsoft.ApiManagement/service/apis@2022-08-01' = {
     protocols: ['https']
     subscriptionRequired: false
   }
-  dependsOn: [functions]
 }
 resource apimApisHealthcheck 'Microsoft.ApiManagement/service/apis@2022-08-01' = {
   parent: apim
@@ -111,7 +110,6 @@ resource apimApisHealthcheck 'Microsoft.ApiManagement/service/apis@2022-08-01' =
     protocols: ['https']
     subscriptionRequired: true
   }
-  dependsOn: [functions]
 }
 resource apimNamedValuesInsightsInstrumentationKey 'Microsoft.ApiManagement/service/namedValues@2022-08-01' = {
   parent: apim
