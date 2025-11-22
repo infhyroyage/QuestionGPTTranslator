@@ -70,13 +70,6 @@
 3. 2 のコマンドを実行して得た以下の値を、それぞれ手元に控える。
    - `appId`(=クライアント ID)
    - `password`(=クライアントシークレット)
-4. 以下のコマンドを実行し、発行したサービスプリンシパルに Reader ロールを追加する。
-   ```bash
-   az role assignment create \
-     --assignee {3で手元に控えたクライアントID} \
-     --role "Reader" \
-     --scope /subscriptions/{手元に控えたサブスクリプションID}
-   ```
 
 ### 5. GitHub Actions 用シークレット・変数設定
 
