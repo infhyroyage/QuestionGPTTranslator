@@ -56,8 +56,10 @@ jobs:
         with:
           app-name: ${{ inputs.FUNCTIONS_NAME }}
           package: functions/
-          scm-do-build-during-deployment: true # リモートビルドの有効化
-          enable-oryx-build: true # リモートビルドの有効化
+          sku: flexconsumption
+          remote-build: false
+          scm-do-build-during-deployment: false
+          enable-oryx-build: false
 
       - name: Delete non-latest deployment packages
         run: |

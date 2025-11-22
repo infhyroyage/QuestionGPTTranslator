@@ -393,7 +393,7 @@ resource insights 'microsoft.insights/components@2020-02-02' = {
 }
 
 // Functions
-resource functionsPlan 'Microsoft.Web/serverfarms@2022-09-01' = {
+resource functionsPlan 'Microsoft.Web/serverfarms@2023-12-01' = {
   name: functionsPlanName
   location: location
   kind: 'linux'
@@ -405,7 +405,7 @@ resource functionsPlan 'Microsoft.Web/serverfarms@2022-09-01' = {
     reserved: true
   }
 }
-resource functions 'Microsoft.Web/sites@2022-09-01' = {
+resource functions 'Microsoft.Web/sites@2023-12-01' = {
   name: functionsName
   location: location
   tags: {
@@ -419,11 +419,30 @@ resource functions 'Microsoft.Web/sites@2022-09-01' = {
     clientAffinityEnabled: false
     httpsOnly: true
     serverFarmId: functionsPlan.id
+    functionAppConfig: {
+      deployment: {
+        storage: {
+          type: 'blobContainer'
+          value: '${storage.properties.primaryEndpoints.blob}${storageBlobContainerName}'
+          authentication: {
+            type: 'SystemAssignedIdentity'
+          }
+        }
+      }
+      scaleAndConcurrency: {
+        maximumInstanceCount: 100
+        instanceMemoryMB: 2048
+      }
+      runtime: {
+        name: 'python'
+        version: '3.12'
+      }
+    }
     siteConfig: {
       appSettings: [
         {
-          name: 'AzureWebJobsStorage'
-          value: 'DefaultEndpointsProtocol=https;AccountName=${storageName};AccountKey=${storage.listKeys().keys[0].value};EndpointSuffix=core.windows.net'
+          name: 'AzureWebJobsStorage__accountName'
+          value: storageName
         }
         {
           name: 'COSMOSDB_URI'
@@ -462,9 +481,6 @@ resource functions 'Microsoft.Web/sites@2022-09-01' = {
         allowedOrigins: ['https://portal.azure.com']
       }
       ftpsState: 'Disabled'
-      linuxFxVersion: 'python|3.12'
-      keyVaultReferenceIdentity: 'SystemAssigned'
-      use32BitWorkerProcess: false
     }
   }
 }

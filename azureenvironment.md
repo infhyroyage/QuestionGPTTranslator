@@ -42,12 +42,12 @@
    4. Add permissions ボタンを押下。
 8. Manifest から JSON 形式のマニフェストを表示し、`"accessTokenAcceptedVersion"`の値を`null`から`2`に変更する。
 
-### 3. GitHub Actions 用サービスプリンシパルの発行
+### 3. Azure リソース構築用サービスプリンシパルの発行
 
 新規作成した Azure サブスクリプションに対し、GitHub Actions から Azure リソースを環境を構築するためのサービスプリンシパル QGTranslator_Contributor を以下の手順で発行する。
 
 1. [Azure Portal](https://portal.azure.com/)にログインし、CloudShell を起動する。
-2. 以下のコマンドを実行し、サービスプリンシパル`QGTranslator_Contributor`を発行する。
+2. 以下のコマンドを実行し、サービスプリンシパル`QGTranslator_Contributor`を Contributor ロールで発行する。
    ```bash
    az ad sp create-for-rbac --name QGTranslator_Contributor --role Contributor --scope /subscriptions/{手元に控えたサブスクリプションID}
    ```
@@ -58,7 +58,27 @@
 5. QGTranslator_Contributor のリンク先にある Overview にある「Managed application in local directory」のリンク「QGTranslator_Contributor」を押下し、QGTranslator_Contributor のエンタープライズアプリケーションに遷移する。
 6. Overview の Properties にある「Object ID」の値(=エンタープライズアプリケーションのオブジェクト ID)を手元に控える。
 
-### 4. GitHub Actions 用シークレット・変数設定
+### 4. Azure ロール割り当て用サービスプリンシパルの発行
+
+新規作成した Azure サブスクリプションに対し、GitHub Actions から Azure Functions に必要なストレージアクセスのロール割り当てを行うためのサービスプリンシパル QGTranslator_User_Access_Admin を以下の手順で発行する。
+
+1. [Azure Portal](https://portal.azure.com/)にログインし、CloudShell を起動する。
+2. 以下のコマンドを実行し、サービスプリンシパル`QGTranslator_User_Access_Admin`を User Access Administrator ロールで発行する。
+   ```bash
+   az ad sp create-for-rbac --name QGTranslator_User_Access_Admin --role "User Access Administrator" --scope /subscriptions/{手元に控えたサブスクリプションID}
+   ```
+3. 2 のコマンドを実行して得た以下の値を、それぞれ手元に控える。
+   - `appId`(=クライアント ID)
+   - `password`(=クライアントシークレット)
+4. 以下のコマンドを実行し、発行したサービスプリンシパルに Reader ロールを追加する。
+   ```bash
+   az role assignment create \
+     --assignee {3で手元に控えたクライアントID} \
+     --role "Reader" \
+     --scope /subscriptions/{手元に控えたサブスクリプションID}
+   ```
+
+### 5. GitHub Actions 用シークレット・変数設定
 
 当リポジトリの Setting > Secrets And variables > Actions より、以下の GitHub Actions 用シークレット・変数をすべて設定する。
 
@@ -66,42 +86,44 @@
 
 Secrets タブから「New repository secret」ボタンを押下して、下記の通りシークレットをすべて設定する。
 
-| シークレット名                        | シークレット値                                                   |
-| ------------------------------------- | ---------------------------------------------------------------- |
-| AZURE_APIM_PUBLISHER_EMAIL            | API Management の発行者メールアドレス                            |
-| AZURE_AD_SP_CONTRIBUTOR_CLIENT_SECRET | 2.で発行した QGTranslator_Contributor のクライアントシークレット |
-| DEEPL_AUTH_KEY                        | DeepL API の認証キー                                             |
+| シークレット名                              | シークレット値                                                         |
+| ------------------------------------------- | ---------------------------------------------------------------------- |
+| AZURE_APIM_PUBLISHER_EMAIL                  | API Management の発行者メールアドレス                                  |
+| AZURE_AD_SP_CONTRIBUTOR_CLIENT_SECRET       | 3.で発行した QGTranslator_Contributor のクライアントシークレット       |
+| AZURE_AD_SP_USER_ACCESS_ADMIN_CLIENT_SECRET | 4.で発行した QGTranslator_User_Access_Admin のクライアントシークレット |
+| DEEPL_AUTH_KEY                              | DeepL API の認証キー                                                   |
 
 #### 変数
 
 Variables タブから「New repository variable」ボタンを押下して、下記の通り変数をすべて設定する。
 
-| 変数名                            | 変数値                                                                                    |
-| --------------------------------- | ----------------------------------------------------------------------------------------- |
-| APIM_NAME                         | Azure API Management 名                                                                   |
-| AZURE_AD_EA_CONTRIBUTOR_OBJECT_ID | 3.で発行した QGTranslator_Contributor のエンタープライズアプリケーションのオブジェクト ID |
-| AZURE_AD_SP_CONTRIBUTOR_CLIENT_ID | 3.で発行した QGTranslator_Contributor のクライアント ID                                   |
-| AZURE_AD_SP_MSAL_CLIENT_ID        | 2.で発行した QGTranslator_MSAL のクライアント ID                                          |
-| AZURE_SUBSCRIPTION_ID             | 1.で新規作成した Azure サブスクリプションのサブスクリプション ID                          |
-| AZURE_TENANT_ID                   | Azure ディレクトリ ID                                                                     |
-| COSMOSDB_NAME                     | Azure Cosmos DB 名                                                                        |
-| FUNCTIONS_NAME                    | Azure Functions 名                                                                        |
-| OPENAI_API_VERSION                | Azure OpenAI の API バージョン                                                            |
-| OPENAI_CAPACITY                   | Azure OpenAI の Capacity 数                                                               |
-| OPENAI_DEPLOYMENT_NAME            | Azure OpenAI のデプロイ名                                                                 |
-| OPENAI_LOCATION                   | Azure OpenAI のリージョン                                                                 |
-| OPENAI_MODEL_NAME                 | Azure OpenAI のモデル名                                                                   |
-| OPENAI_MODEL_VERSION              | Azure OpenAI のモデルのバージョン                                                         |
-| OPENAI_NAME                       | Azure OpenAI 名                                                                           |
-| STORAGE_NAME                      | Azure ストレージアカウント名                                                              |
-| SWA_NAME                          | Azure Static Web Apps 名                                                                  |
-| TRANSLATOR_NAME                   | Azure Translator 名                                                                       |
-| VAULT_NAME                        | Azure Key Vault 名                                                                        |
+| 変数名                                  | 変数値                                                                                    |
+| --------------------------------------- | ----------------------------------------------------------------------------------------- |
+| APIM_NAME                               | Azure API Management 名                                                                   |
+| AZURE_AD_EA_CONTRIBUTOR_OBJECT_ID       | 3.で発行した QGTranslator_Contributor のエンタープライズアプリケーションのオブジェクト ID |
+| AZURE_AD_SP_CONTRIBUTOR_CLIENT_ID       | 3.で発行した QGTranslator_Contributor のクライアント ID                                   |
+| AZURE_AD_SP_USER_ACCESS_ADMIN_CLIENT_ID | 4.で発行した QGTranslator_User_Access_Admin のクライアント ID                             |
+| AZURE_AD_SP_MSAL_CLIENT_ID              | 2.で発行した QGTranslator_MSAL のクライアント ID                                          |
+| AZURE_SUBSCRIPTION_ID                   | 1.で新規作成した Azure サブスクリプションのサブスクリプション ID                          |
+| AZURE_TENANT_ID                         | Azure ディレクトリ ID                                                                     |
+| COSMOSDB_NAME                           | Azure Cosmos DB 名                                                                        |
+| FUNCTIONS_NAME                          | Azure Functions 名                                                                        |
+| OPENAI_API_VERSION                      | Azure OpenAI の API バージョン                                                            |
+| OPENAI_CAPACITY                         | Azure OpenAI の Capacity 数                                                               |
+| OPENAI_DEPLOYMENT_NAME                  | Azure OpenAI のデプロイ名                                                                 |
+| OPENAI_LOCATION                         | Azure OpenAI のリージョン                                                                 |
+| OPENAI_MODEL_NAME                       | Azure OpenAI のモデル名                                                                   |
+| OPENAI_MODEL_VERSION                    | Azure OpenAI のモデルのバージョン                                                         |
+| OPENAI_NAME                             | Azure OpenAI 名                                                                           |
+| STORAGE_NAME                            | Azure ストレージアカウント名                                                              |
+| SWA_NAME                                | Azure Static Web Apps 名                                                                  |
+| TRANSLATOR_NAME                         | Azure Translator 名                                                                       |
+| VAULT_NAME                              | Azure Key Vault 名                                                                        |
 
 > [!NOTE]  
 > Azure OpenAI の Capacity 数とは、1 分間あたりに処理できるトークン数(=TPM)であり、1 Capacity = 1000 TPM である。Azure OpenAI のモデルによって、Capacity 数の最大値が異なる。
 
-### 5. Azure リソースの構築
+### 6. Azure リソースの構築
 
 新規作成した Azure サブスクリプションに対し、[technologystack.md](technologystack.md)に記載した Azure リソースを構築する。
 
@@ -109,7 +131,7 @@ Variables タブから「New repository variable」ボタンを押下して、�
 2. Create Azure Resources の workflow が無効化されている場合は、workflow を有効化する。
 3. 右上の「Re-run jobs」から「Re-run all jobs」を押下し、確認ダイアログ内の「Re-run jobs」ボタンを押下する。
 
-### 6. Azure AD 認証認可用サービスプリンシパルのリダイレクト URI の追加
+### 7. Azure AD 認証認可用サービスプリンシパルのリダイレクト URI の追加
 
 発行した QGTranslator_MSAL のリダイレクト URI に Azure Static Web Apps の URL を設定する。
 
@@ -123,7 +145,7 @@ Variables タブから「New repository variable」ボタンを押下して、�
 5. 「Add a Redirect URI」タブにある「+ Add Redirect URI」ボタンを押下し、「Select a platform to add redirect URI」で「Single-page application」ボタンを押下する。
 6. 「Redirect URI」のテキストボックスに、2 で手元に控えた Azure Static Web Apps の URL を入力し、「Configure」ボタンを押下する。
 
-### 7. インポートデータファイルの作成・アップロード
+### 8. インポートデータファイルの作成・アップロード
 
 Azure Cosmos DB に格納するデータであるインポートデータファイルを、以下の json フォーマットで`data/(コース名)/(テスト名).json`に作成する。
 
@@ -210,6 +232,7 @@ az storage blob directory upload --account-name (当リポジトリの変数STOR
    az resource delete --ids /subscriptions/{手元に控えたサブスクリプションID}/providers/Microsoft.CognitiveServices/locations/(当リポジトリの変数OPENAI_LOCATIONの値)/resourceGroups/qgtranslator-je/deletedAccounts/(当リポジトリの変数OPENAI_NAMEの値)
    ```
 7. 当リポジトリの Setting > Secrets And variables > Actions より、Secrets・Variables タブから初期構築時に設定した各シークレット・変数に対し、ゴミ箱のボタンを押下する。
-8. [Azure Portal](https://portal.azure.com/) にログインし、Azure AD > App Registrations に遷移後、QGTranslator_Contributor のリンク先にある Delete ボタンを押下し、「I understand the implications of deleting this app registration.」のチェックを入れて Delete ボタンを押下する。
-9. 8 に続けて、QGTranslator_MSAL のリンク先にある Delete ボタンを押下し、「I understand the implications of deleting this app registration.」のチェックを入れて Delete ボタンを押下する。
-10. 構築手順の 1.で新規作成した Azure サブスクリプションを選択後、上部メニューから Delete ボタンを押下し、サブスクリプション名を入力し、Delete ボタンを押下する。
+8. [Azure Portal](https://portal.azure.com/) にログインし、Azure AD > App Registrations に遷移後、QGTranslator_User_Access_Admin のリンク先にある Delete ボタンを押下し、「I understand the implications of deleting this app registration.」のチェックを入れて Delete ボタンを押下する。
+9. 8 に続けて、QGTranslator_Contributor のリンク先にある Delete ボタンを押下し、「I understand the implications of deleting this app registration.」のチェックを入れて Delete ボタンを押下する。
+10. 9 に続けて、QGTranslator_MSAL のリンク先にある Delete ボタンを押下し、「I understand the implications of deleting this app registration.」のチェックを入れて Delete ボタンを押下する。
+11. 構築手順の 1.で新規作成した Azure サブスクリプションを選択後、上部メニューから Delete ボタンを押下し、サブスクリプション名を入力し、Delete ボタンを押下する。

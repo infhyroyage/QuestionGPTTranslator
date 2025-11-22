@@ -111,11 +111,39 @@ jobs:
             -n ${{ vars.FUNCTIONS_NAME }} \
             --settings @resources/functions-appsettings.json
 
+  # Azure FunctionsのFlex Consumptionプランでは、Azure FunctionsのマネージドIDに対して
+  # Azure Storageアカウントへのアクセス権限を付与するロールを割り当てる必要がある
+  assign-storage-roles:
+    runs-on: ubuntu-latest
+    needs: set-functions-appsettings
+    steps:
+      - name: Checkout
+        uses: actions/checkout@main
+
+      - name: Login Azure as User Access Administrator
+        uses: azure/login@v2
+        with:
+          creds: '{"clientId":"${{ vars.AZURE_AD_SP_USER_ACCESS_ADMIN_CLIENT_ID }}","clientSecret":"${{ secrets.AZURE_AD_SP_USER_ACCESS_ADMIN_CLIENT_SECRET }}","subscriptionId":"${{ vars.AZURE_SUBSCRIPTION_ID }}","tenantId":"${{ vars.AZURE_TENANT_ID }}"}'
+
+      - name: Upgrade Bicep
+        run: az bicep upgrade
+
+      - name: Assign Storage Roles to Functions
+        uses: azure/arm-deploy@v2
+        with:
+          scope: resourcegroup
+          subscriptionId: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+          resourceGroupName: ${{ env.RESOURCE_GROUP }}
+          template: ./resources/role-assignments.bicep
+          parameters: >-
+            functionsName=${{ vars.FUNCTIONS_NAME }}
+            storageName=${{ vars.STORAGE_NAME }}
+
   # FunctionsにAzureWebJobsStorageのアプリケーション設定をせずにデプロイすると
   # InternalServerErrorとなってしまうデプロイ処理は、以下のJobに定義すること
   connect-apim-2-functions:
     runs-on: ubuntu-latest
-    needs: set-functions-appsettings
+    needs: assign-storage-roles
     steps:
       - name: Checkout
         uses: actions/checkout@main
@@ -141,7 +169,7 @@ jobs:
             vaultName=${{ vars.VAULT_NAME }}
 
   use-deploy-functions-app-workflow:
-    needs: set-functions-appsettings
+    needs: assign-storage-roles
     uses: ./.github/workflows/reusable-deploy-functions-app.yaml
     with:
       AZURE_AD_SP_CONTRIBUTOR_CLIENT_ID: ${{ vars.AZURE_AD_SP_CONTRIBUTOR_CLIENT_ID }}
