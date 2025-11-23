@@ -9,7 +9,6 @@ from typing import Iterable
 import azure.functions as func
 from azure.cosmos import ContainerProxy
 from azure.cosmos.exceptions import CosmosResourceNotFoundError
-from azure.storage.queue import BinaryBase64EncodePolicy
 from openai import AzureOpenAI
 from openai.types.chat.chat_completion_content_part_param import (
     ChatCompletionContentPartParam,
@@ -282,7 +281,6 @@ def queue_message_answer(message_answer: MessageAnswer) -> None:
     """
 
     queue_client = get_queue_client("answers")
-    queue_client.message_encode_policy = BinaryBase64EncodePolicy()
     logging.info({"message_answer": message_answer})
     queue_client.send_message(json.dumps(message_answer).encode("utf-8"))
 

@@ -8,7 +8,6 @@ import traceback
 import azure.functions as func
 from azure.cosmos import ContainerProxy
 from azure.cosmos.exceptions import CosmosResourceNotFoundError
-from azure.storage.queue import BinaryBase64EncodePolicy
 from openai import AzureOpenAI
 from type.cosmos import Question, QuestionDiscussion
 from type.message import MessageCommunity
@@ -189,7 +188,6 @@ def queue_message_community(message_community: MessageCommunity) -> None:
     """
 
     queue_client = get_queue_client("communities")
-    queue_client.message_encode_policy = BinaryBase64EncodePolicy()
     logging.info({"message_community": message_community})
     queue_client.send_message(json.dumps(message_community).encode("utf-8"))
 

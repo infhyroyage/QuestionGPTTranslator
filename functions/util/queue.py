@@ -3,7 +3,7 @@
 import os
 
 from azure.identity import DefaultAzureCredential
-from azure.storage.queue import QueueClient
+from azure.storage.queue import BinaryBase64EncodePolicy, QueueClient
 
 # pylint: disable=line-too-long
 AZURITE_QUEUE_STORAGE_CONNECTION_STRING: str = (
@@ -24,12 +24,12 @@ def get_queue_client(queue_name: str) -> QueueClient:
     Raises:
         ValueError: Azure環境でAzureWebJobsStorage__accountNameが設定されていない場合
     """
-    # ローカル環境の場合はAzuriteへの接続文字列を使用し、
-    # Azure環境の場合はManaged Identityを使用
+    # ローカル環境の場合はAzuriteの接続文字列、Azure環境の場合はManaged Identityを使用
     if os.environ.get("AzureWebJobsStorage", "") == "UseDevelopmentStorage=true":
         return QueueClient.from_connection_string(
             conn_str=AZURITE_QUEUE_STORAGE_CONNECTION_STRING,
             queue_name=queue_name,
+            message_encode_policy=BinaryBase64EncodePolicy(),
         )
 
     account_name = os.environ.get("AzureWebJobsStorage__accountName")
@@ -38,9 +38,9 @@ def get_queue_client(queue_name: str) -> QueueClient:
             "AzureWebJobsStorage__accountName environment variable is not set"
         )
 
-    account_url = f"https://{account_name}.queue.core.windows.net"
     return QueueClient(
-        account_url=account_url,
+        account_url=f"https://{account_name}.queue.core.windows.net",
         queue_name=queue_name,
         credential=DefaultAzureCredential(),
+        message_encode_policy=BinaryBase64EncodePolicy(),
     )
