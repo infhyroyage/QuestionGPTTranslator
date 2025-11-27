@@ -177,7 +177,7 @@ class TestCreateDiscussionSummaryPrompt(unittest.TestCase):
 
         result = create_discussion_summary_prompt(discussions)
 
-        expected_prompt = """Please create a concise summary (approximately 200 characters) \
+        expected_prompt = """Please create a concise summary (approximately 300 characters) \
 of the following community discussions about an exam question. Focus on the main points, \
 popular opinions (based on upvotes), and the general consensus on answer choices.
 
@@ -192,7 +192,7 @@ Please provide a summary that captures:
 2. Popular answer choices mentioned by users
 3. Key insights or concerns raised by the community
 
-Summary (approximately 200 characters):"""
+Summary (approximately 300 characters):"""
 
         self.assertEqual(result, expected_prompt)
 
@@ -219,7 +219,7 @@ Summary (approximately 200 characters):"""
 
         result = create_discussion_summary_prompt(discussions)
 
-        expected_prompt = """Please create a concise summary (approximately 200 characters) \
+        expected_prompt = """Please create a concise summary (approximately 300 characters) \
 of the following community discussions about an exam question. Focus on the main points, \
 popular opinions (based on upvotes), and the general consensus on answer choices.
 
@@ -244,7 +244,7 @@ Please provide a summary that captures:
 2. Popular answer choices mentioned by users
 3. Key insights or concerns raised by the community
 
-Summary (approximately 200 characters):"""
+Summary (approximately 300 characters):"""
 
         self.assertEqual(result, expected_prompt)
 

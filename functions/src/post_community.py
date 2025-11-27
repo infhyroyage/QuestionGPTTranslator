@@ -113,7 +113,7 @@ def create_discussion_summary_prompt(discussions: list[QuestionDiscussion]) -> s
 
     # プロンプトを構築
     # pylint: disable=line-too-long
-    prompt: str = f"""Please create a concise summary (approximately 200 characters) of the following \
+    prompt: str = f"""Please create a concise summary (approximately 300 characters) of the following \
 community discussions about an exam question. Focus on the main points, popular opinions \
 (based on upvotes), and the general consensus on answer choices.
 
@@ -125,7 +125,7 @@ Please provide a summary that captures:
 2. Popular answer choices mentioned by users
 3. Key insights or concerns raised by the community
 
-Summary (approximately 200 characters):"""
+Summary (approximately 300 characters):"""
 
     return prompt
 
