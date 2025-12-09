@@ -3,8 +3,6 @@ param azureAdEAContributorObjectId string
 @secure()
 param azureApimPublisherEmail string
 param cosmosDBName string
-@secure()
-param deeplAuthKey string
 param functionsName string
 param githubRepoUrl string
 param location string = resourceGroup().location
@@ -54,7 +52,6 @@ var storageQueueNames = {
 var vaultSecretNames = {
   cosmosDBPrimaryKey: 'cosmos-db-primary-key'
   cosmosDBPrimaryReadonlyKey: 'cosmos-db-primary-readonly-key'
-  deeplAuthKey: 'deepl-auth-key'
   insightsConnectionString: 'insights-connection-string'
   insightsInstrumentationKey: 'insights-instrumentation-key'
   openAIApiKey: 'openai-api-key'
@@ -501,7 +498,7 @@ resource translator 'Microsoft.CognitiveServices/accounts@2024-10-01' = {
   name: translatorName
   location: location
   sku: {
-    name: 'F0'
+    name: 'S1'
   }
   kind: 'TextTranslation'
   properties: {
@@ -581,16 +578,6 @@ resource vaultSecretsCosmosDBPrimaryReadonlyKey 'Microsoft.KeyVault/vaults/secre
       enabled: true
     }
     value: cosmosDB.listKeys().primaryReadonlyMasterKey
-  }
-}
-resource vaultSecretsDeeplAuthKey 'Microsoft.KeyVault/vaults/secrets@2023-02-01' = {
-  parent: vault
-  name: vaultSecretNames.deeplAuthKey
-  properties: {
-    attributes: {
-      enabled: true
-    }
-    value: deeplAuthKey
   }
 }
 resource vaultSecretsInsightsConnectionString 'Microsoft.KeyVault/vaults/secrets@2023-02-01' = {

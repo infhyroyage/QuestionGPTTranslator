@@ -53,7 +53,7 @@
   - Structured Outputs
   - Vision-enabled
 - 長い実行時間を要求される生成 AI の処理が含まれている API には、Queue Storage キュートリガー関数にて Azure Cosmos DB に保存する非同期処理を採用する。
-- 英語 → 日本語の翻訳システムは、Azure Translator(無料枠)をプライマリ、無料枠の超過分を DeepL API でセカンダリとして採用する。
+- 英語 → 日本語の翻訳システムは、Azure Translator (Standard Tier) を採用する。
 - 以下の CI/CD パイプラインは GitHub Actions によって自動化する:
   - 全 Azure リソースデプロイ: .github/workflows/create-azure-resources.yaml
   - Functions アプリのみのデプロイ: .github/workflows/deploy-functions-app.yaml
@@ -85,7 +85,7 @@
 以下の機密情報は Azure Key Vault で安全に管理するため、リポジトリにコミットしないこと:
 
 - Azure OpenAI の API キー
-- Azure Translator・DeepL API の API キー
+- Azure Translator の API キー
 - Azure Cosmos DB の API キー
 
 また、以下のファイルはローカル環境で管理するため、リポジトリにコミットしないこと:

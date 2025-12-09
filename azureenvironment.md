@@ -84,7 +84,6 @@ Secrets タブから「New repository secret」ボタンを押下して、下記
 | AZURE_APIM_PUBLISHER_EMAIL                  | API Management の発行者メールアドレス                                  |
 | AZURE_AD_SP_CONTRIBUTOR_CLIENT_SECRET       | 3.で発行した QGTranslator_Contributor のクライアントシークレット       |
 | AZURE_AD_SP_USER_ACCESS_ADMIN_CLIENT_SECRET | 4.で発行した QGTranslator_User_Access_Admin のクライアントシークレット |
-| DEEPL_AUTH_KEY                              | DeepL API の認証キー                                                   |
 
 #### 変数
 

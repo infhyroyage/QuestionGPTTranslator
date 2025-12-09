@@ -3,33 +3,6 @@
 from typing import List, TypedDict
 
 
-class DeepLTranslation(TypedDict):
-    """
-    DeepLのレスポンスのtranslationsフィールドの型
-    """
-
-    detected_source_language: str
-    """
-    DeepLが検出した言語コード
-    """
-
-    text: str
-    """
-    DeepLで翻訳した文章
-    """
-
-
-class DeepLRes(TypedDict):
-    """
-    DeepLのレスポンスの型
-    """
-
-    translations: List[DeepLTranslation]
-    """
-    DeepLの翻訳結果
-    """
-
-
 class AzureTranslatorTranslationsItem(TypedDict):
     """
     Azure Translatorのレスポンスの各要素のtranslationsフィールドの型

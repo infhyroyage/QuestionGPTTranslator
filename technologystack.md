@@ -8,14 +8,14 @@
 
 ### 1.2 ソリューション概要
 
-Azure Functions をベースとしたサーバーレスアプリケーションにより、Azure OpenAI・Azure Translator・DeepL API を活用した多言語対応の学習プラットフォームを構築する。Azure API Management を通じてセキュアな API アクセスを提供し、Azure Cosmos DB で学習データと進捗を管理することで、スケーラブルかつ高可用性な学習環境を実現する。
+Azure Functions をベースとしたサーバーレスアプリケーションにより、Azure OpenAI・Azure Translator を活用した多言語対応の学習プラットフォームを構築する。Azure API Management を通じてセキュアな API アクセスを提供し、Azure Cosmos DB で学習データと進捗を管理することで、スケーラブルかつ高可用性な学習環境を実現する。
 
 ### 1.3 データフロー
 
 システム全体の処理フローは以下の通りである:
 
 1. ユーザーがインポートデータファイルを Azure Blob Storage にアップロードし、Azure Storage Blob トリガーの関数アプリが Azure Cosmos DB にテスト・問題のデータをインポートする。
-2. 関数アプリが API Management 経由で問題・選択肢を取得し、Azure Translator/DeepL API で翻訳を実行する。
+2. 関数アプリが API Management 経由で問題・選択肢を取得し、Azure Translator で翻訳を実行する。
 3. Azure OpenAI が正解の選択肢と各選択肢の正解/不正解理由を生成し、Azure Storage Queue トリガーの関数アプリが Azure Cosmos DB に非同期で保存する。
 4. Azure OpenAI がコミュニティのディスカッションの内容要約や回答投票割合を計算し、Azure Storage Queue トリガーの関数アプリが Azure Cosmos DB に非同期で保存する。
 5. 関数アプリが回答履歴・お気に入り情報を Azure Cosmos DB で管理する。
@@ -44,7 +44,6 @@ Azure Functions をベースとしたサーバーレスアプリケーション�
 Azure 以外の外部サービスとも連携することにより、コア機能を実現する:
 
 - GitHub (コードリポジトリ、CI/CD パイプライン管理)
-- DeepL API (翻訳サービス、Azure Translator の無料枠超過時の代替)
 - Microsoft ID Platform (Entra ID 認証・アクセストークン発行)
 
 ### 2.2 Azure リソース構成
@@ -68,9 +67,6 @@ Azure 以外の外部サービスとも連携することにより、コア機�
 >
 > - [Structured outputs](https://learn.microsoft.com/ja-jp/azure/ai-services/openai/how-to/structured-outputs)
 > - [Vision-enabled](https://learn.microsoft.com/ja-jp/azure/ai-services/openai/how-to/gpt-with-vision)
-
-> [!NOTE]  
-> Translator の価格レベルは Free(無料)とする。この無料枠をすべて使い切った場合、代わりに DeepL へアクセスする。
 
 ### 2.3 Azure アーキテクチャー図
 
@@ -151,9 +147,5 @@ Azure OpenAI を用いて、問題文や選択肢の文章から正解の選択�
 
 ### 3.3 日本語翻訳システム
 
-翻訳機能は以下の冗長構造で実装されている:
-
-- Azure Translator (Free Tier)
-- DeepL API(Azure Translator の無料枠超過時の自動フォールバック)
-
-なお、インポートデータファイルで問題文・選択肢ごとに `isEscapedTranslation` フラグを設定すると、翻訳不要な文章(コマンド、コード等)をスキップすることができる。
+翻訳機能は Azure Translator (Standard Tier) を使用する。
+インポートデータファイルで問題文・選択肢ごとに `isEscapedTranslation` フラグを設定すると、翻訳不要な文章(コマンド、コード等)をスキップすることができる。

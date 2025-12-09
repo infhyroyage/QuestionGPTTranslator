@@ -20,11 +20,6 @@
     "value": "@Microsoft.KeyVault(SecretUri={cosmosdbReadonlyKey})"
   },
   {
-    "name": "DEEPL_AUTH_KEY",
-    "slotSetting": false,
-    "value": "@Microsoft.KeyVault(VaultName={vaultName};SecretName=deepl-auth-key)"
-  },
-  {
     "name": "OPENAI_API_KEY",
     "slotSetting": false,
     "value": "@Microsoft.KeyVault(VaultName={vaultName};SecretName=openai-api-key)"

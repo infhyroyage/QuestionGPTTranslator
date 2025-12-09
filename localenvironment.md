@@ -36,7 +36,6 @@ Azure 環境構築後に、以下のサーバーをすべて起動すると、�
        "COSMOSDB_KEY": "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==",
        "COSMOSDB_READONLY_KEY": "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==",
        "COSMOSDB_URI": "http://localhost:8081",
-       "DEEPL_AUTH_KEY": "(DeepL APIの認証キー)",
        "FUNCTIONS_WORKER_RUNTIME": "python",
        "NODE_TLS_REJECT_UNAUTHORIZED": "0",
        "OPENAI_API_KEY": "(Azure OpenAIのAPIキー)",
