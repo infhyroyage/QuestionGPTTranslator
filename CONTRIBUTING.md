@@ -58,7 +58,6 @@
   - 全 Azure リソースデプロイ: .github/workflows/create-azure-resources.yaml
   - Functions アプリのみのデプロイ: .github/workflows/deploy-functions-app.yaml
   - API Management のみのデプロイ: .github/workflows/deploy-apim.yaml
-  - apim/apis-functions-swagger.yaml の Swagger UI デプロイ: .github/workflows/deploy-swagger-ui.yaml
   - シークレット日次再発行: .github/workflows/regenerate-secrets.yaml
   - Pull Request 発行時のユニットテスト・Pylint 実行: .github/workflows/test-lint.yaml
 
