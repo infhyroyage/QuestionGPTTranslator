@@ -18,7 +18,8 @@ from util.queue import get_queue_client
 MAX_RETRY_NUMBER: int = 5
 SYSTEM_PROMPT: str = (
     "You are a professional content summarizer who creates concise summaries "
-    "of community discussions."
+    "of community discussions. "
+    "Output only plain text without any Markdown formatting (e.g., do not use **, *, _, etc.)."
 )
 
 

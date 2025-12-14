@@ -24,7 +24,8 @@ from util.queue import get_queue_client
 
 MAX_RETRY_NUMBER: int = 5
 SYSTEM_PROMPT: str = (
-    "You are a professional who provides correct explanations for candidates of the exam."
+    "You are a professional who provides correct explanations for candidates of the exam. "
+    "Output only plain text without any Markdown formatting (e.g., do not use **, *, _, etc.)."
 )
 
 
