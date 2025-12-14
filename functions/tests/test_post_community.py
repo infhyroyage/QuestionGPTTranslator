@@ -192,6 +192,8 @@ Please provide a summary that captures:
 2. Popular answer choices mentioned by users
 3. Key insights or concerns raised by the community
 
+Important: Do not use any Markdown formatting (such as **, *, __, _, etc.) in the summary. Use plain text only.
+
 Summary (approximately 300 characters):"""
 
         self.assertEqual(result, expected_prompt)
@@ -243,6 +245,8 @@ Please provide a summary that captures:
 1. The overall sentiment and main discussion points
 2. Popular answer choices mentioned by users
 3. Key insights or concerns raised by the community
+
+Important: Do not use any Markdown formatting (such as **, *, __, _, etc.) in the summary. Use plain text only.
 
 Summary (approximately 300 characters):"""
 

@@ -129,7 +129,8 @@ class TestCreateChatCompletionsMessages(unittest.TestCase):
         "---\n\n"
         "# Main Topic\n"
         "For the question and choices below, generate the JSON format with `correct_indexes` and `explanations`.\n"
-        "Remember to select exactly {answer_num} correct option(s) in your response.\n"
+        "Remember to select exactly {answer_num} correct option(s) in your response.\n\n"
+        "Important: Do not use any Markdown formatting (such as **, *, __, _, etc.) in the explanations. Use plain text only.\n"
         "---\n"
     )
     USER_CONTENT_TEXT_FOOTER = "---"

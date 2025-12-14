@@ -125,6 +125,8 @@ Please provide a summary that captures:
 2. Popular answer choices mentioned by users
 3. Key insights or concerns raised by the community
 
+Important: Do not use any Markdown formatting (such as **, *, __, _, etc.) in the summary. Use plain text only.
+
 Summary (approximately 300 characters):"""
 
     return prompt
